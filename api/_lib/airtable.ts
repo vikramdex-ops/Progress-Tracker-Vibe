@@ -100,4 +100,8 @@ export const TABLES = {
   XP_LOG: "XP_Log",
   NOTIFICATIONS: "Notifications",
   SETTINGS: "App_Settings",
+  CALENDAR: "Calendar",
+  ANNOUNCEMENTS: "Announcements",
+  ENG_FACTS: "EngineeringFacts",
+  PUSH_SUBS: "PushSubscriptions",
 } as const;

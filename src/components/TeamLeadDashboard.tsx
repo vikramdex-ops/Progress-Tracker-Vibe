@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { entriesApi, employeesApi, leavesApi, passwordResetsApi, notificationsApi } from "@/lib/api";
+import { entriesApi, employeesApi, leavesApi, passwordResetsApi, notificationsApi, announcementsApi, calendarApi } from "@/lib/api";
 import { PROJECTS, RATING_OPTIONS, COMPLEXITY_COLORS } from "@/lib/constants";
-import { getFactForDate } from "@/lib/engineering-facts";
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,21 +35,27 @@ export default function TeamLeadDashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [resetModal, setResetModal] = useState<any>(null);
   const [newTempPw, setNewTempPw] = useState("");
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [calendar, setCalendar] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [empRes, entRes, leaveRes, resetRes, notifRes] = await Promise.all([
+      const [empRes, entRes, leaveRes, resetRes, notifRes, annRes, calRes] = await Promise.all([
         employeesApi.list() as any,
         entriesApi.list() as any,
         leavesApi.list({ date: today }) as any,
         passwordResetsApi.list() as any,
         notificationsApi.list(user?.name) as any,
+        announcementsApi.list() as any,
+        calendarApi.list() as any,
       ]);
       setEmployees(Array.isArray(empRes) ? empRes : []);
       setEntries(Array.isArray(entRes) ? entRes.sort((a: any, b: any) => b.Date?.localeCompare(a.Date)) : []);
       setLeaves(Array.isArray(leaveRes) ? leaveRes : []);
       setPasswordResets(Array.isArray(resetRes) ? resetRes : []);
       setNotifications(Array.isArray(notifRes) ? notifRes : []);
+      setAnnouncements(Array.isArray(annRes) ? annRes : []);
+      setCalendar(Array.isArray(calRes) ? calRes : []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -159,8 +164,6 @@ export default function TeamLeadDashboard() {
   };
 
   const sortedByStreak = [...teamNames].sort((a, b) => (streakMap[b] || 0) - (streakMap[a] || 0));
-  const todayFact = getFactForDate(today);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -520,20 +523,45 @@ export default function TeamLeadDashboard() {
         </CardContent>
       </Card>
 
-      {/* ── Engineering Fact ── */}
-      <Card className="card-hover bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/60 dark:to-slate-800/40 border-slate-200/60 dark:border-slate-700/40">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-              <BookOpen className="w-5 h-5 text-blue-500" />
+      {/* ── Announcements Live Feed ── */}
+      <Card className="card-hover">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
+            <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case tracking-normal ml-auto">
+              who filled & when
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {announcements.length > 0 ? (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {announcements.slice(0, 15).map((ann) => (
+                <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--color-surface-hover)] transition-colors">
+                  <div className={cn(
+                    "w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0",
+                    ann.Type === "entry" && "bg-emerald-400",
+                    ann.Type === "leave" && "bg-orange-400",
+                    ann.Type === "badge" && "bg-amber-400",
+                    ann.Type === "system" && "bg-blue-400",
+                  )} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
+                      <span className="font-semibold text-[var(--color-text-primary)]">{ann.EmployeeName}</span>
+                      {" "}{ann.Message}
+                    </p>
+                    {ann.Timestamp && (
+                      <span className="text-[10px] text-[var(--color-text-muted)] font-mono">
+                        {new Date(ann.Timestamp).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <div className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase mb-1.5">
-                ⚙ ENGINEERING FACT
-              </div>
-              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed font-medium">{todayFact}</p>
-            </div>
-          </div>
+          ) : (
+            <p className="text-sm text-[var(--color-text-muted)] text-center py-6">No activity yet today.</p>
+          )}
         </CardContent>
       </Card>
     </div>

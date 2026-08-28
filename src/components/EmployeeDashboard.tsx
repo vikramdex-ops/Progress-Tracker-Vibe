@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { entriesApi, gamificationApi, leavesApi } from "@/lib/api";
+import { entriesApi, gamificationApi, leavesApi, announcementsApi, quizApi, calendarApi } from "@/lib/api";
 import { PROJECTS, COMPLEXITY_COLORS } from "@/lib/constants";
-import { getFactForDate } from "@/lib/engineering-facts";
 import { calculateLevel, cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,12 @@ export default function EmployeeDashboard() {
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [leaveReason, setLeaveReason] = useState("");
   const [loading, setLoading] = useState(true);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [quiz, setQuiz] = useState<any>(null);
+  const [quizAnswer, setQuizAnswer] = useState("");
+  const [quizResult, setQuizResult] = useState<{ correct: boolean; xp: number } | null>(null);
+  const [quizStats, setQuizStats] = useState<any>(null);
+  const [calendar, setCalendar] = useState<any[]>([]);
 
   const todayEntry = entries.find((e) => e.Date === today);
   const weekEntries = entries.filter((e) => {
@@ -55,14 +60,16 @@ export default function EmployeeDashboard() {
     ? calculateLevel(gamification.xp)
     : { level: 1, currentXp: 0, nextLevelXp: 50, progress: 0, title: "Piping Trainee" };
 
-  const todayFact = getFactForDate(today);
-
   const loadData = useCallback(async () => {
     try {
-      const [eRes, gRes, lRes] = await Promise.all([
+      const [eRes, gRes, lRes, annRes, quizRes, qStats, calRes] = await Promise.all([
         entriesApi.list({ employee: user?.name || "" }) as any,
         gamificationApi.get(user?.name || "") as any,
         leavesApi.list({ date: today }) as any,
+        announcementsApi.list() as any,
+        quizApi.daily(today) as any,
+        quizApi.stats(user?.name || "") as any,
+        calendarApi.list() as any,
       ]);
       setEntries(Array.isArray(eRes) ? eRes.sort((a: any, b: any) => b.Date?.localeCompare(a.Date)) : []);
       if (gRes) {
@@ -78,6 +85,10 @@ export default function EmployeeDashboard() {
         });
       }
       setLeaves(Array.isArray(lRes) ? lRes : []);
+      setAnnouncements(Array.isArray(annRes) ? annRes : []);
+      if (quizRes) setQuiz(quizRes);
+      if (qStats) setQuizStats(qStats);
+      setCalendar(Array.isArray(calRes) ? calRes : []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -134,6 +145,24 @@ export default function EmployeeDashboard() {
   };
 
   const onLeaveToday = leaves.some((l) => l.EmployeeName === user?.name && l.Date === today);
+
+  const handleQuizAnswer = async (answer: string) => {
+    if (!quiz || quizResult) return;
+    setQuizAnswer(answer);
+    try {
+      const res: any = await quizApi.answer({
+        employee: user?.name || "",
+        factId: quiz.id,
+        answer,
+        correctAnswer: quiz.correctAnswer,
+      });
+      setQuizResult({ correct: res.correct, xp: res.xpEarned });
+      const gRes: any = await gamificationApi.get(user?.name || "");
+      if (gRes) setGamification(gRes);
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
 
   if (loading) {
     return (
@@ -315,22 +344,124 @@ export default function EmployeeDashboard() {
             </CardContent>
           </Card>
 
-          {/* Engineering Fact — full width */}
-          <Card className="lg:col-span-3 card-hover bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/60 dark:to-slate-800/40 border-slate-200/60 dark:border-slate-700/40">
+          {/* Daily Quiz — full width */}
+          <Card className="lg:col-span-3 card-hover bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border-indigo-200/60 dark:border-indigo-800/30">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 text-blue-500" />
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-5 h-5 text-indigo-500" />
                 </div>
-                <div>
-                  <div className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase mb-1.5">
-                    ⚙ ENGINEERING FACT
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">
+                      ⚙ DAILY PIPING QUIZ
+                    </span>
+                    {quiz?.difficulty && (
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[9px] font-bold",
+                        quiz.difficulty === "Easy" && "bg-emerald-100 text-emerald-600",
+                        quiz.difficulty === "Medium" && "bg-amber-100 text-amber-600",
+                        quiz.difficulty === "Hard" && "bg-red-100 text-red-500",
+                      )}>{quiz.difficulty}</span>
+                    )}
+                    {quiz?.category && (
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-surface-hover)] text-[9px] font-semibold text-[var(--color-text-muted)]">
+                        {quiz.category}
+                      </span>
+                    )}
+                    {quizStats && (
+                      <span className="ml-auto text-[10px] font-semibold text-[var(--color-text-muted)]">
+                        {quizStats.correct}/{quizStats.total} correct ({quizStats.accuracy}%)
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed font-medium">{todayFact}</p>
+                  {quiz ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-[var(--color-text-primary)] leading-relaxed font-semibold">{quiz.question}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(quiz.options).map(([key, val]) => {
+                          const isSelected = quizAnswer === key;
+                          const isCorrect = quizResult && key === quiz.correctAnswer;
+                          const isWrong = quizResult && isSelected && !quizResult.correct;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => handleQuizAnswer(key)}
+                              disabled={!!quizResult || quizStats?.answeredToday}
+                              className={cn(
+                                "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
+                                !quizResult && !quizStats?.answeredToday && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
+                                (quizResult || quizStats?.answeredToday) && "cursor-default",
+                                isCorrect && "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400",
+                                isWrong && "border-red-400 bg-red-50 dark:bg-red-950/20 text-red-600",
+                                !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
+                              )}
+                            >
+                              <span className="text-[10px] font-bold text-[var(--color-text-muted)] mr-1.5">{key}.</span>
+                              {String(val)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {quizResult && (
+                        <div className={cn(
+                          "p-3 rounded-xl text-sm font-medium animate-slide-up",
+                          quizResult.correct ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600" : "bg-red-50 dark:bg-red-950/20 text-red-500",
+                        )}>
+                          {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong answer. The correct answer is ${quiz.correctAnswer}.`}
+                          {quiz.explanation && (
+                            <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-normal">{quiz.explanation}</p>
+                          )}
+                        </div>
+                      )}
+                      {quizStats?.answeredToday && !quizResult && (
+                        <p className="text-xs text-[var(--color-text-muted)] font-medium">✅ Already answered today!</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[var(--color-text-muted)]">Loading today's quiz...</p>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Announcements Live Feed — full width */}
+          {announcements.length > 0 && (
+            <Card className="lg:col-span-3 card-hover">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {announcements.slice(0, 10).map((ann) => (
+                    <div key={ann.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--color-surface-hover)] transition-colors">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
+                        ann.Type === "entry" && "bg-emerald-400",
+                        ann.Type === "leave" && "bg-orange-400",
+                        ann.Type === "badge" && "bg-amber-400",
+                        ann.Type === "system" && "bg-blue-400",
+                      )} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
+                          <span className="font-semibold text-[var(--color-text-primary)]">{ann.EmployeeName}</span>
+                          {" "}{ann.Message}
+                        </p>
+                        {ann.Timestamp && (
+                          <span className="text-[10px] text-[var(--color-text-muted)] font-mono">
+                            {new Date(ann.Timestamp).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 

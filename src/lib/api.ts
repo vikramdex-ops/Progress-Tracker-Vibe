@@ -138,3 +138,37 @@ export const employeeActionsApi = {
 export const seedApi = {
   run: () => apiRequest("seed", { method: "POST" }),
 };
+
+// Calendar
+export const calendarApi = {
+  list: () => apiRequest("calendar"),
+  create: (data: any) => apiRequest("calendar", { method: "POST", body: JSON.stringify(data) }),
+  remove: (id: string) => apiRequest(`calendar/${id}`, { method: "DELETE" }),
+};
+
+// Announcements (Live Feed)
+export const announcementsApi = {
+  list: () => apiRequest("announcements"),
+  create: (data: any) => apiRequest("announcements", { method: "POST", body: JSON.stringify(data) }),
+};
+
+// Engineering Quiz (MCQ)
+export const quizApi = {
+  daily: (date?: string) => {
+    const qs = date ? `?date=${date}` : "";
+    return apiRequest(`quiz/daily${qs}`);
+  },
+  stats: (employee: string) =>
+    apiRequest(`quiz/stats?employee=${encodeURIComponent(employee)}`),
+  answer: (data: { employee: string; factId: string; answer: string; correctAnswer: string }) =>
+    apiRequest("quiz/answer", { method: "POST", body: JSON.stringify(data) }),
+};
+
+// Push Notifications
+export const pushApi = {
+  subscribe: (data: { employeeName: string; endpoint: string; p256dh?: string; auth?: string }) =>
+    apiRequest("push/subscribe", { method: "POST", body: JSON.stringify(data) }),
+  unsubscribe: (employeeName: string) =>
+    apiRequest("push/unsubscribe", { method: "POST", body: JSON.stringify({ employeeName }) }),
+  checkReminders: () => apiRequest("push/check-reminders"),
+};

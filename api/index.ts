@@ -18,6 +18,19 @@ import {
   handleApprovePasswordReset,
   handleResetEmployeePassword,
   handleSeed,
+  handleGetCalendar,
+  handleGetAllCalendar,
+  handleCreateCalendarEntry,
+  handleDeleteCalendarEntry,
+  handleGetAnnouncements,
+  handleGetAllAnnouncements,
+  handleCreateAnnouncement,
+  handleGetDailyQuiz,
+  handleGetQuizStats,
+  handleSubmitQuizAnswer,
+  handleSubscribePush,
+  handleUnsubscribePush,
+  handleCheckReminders,
 } from "./_lib/handlers";
 
 export default async function handler(req: any, res: any) {
@@ -112,6 +125,60 @@ export default async function handler(req: any, res: any) {
     }
     if (path === "gamification" && method === "GET") {
       const result = await handleGetGamification(req.query as any);
+      return res.status(result.status).json(result.data);
+    }
+    // ── Calendar ──
+    if (path === "calendar" && method === "GET") {
+      const result = await handleGetAllCalendar();
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "calendar" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleCreateCalendarEntry(body);
+      return res.status(result.status).json(result.data);
+    }
+    if (path.startsWith("calendar/") && method === "DELETE") {
+      const id = path.split("/")[1];
+      const result = await handleDeleteCalendarEntry(id);
+      return res.status(result.status).json(result.data);
+    }
+    // ── Announcements ──
+    if (path === "announcements" && method === "GET") {
+      const result = await handleGetAllAnnouncements();
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "announcements" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleCreateAnnouncement(body);
+      return res.status(result.status).json(result.data);
+    }
+    // ── Engineering Quiz ──
+    if (path === "quiz/daily" && method === "GET") {
+      const result = await handleGetDailyQuiz(req.query as any);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "quiz/stats" && method === "GET") {
+      const result = await handleGetQuizStats(req.query as any);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "quiz/answer" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleSubmitQuizAnswer(body);
+      return res.status(result.status).json(result.data);
+    }
+    // ── Push Notifications ──
+    if (path === "push/subscribe" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleSubscribePush(body);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "push/unsubscribe" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleUnsubscribePush(body);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "push/check-reminders" && method === "GET") {
+      const result = await handleCheckReminders();
       return res.status(result.status).json(result.data);
     }
 

@@ -214,6 +214,24 @@ export async function handleCreateEntry(body: any) {
   // Award XP
   const xpResult = await awardEntryXp(EmployeeName, workItems);
 
+  // Auto-create announcement for live feed
+  try {
+    const filledAt = results[0]?.fields?.FilledAt || "now";
+    const totalItems = workItems.length;
+    const avgCompletion = results.length > 0
+      ? Math.round(results.reduce((s: number, r: any) => s + (r.fields?.CompletionPct || 0), 0) / results.length)
+      : 0;
+    await airtable.create(TABLES.ANNOUNCEMENTS, {
+      EmployeeName,
+      Message: `filled ${totalItems} task${totalItems > 1 ? "s" : ""} at ${filledAt} — ${avgCompletion}% completion`,
+      Type: "entry",
+      Timestamp: new Date().toISOString(),
+      Read: false,
+    });
+  } catch (err) {
+    console.error("Announcement creation failed (non-critical):", err);
+  }
+
   return { status: 201, data: { entries: results, xp: xpResult } };
 }
 
@@ -253,6 +271,18 @@ export async function handleCreateLeave(body: any) {
       Reason: Reason || "",
       MarkedBy: MarkedBy || "",
     });
+    // Auto-create announcement for leave
+    try {
+      await airtable.create(TABLES.ANNOUNCEMENTS, {
+        EmployeeName,
+        Message: `marked as on leave for ${Date}${Reason ? ` — ${Reason}` : ""}`,
+        Type: "leave",
+        Timestamp: new Date().toISOString(),
+        Read: false,
+      });
+    } catch (err) {
+      console.error("Leave announcement failed (non-critical):", err);
+    }
     return { status: 201, data: { id: created.id, ...created.fields } };
   } catch (err: any) {
     return { status: 500, data: { error: "Failed to mark leave: " + err.message } };
@@ -530,4 +560,284 @@ export async function handleResetEmployeePassword(body: any) {
 // ─── Seed ────────────────────────────────────────────────
 export async function handleSeed() {
   return { status: 200, data: { success: true, message: "Database already seeded via setup script" } };
+}
+
+// ─── Calendar ──────────────────────────────────────────────
+export async function handleGetCalendar(params: URLSearchParams) {
+  const date = params.get("date");
+  const filter = date ? `{Date} = "${ef(date)}"` : "";
+  try {
+    const records = await airtable.list(TABLES.CALENDAR, filter || undefined);
+    return { status: 200, data: records.map((r) => ({ id: r.id, ...r.fields })) };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch calendar: " + err.message } };
+  }
+}
+
+export async function handleCreateCalendarEntry(body: any) {
+  const { Date: date, DayType, EmployeeName, Reason } = body;
+  if (!date || !DayType) return { status: 400, data: { error: "Date and DayType required" } };
+  try {
+    const created = await airtable.create(TABLES.CALENDAR, {
+      Date: date,
+      "Day Type": DayType,
+      Description: Reason || "",
+      EmployeeName: EmployeeName || "All",
+    });
+    return { status: 201, data: { id: created.id, ...created.fields } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to create calendar entry: " + err.message } };
+  }
+}
+
+export async function handleDeleteCalendarEntry(id: string) {
+  try {
+    await airtable.remove(TABLES.CALENDAR, id);
+    return { status: 200, data: { success: true } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to delete calendar entry: " + err.message } };
+  }
+}
+
+// ─── Announcements (Live Feed) ──────────────────────────────
+export async function handleGetAnnouncements(params: URLSearchParams) {
+  const limit = params.get("limit") ? Number(params.get("limit")) : 20;
+  try {
+    const records = await airtable.list(TABLES.ANNOUNCEMENTS, undefined, undefined, limit);
+    return {
+      status: 200,
+      data: records.map((r) => ({ id: r.id, ...r.fields })).sort((a, b) => {
+        const ta = a.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+        const tb = b.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+        return tb - ta;
+      }),
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch announcements: " + err.message } };
+  }
+}
+
+export async function handleCreateAnnouncement(body: any) {
+  const { EmployeeName, Message, Type } = body;
+  if (!EmployeeName || !Message) return { status: 400, data: { error: "EmployeeName and Message required" } };
+  try {
+    const created = await airtable.create(TABLES.ANNOUNCEMENTS, {
+      EmployeeName,
+      Message,
+      Type: Type || "system",
+      Timestamp: new Date().toISOString(),
+      Read: false,
+    });
+    return { status: 201, data: { id: created.id, ...created.fields } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to create announcement: " + err.message } };
+  }
+}
+
+// ─── Engineering Facts (MCQ Quiz) ───────────────────────────
+export async function handleGetDailyQuiz(params: URLSearchParams) {
+  const dateStr = params.get("date") || new Date().toISOString().split("T")[0];
+  try {
+    const allFacts = await airtable.list(TABLES.ENG_FACTS);
+    if (allFacts.length === 0) {
+      return { status: 200, data: null };
+    }
+    // Deterministic selection based on date
+    const hash = dateStr.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    const idx = hash % allFacts.length;
+    const fact = allFacts[idx];
+    return {
+      status: 200,
+      data: {
+        id: fact.id,
+        question: fact.fields.Question,
+        options: {
+          A: fact.fields.OptionA,
+          B: fact.fields.OptionB,
+          C: fact.fields.OptionC,
+          D: fact.fields.OptionD,
+        },
+        correctAnswer: fact.fields.CorrectAnswer,
+        difficulty: fact.fields.Difficulty,
+        category: fact.fields.Category,
+        explanation: fact.fields.Explanation,
+      },
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to load quiz: " + err.message } };
+  }
+}
+
+export async function handleGetQuizStats(params: URLSearchParams) {
+  const employee = params.get("employee");
+  if (!employee) return { status: 400, data: { error: "Employee parameter required" } };
+  try {
+    // Get XP log entries for quiz answers
+    const xpLogs = await airtable.list(TABLES.XP_LOG, `{EmployeeName} = "${ef(employee)}"`);
+    const quizLogs = xpLogs.filter((l) => l.fields.Action === "quiz_correct" || l.fields.Action === "quiz_wrong");
+    const correct = quizLogs.filter((l) => l.fields.Action === "quiz_correct").length;
+    const total = quizLogs.length;
+    const todayLog = xpLogs.find((l) => l.fields.Action?.startsWith("quiz_") && l.fields.Timestamp?.startsWith(new Date().toISOString().split("T")[0]));
+    return {
+      status: 200,
+      data: {
+        correct,
+        total,
+        accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
+        answeredToday: !!todayLog,
+      },
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to load quiz stats: " + err.message } };
+  }
+}
+
+export async function handleSubmitQuizAnswer(body: any) {
+  const { employee, factId, answer, correctAnswer } = body;
+  if (!employee || !factId || !answer || !correctAnswer) {
+    return { status: 400, data: { error: "Missing required fields" } };
+  }
+  const isCorrect = answer === correctAnswer;
+  const xpEarned = isCorrect ? 5 : 0;
+  try {
+    // Log the XP
+    await airtable.create(TABLES.XP_LOG, {
+      EmployeeName: employee,
+      Action: isCorrect ? "quiz_correct" : "quiz_wrong",
+      Details: `Answered ${answer} (${isCorrect ? "correct" : "wrong"})`,
+      Timestamp: new Date().toISOString(),
+    });
+    // Award XP if correct
+    if (isCorrect) {
+      const emps = await airtable.list(TABLES.EMPLOYEES, `{Name} = "${ef(employee)}"`);
+      if (emps.length > 0) {
+        const emp = emps[0];
+        await airtable.update(TABLES.EMPLOYEES, emp.id, {
+          XP: (emp.fields.XP || 0) + xpEarned,
+        });
+      }
+    }
+    return {
+      status: 200,
+      data: { correct: isCorrect, xpEarned },
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to submit answer: " + err.message } };
+  }
+}
+
+// ─── Push Notifications ─────────────────────────────────────
+export async function handleSubscribePush(body: any) {
+  const { employeeName, endpoint, p256dh, auth } = body;
+  if (!employeeName || !endpoint) {
+    return { status: 400, data: { error: "employeeName and endpoint required" } };
+  }
+  try {
+    // Check if already subscribed
+    const existing = await airtable.list(TABLES.PUSH_SUBS, `{EmployeeName} = "${ef(employeeName)}"`);
+    if (existing.length > 0) {
+      // Update existing
+      await airtable.update(TABLES.PUSH_SUBS, existing[0].id, {
+        Endpoint: endpoint,
+        P256dh: p256dh || "",
+        Auth: auth || "",
+        Active: true,
+      });
+    } else {
+      await airtable.create(TABLES.PUSH_SUBS, {
+        EmployeeName: employeeName,
+        Endpoint: endpoint,
+        P256dh: p256dh || "",
+        Auth: auth || "",
+        Active: true,
+        ReminderCount: 0,
+      });
+    }
+    return { status: 200, data: { success: true } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to subscribe: " + err.message } };
+  }
+}
+
+export async function handleUnsubscribePush(body: any) {
+  const { employeeName } = body;
+  if (!employeeName) return { status: 400, data: { error: "employeeName required" } };
+  try {
+    const existing = await airtable.list(TABLES.PUSH_SUBS, `{EmployeeName} = "${ef(employeeName)}"`);
+    if (existing.length > 0) {
+      await airtable.update(TABLES.PUSH_SUBS, existing[0].id, { Active: false });
+    }
+    return { status: 200, data: { success: true } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to unsubscribe: " + err.message } };
+  }
+}
+
+export async function handleCheckReminders() {
+  // This endpoint is called by the client to check if reminders should be sent
+  // It checks: (1) employee hasn't filled today, (2) today is a working day, (3) not on leave
+  const today = new Date().toISOString().split("T")[0];
+  try {
+    const employees = await airtable.list(TABLES.EMPLOYEES, "{Active} = TRUE()");
+    const entries = await airtable.list(TABLES.ENTRIES, `{Date} = "${ef(today)}"`);
+    const leaves = await airtable.list(TABLES.LEAVES, `{Date} = "${ef(today)}"`);
+    const calendar = await airtable.list(TABLES.CALENDAR, `{Date} = "${ef(today)}"`);
+    const pushSubs = await airtable.list(TABLES.PUSH_SUBS, "{Active} = TRUE()");
+
+    const filledNames = entries.map((e) => e.fields.EmployeeName);
+    const onLeaveNames = leaves.map((l) => l.fields.EmployeeName);
+    const isWorkingDay = calendar.length === 0 || calendar.some((c) => c.fields["Day Type"] === "Working");
+
+    const needReminders: string[] = [];
+    for (const emp of employees) {
+      const name = emp.fields.Name;
+      if (filledNames.includes(name)) continue; // Already filled
+      if (onLeaveNames.includes(name)) continue; // On leave
+      // Check push subscription exists
+      const sub = pushSubs.find((s) => s.fields.EmployeeName === name);
+      if (sub) needReminders.push(name);
+    }
+
+    return {
+      status: 200,
+      data: {
+        isWorkingDay,
+        needReminders,
+        filledToday: filledNames,
+        onLeaveToday: onLeaveNames,
+      },
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to check reminders: " + err.message } };
+  }
+}
+
+// ─── Team Lead: Get All Announcements ─────────────────────
+export async function handleGetAllAnnouncements() {
+  try {
+    const records = await airtable.list(TABLES.ANNOUNCEMENTS);
+    return {
+      status: 200,
+      data: records.map((r) => ({ id: r.id, ...r.fields })).sort((a, b) => {
+        const ta = a.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+        const tb = b.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+        return tb - ta;
+      }),
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch announcements: " + err.message } };
+  }
+}
+
+// ─── Team Lead: Manage Calendar ──────────────────────────
+export async function handleGetAllCalendar() {
+  try {
+    const records = await airtable.list(TABLES.CALENDAR);
+    return {
+      status: 200,
+      data: records.map((r) => ({ id: r.id, ...r.fields })),
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch calendar: " + err.message } };
+  }
 }
