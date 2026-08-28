@@ -48,13 +48,13 @@ export default async function handler(req: any, res: any) {
   // Extract path from URL — works with all Vercel routing modes
   const url = req.url || "/";
   let rawPath = url.split("?")[0].replace(/^\//, "").replace(/\/$/, "");
-  // Strip prefixes added by Vercel routing
-  if (rawPath.startsWith("index.ts/")) rawPath = rawPath.replace(/^index\.ts\/?/, "");
-  if (rawPath.startsWith("api/index.ts/")) rawPath = rawPath.replace(/^api\/index\.ts\/?/, "");
-  if (rawPath.startsWith("api/")) rawPath = rawPath.replace(/^api\//, "");
-  // Also support req.query.path from file-based rewrites
+  // Also support req.query.path from routes capture groups
   const queryPath = (req.query.path as string[] | string) || "";
-  const path = (Array.isArray(queryPath) ? queryPath.join("/") : queryPath) || rawPath;
+  let path = (Array.isArray(queryPath) ? queryPath.join("/") : queryPath) || rawPath;
+  // Strip all prefixes: index.ts/, api/index.ts/, api/
+  path = path.replace(/^index\.ts\/?/, "");
+  path = path.replace(/^api\/index\.ts\/?/, "");
+  path = path.replace(/^api\//, "");
   const method = req.method || "GET";
   console.log(`[API] ${method} ${path} (raw: ${url})`);
 
