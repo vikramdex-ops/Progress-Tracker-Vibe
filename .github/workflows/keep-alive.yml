@@ -2,7 +2,7 @@ name: Keep Services Alive
 
 on:
   schedule:
-    # Every 5 minutes — prevents Netlify/Vercel free-tier cold starts
+    # Every 5 minutes — prevents Vercel free-tier cold starts
     - cron: '*/5 * * * *'
   workflow_dispatch:
 
@@ -16,27 +16,18 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
             -X OPTIONS \
             "${{ vars.VERCEL_API_URL }}/api/seed" \
-            -H "Origin: https://example.com" \
+            -H "Origin: ${{ vars.GITHUB_PAGES_URL }}" \
             -H "Access-Control-Request-Method: POST" \
             || echo "000")
           echo "Vercel API status: $STATUS"
-          if [ "$STATUS" = "000" ]; then
-            echo "⚠️ Vercel API unreachable"
-          fi
 
-      - name: Ping Netlify Site
+      - name: Ping GitHub Pages
         run: |
-          echo "[$(date -u)] Pinging Netlify site..."
+          echo "[$(date -u)] Pinging GitHub Pages..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "${{ vars.NETLIFY_SITE_URL }}" \
+            "${{ vars.GITHUB_PAGES_URL }}" \
             || echo "000")
-          echo "Netlify site status: $STATUS"
-          if [ "$STATUS" = "000" ]; then
-            echo "⚠️ Netlify site unreachable"
-          fi
+          echo "GitHub Pages status: $STATUS"
 
-      - name: Health check summary
-        run: |
-          echo "✅ Keep-alive ping completed at $(date -u)"
-          echo "Vercel:  ${{ vars.VERCEL_API_URL }}"
-          echo "Netlify: ${{ vars.NETLIFY_SITE_URL }}"
+      - name: Summary
+        run: echo "✅ Keep-alive ping completed at $(date -u)"

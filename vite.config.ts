@@ -29,6 +29,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // base path for GitHub Pages (set via GITHUB_REPOSITORY env var in CI)
+  base: process.env.GITHUB_REPOSITORY ? "/" + process.env.GITHUB_REPOSITORY.split("/")[1] + "/" : "/",
   server: {
     host: "0.0.0.0",
     hmr: false,
