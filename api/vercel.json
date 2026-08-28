@@ -1,12 +1,6 @@
 {
   "version": 2,
   "outputDirectory": "static",
-  "functions": {
-    "index.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/((?!index\\.ts|static).*)", "destination": "/index.ts" }
   ]
