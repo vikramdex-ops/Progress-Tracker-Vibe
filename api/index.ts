@@ -31,6 +31,9 @@ import {
   handleGetQuizHistory,
   handleGetEodInsights,
   handleGetWeeklyReport,
+  handleAutoDescribe,
+  handleChatMessage,
+  handleTeamAnalytics,
   handleSubscribePush,
   handleUnsubscribePush,
   handleCheckReminders,
@@ -182,6 +185,21 @@ export default async function handler(req: any, res: any) {
     }
     if (path === "ai/weekly-report" && method === "GET") {
       const result = await handleGetWeeklyReport();
+      return res.status(result.status).json(result.data);
+    }
+    // ── DeepSeek AI Features ──
+    if (path === "ai/auto-describe" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleAutoDescribe(body);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "ai/chat" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleChatMessage(body);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "ai/team-analytics" && method === "GET") {
+      const result = await handleTeamAnalytics();
       return res.status(result.status).json(result.data);
     }
     // ── Push Notifications ──

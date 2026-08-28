@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { entriesApi, employeesApi, leavesApi, passwordResetsApi, notificationsApi, announcementsApi, calendarApi, quizApi, gamificationApi, aiInsightsApi } from "@/lib/api";
+import { entriesApi, employeesApi, leavesApi, passwordResetsApi, notificationsApi, announcementsApi, calendarApi, quizApi, gamificationApi, aiInsightsApi, deepseekApi } from "@/lib/api";
 import { PROJECTS, RATING_OPTIONS, COMPLEXITY_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import type { EodEntry, Employee } from "@/lib/types";
 import {
   Users, AlertTriangle, Flame, Star, Target, TrendingUp,
-  Zap, Clock, CheckCircle2, X, BarChart3, BookOpen, Filter, Lock,
+  Zap, Clock, CheckCircle2, X, BarChart3, BookOpen, Filter, Lock, Send,
 } from "lucide-react";
 
 export default function TeamLeadDashboard() {
@@ -55,6 +55,15 @@ export default function TeamLeadDashboard() {
   const [quizTab, setQuizTab] = useState<"play" | "history">("play");
   const [weeklyReport, setWeeklyReport] = useState<any>(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [teamAnalytics, setTeamAnalytics] = useState<any>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  // Chatbot
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([
+    { role: "assistant", content: "👋 Hi! I'm your piping engineering assistant. Ask me anything about codes, standards, or team management!" },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -189,6 +198,34 @@ export default function TeamLeadDashboard() {
 
   const sortedByStreak = [...teamNames].sort((a, b) => (streakMap[b] || 0) - (streakMap[a] || 0));
 
+  const loadTeamAnalytics = async () => {
+    setLoadingAnalytics(true);
+    try {
+      const report = await deepseekApi.teamAnalytics();
+      setTeamAnalytics(report);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  };
+
+  const handleChat = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    const userMsg = chatInput.trim();
+    setChatInput("");
+    setChatMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setChatLoading(true);
+    try {
+      const res: any = await deepseekApi.chat(userMsg, `Team: ${teamNames.join(", ")}. Today: ${today}. Team size: ${teamNames.length}`);
+      setChatMessages((prev) => [...prev, { role: "assistant", content: res.answer || "I couldn't process that." }]);
+    } catch {
+      setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const loadWeeklyReport = async () => {
     setLoadingReport(true);
     try {
@@ -291,9 +328,64 @@ export default function TeamLeadDashboard() {
           <div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
           <span className="text-sm text-[var(--color-text-muted)]">Loading team data...</span>
         </div>
+      {/* ── Floating Chatbot ── */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {chatOpen && (
+          <div className="mb-3 w-80 bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
+            <div className="p-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🤖</span>
+                <span className="text-xs font-bold">Piping Assistant</span>
+                <span className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded-full">DeepSeek V4</span>
+              </div>
+              <button onClick={() => setChatOpen(false)} className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="h-72 overflow-y-auto p-3 space-y-3">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
+                    msg.role === "user" ? "bg-cyan-500 text-white rounded-br-md" : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
+                  )}>{msg.content}</div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
+                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"300ms"}} /></div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-[var(--color-border)]">
+              <div className="flex gap-2">
+                <input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleChat()}
+                  placeholder="Ask about piping codes, standards..."
+                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-cyan-400"
+                />
+                <button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="w-9 h-9 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white flex items-center justify-center disabled:opacity-50">
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={() => setChatOpen(!chatOpen)}
+          className={cn(
+            "w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300",
+            chatOpen ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90" : "bg-gradient-to-br from-cyan-500 to-teal-600 hover:scale-110",
+          )}
+        >
+          {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-8 space-y-7">
@@ -776,6 +868,66 @@ export default function TeamLeadDashboard() {
             </div>
           ) : (
             <p className="text-xs text-[var(--color-text-muted)] text-center py-3">Click Generate to get AI-powered team analysis</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── AI Deep Team Analytics (DeepSeek V4) ── */}
+      <Card className="card-hover border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-cyan-600 flex items-center gap-2">
+              🔍 Deep Team Analytics
+              <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case">DeepSeek V4</span>
+            </h3>
+            <button
+              onClick={loadTeamAnalytics}
+              disabled={loadingAnalytics}
+              className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-600 text-white text-[10px] font-bold transition-colors disabled:opacity-50"
+            >
+              {loadingAnalytics ? "Analyzing..." : "🔄 Deep Analyze"}
+            </button>
+          </div>
+          {loadingAnalytics ? (
+            <div className="flex items-center gap-3 py-4">
+              <div className="w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+              <span className="text-xs text-cyan-500">Deep reasoning in progress...</span>
+            </div>
+          ) : teamAnalytics ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-cyan-200/30">
+                <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">{teamAnalytics.insights}</p>
+              </div>
+              {teamAnalytics.patterns?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-cyan-600 uppercase mb-1">🔍 Patterns Detected</p>
+                  {teamAnalytics.patterns.map((p: any, i: number) => (
+                    <div key={i} className="py-1">
+                      <span className="text-xs font-semibold">{p.pattern}</span>
+                      <span className="text-[10px] text-[var(--color-text-muted)] ml-1">— {p.impact}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {teamAnalytics.recommendations?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">💡 Recommendations</p>
+                  {teamAnalytics.recommendations.map((r: string, i: number) => (
+                    <p key={i} className="text-xs text-[var(--color-text-secondary)] py-0.5">• {r}</p>
+                  ))}
+                </div>
+              )}
+              {teamAnalytics.riskAlerts?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-red-500 uppercase mb-1">⚠️ Risk Alerts</p>
+                  {teamAnalytics.riskAlerts.map((r: string, i: number) => (
+                    <p key={i} className="text-xs text-[var(--color-text-secondary)] py-0.5">• {r}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-[var(--color-text-muted)] text-center py-3">Click Deep Analyze for AI pattern detection</p>
           )}
         </CardContent>
       </Card>

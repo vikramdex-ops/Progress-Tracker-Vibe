@@ -171,6 +171,15 @@ export const aiInsightsApi = {
   weeklyReport: () => apiRequest("ai/weekly-report"),
 };
 
+// DeepSeek AI Features
+export const deepseekApi = {
+  autoDescribe: (data: { task: string; project?: string; plannedQty?: number; actualQty?: number; complexity?: string }) =>
+    apiRequest("ai/auto-describe", { method: "POST", body: JSON.stringify(data) }),
+  chat: (message: string, context?: string) =>
+    apiRequest("ai/chat", { method: "POST", body: JSON.stringify({ message, context }) }),
+  teamAnalytics: () => apiRequest("ai/team-analytics"),
+};
+
 // Push Notifications
 export const pushApi = {
   subscribe: (data: { employeeName: string; endpoint: string; p256dh?: string; auth?: string }) =>

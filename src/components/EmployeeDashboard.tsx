@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { entriesApi, gamificationApi, leavesApi, announcementsApi, quizApi, calendarApi, aiInsightsApi } from "@/lib/api";
+import { entriesApi, gamificationApi, leavesApi, announcementsApi, quizApi, calendarApi, aiInsightsApi, deepseekApi } from "@/lib/api";
 import { PROJECTS, COMPLEXITY_COLORS } from "@/lib/constants";
 import { calculateLevel, cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -46,6 +46,14 @@ export default function EmployeeDashboard() {
   const [quizTab, setQuizTab] = useState<"play" | "history">("play");
   const [eodInsights, setEodInsights] = useState<any>(null);
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [autoDescribeIdx, setAutoDescribeIdx] = useState<number | null>(null);
+  // Chatbot
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([
+    { role: "assistant", content: "👋 Hi! I'm your piping engineering assistant. Ask me anything about codes, standards, design, or calculations!" },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [calendar, setCalendar] = useState<any[]>([]);
 
   const todayEntry = entries.find((e) => e.Date === today);
@@ -185,6 +193,44 @@ export default function EmployeeDashboard() {
       if (gRes) setGamification(gRes);
     } catch (e: any) {
       console.error(e);
+    }
+  };
+
+  // ── Auto-Describe ──
+  const handleAutoDescribe = async (idx: number) => {
+    const item = workItems[idx];
+    if (!item.task) return;
+    setAutoDescribeIdx(idx);
+    try {
+      const res: any = await deepseekApi.autoDescribe({
+        task: item.task,
+        project: item.projectName,
+        plannedQty: item.plannedQty,
+        actualQty: item.actualQty,
+        complexity: item.complexity,
+      });
+      updateItem(idx, "description", res.description || "");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAutoDescribeIdx(null);
+    }
+  };
+
+  // ── Chat ──
+  const handleChat = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    const userMsg = chatInput.trim();
+    setChatInput("");
+    setChatMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setChatLoading(true);
+    try {
+      const res: any = await deepseekApi.chat(userMsg);
+      setChatMessages((prev) => [...prev, { role: "assistant", content: res.answer || "I couldn't process that question." }]);
+    } catch (e: any) {
+      setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -807,8 +853,20 @@ export default function EmployeeDashboard() {
                         <Input value={item.task} onChange={(e) => updateItem(i, "task", e.target.value)} placeholder="e.g., Isometric drafting" />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Description</label>
-                        <Input value={item.description} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Brief description of work done..." />
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-xs font-semibold text-[var(--color-text-secondary)]">Description</label>
+                          <button
+                            type="button"
+                            onClick={() => handleAutoDescribe(i)}
+                            disabled={!item.task || autoDescribeIdx === i}
+                            className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 disabled:opacity-40 flex items-center gap-1"
+                          >
+                            {autoDescribeIdx === i ? (
+                              <><div className="w-3 h-3 rounded-full border border-indigo-400 border-t-transparent animate-spin" /> Generating...</>
+                            ) : ("✨ AI Auto-Describe")}
+                          </button>
+                        </div>
+                        <Input value={item.description} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Brief description or click AI Auto-Describe..." />
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Planned Qty</label>
@@ -911,6 +969,69 @@ export default function EmployeeDashboard() {
           )}
         </div>
       )}
+      {/* ── Floating Chatbot ── */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {chatOpen && (
+          <div className="mb-3 w-80 bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
+            <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🤖</span>
+                <span className="text-xs font-bold">Piping Assistant</span>
+                <span className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded-full">DeepSeek V4</span>
+              </div>
+              <button onClick={() => setChatOpen(false)} className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="h-72 overflow-y-auto p-3 space-y-3">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
+                    msg.role === "user"
+                      ? "bg-indigo-500 text-white rounded-br-md"
+                      : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
+                  )}>{msg.content}</div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
+                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"300ms"}} /></div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-[var(--color-border)]">
+              <div className="flex gap-2">
+                <input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleChat()}
+                  placeholder="Ask about piping codes, standards..."
+                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-indigo-400"
+                />
+                <button
+                  onClick={handleChat}
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="w-9 h-9 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={() => setChatOpen(!chatOpen)}
+          className={cn(
+            "w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300",
+            chatOpen
+              ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90"
+              : "bg-gradient-to-br from-indigo-500 to-purple-600 hover:scale-110",
+          )}
+        >
+          {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}
+        </button>
+      </div>
     </div>
   );
 }
