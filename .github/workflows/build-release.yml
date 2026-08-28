@@ -18,6 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: Production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +33,16 @@ jobs:
 
       - name: Type check
         run: bun tsc -b --noEmit
+
+      - name: Validate environment
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "ERROR: VITE_API_URL is not configured. Check GitHub Settings → Variables → Production"
+            exit 1
+          fi
+          echo "✅ API URL configured: $VITE_API_URL"
+        env:
+          VITE_API_URL: ${{ vars.API_BASE_URL }}
 
       - name: Build
         run: bun run build
