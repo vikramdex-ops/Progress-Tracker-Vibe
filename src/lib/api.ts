@@ -152,15 +152,13 @@ export const announcementsApi = {
   create: (data: any) => apiRequest("announcements", { method: "POST", body: JSON.stringify(data) }),
 };
 
-// Engineering Quiz (MCQ)
+// AI Engineering Quiz (NVIDIA MiniMax M3)
 export const quizApi = {
-  daily: (date?: string) => {
-    const qs = date ? `?date=${date}` : "";
-    return apiRequest(`quiz/daily${qs}`);
-  },
+  generate: (employee: string) =>
+    apiRequest("quiz/generate", { method: "POST", body: JSON.stringify({ employee }) }),
   stats: (employee: string) =>
     apiRequest(`quiz/stats?employee=${encodeURIComponent(employee)}`),
-  answer: (data: { employee: string; factId: string; answer: string; correctAnswer: string }) =>
+  answer: (data: { employee: string; question: string; answer: string; correctAnswer: string; explanation: string }) =>
     apiRequest("quiz/answer", { method: "POST", body: JSON.stringify(data) }),
 };
 

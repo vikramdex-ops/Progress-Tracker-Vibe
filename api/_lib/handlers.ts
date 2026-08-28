@@ -634,57 +634,91 @@ export async function handleCreateAnnouncement(body: any) {
   }
 }
 
-// ─── Engineering Facts (MCQ Quiz) ───────────────────────────
-export async function handleGetDailyQuiz(params: URLSearchParams) {
-  const dateStr = params.get("date") || new Date().toISOString().split("T")[0];
+// ─── AI-Powered Engineering Quiz (NVIDIA MiniMax M3) ─────────
+import { generateQuizQuestion } from "./nvidia";
+
+/** Get previously asked questions for an employee from App_Settings */
+async function getAskedQuestions(employee: string): Promise<string[]> {
   try {
-    const allFacts = await airtable.list(TABLES.ENG_FACTS);
-    if (allFacts.length === 0) {
-      return { status: 200, data: null };
+    const records = await airtable.list(
+      TABLES.SETTINGS,
+      `{Key} = "quiz_history_${ef(employee)}"`
+    );
+    if (records.length > 0) {
+      const data = JSON.parse(records[0].fields.Value || "[]");
+      return Array.isArray(data) ? data : [];
     }
-    // Deterministic selection based on date
-    const hash = dateStr.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-    const idx = hash % allFacts.length;
-    const fact = allFacts[idx];
-    return {
-      status: 200,
-      data: {
-        id: fact.id,
-        question: fact.fields.Question,
-        options: {
-          A: fact.fields.OptionA,
-          B: fact.fields.OptionB,
-          C: fact.fields.OptionC,
-          D: fact.fields.OptionD,
-        },
-        correctAnswer: fact.fields.CorrectAnswer,
-        difficulty: fact.fields.Difficulty,
-        category: fact.fields.Category,
-        explanation: fact.fields.Explanation,
-      },
-    };
-  } catch (err: any) {
-    return { status: 500, data: { error: "Failed to load quiz: " + err.message } };
+    return [];
+  } catch {
+    return [];
   }
 }
 
+/** Save a question to the employee's history */
+async function saveAskedQuestion(employee: string, question: string) {
+  try {
+    const records = await airtable.list(
+      TABLES.SETTINGS,
+      `{Key} = "quiz_history_${ef(employee)}"`
+    );
+    const existing = records.length > 0 ? JSON.parse(records[0].fields.Value || "[]") : [];
+    // Keep last 200 questions to avoid unbounded growth
+    const updated = [...existing, question].slice(-200);
+    if (records.length > 0) {
+      await airtable.update(TABLES.SETTINGS, records[0].id, {
+        Value: JSON.stringify(updated),
+      });
+    } else {
+      await airtable.create(TABLES.SETTINGS, {
+        Key: `quiz_history_${employee}`,
+        Value: JSON.stringify(updated),
+      });
+    }
+  } catch (err) {
+    console.error("Failed to save quiz history (non-critical):", err);
+  }
+}
+
+/** Generate a fresh AI-powered quiz question */
+export async function handleGenerateQuiz(body: any) {
+  const { employee } = body;
+  if (!employee) return { status: 400, data: { error: "Employee name required" } };
+  try {
+    const previousQuestions = await getAskedQuestions(employee);
+    const question = await generateQuizQuestion(previousQuestions);
+    // Save this question to history
+    await saveAskedQuestion(employee, question.question);
+    return {
+      status: 200,
+      data: {
+        id: `ai_${Date.now()}`,
+        ...question,
+      },
+    };
+  } catch (err: any) {
+    console.error("Quiz generation failed:", err);
+    return { status: 500, data: { error: "Failed to generate question: " + err.message } };
+  }
+}
+
+/** Get quiz stats for an employee */
 export async function handleGetQuizStats(params: URLSearchParams) {
   const employee = params.get("employee");
   if (!employee) return { status: 400, data: { error: "Employee parameter required" } };
   try {
-    // Get XP log entries for quiz answers
     const xpLogs = await airtable.list(TABLES.XP_LOG, `{EmployeeName} = "${ef(employee)}"`);
     const quizLogs = xpLogs.filter((l) => l.fields.Action === "quiz_correct" || l.fields.Action === "quiz_wrong");
     const correct = quizLogs.filter((l) => l.fields.Action === "quiz_correct").length;
     const total = quizLogs.length;
-    const todayLog = xpLogs.find((l) => l.fields.Action?.startsWith("quiz_") && l.fields.Timestamp?.startsWith(new Date().toISOString().split("T")[0]));
+    const asked = await getAskedQuestions(employee);
     return {
       status: 200,
       data: {
         correct,
         total,
         accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
-        answeredToday: !!todayLog,
+        questionsAnswered: total,
+        uniqueQuestions: asked.length,
       },
     };
   } catch (err: any) {
@@ -692,34 +726,37 @@ export async function handleGetQuizStats(params: URLSearchParams) {
   }
 }
 
+/** Submit a quiz answer and get explanation */
 export async function handleSubmitQuizAnswer(body: any) {
-  const { employee, factId, answer, correctAnswer } = body;
-  if (!employee || !factId || !answer || !correctAnswer) {
+  const { employee, question, answer, correctAnswer, explanation } = body;
+  if (!employee || !question || !answer || !correctAnswer) {
     return { status: 400, data: { error: "Missing required fields" } };
   }
   const isCorrect = answer === correctAnswer;
   const xpEarned = isCorrect ? 5 : 0;
   try {
-    // Log the XP
     await airtable.create(TABLES.XP_LOG, {
       EmployeeName: employee,
       Action: isCorrect ? "quiz_correct" : "quiz_wrong",
-      Details: `Answered ${answer} (${isCorrect ? "correct" : "wrong"})`,
+      Details: `${question.substring(0, 80)}... → ${answer} (${isCorrect ? "correct" : "wrong"})`,
       Timestamp: new Date().toISOString(),
     });
-    // Award XP if correct
     if (isCorrect) {
       const emps = await airtable.list(TABLES.EMPLOYEES, `{Name} = "${ef(employee)}"`);
       if (emps.length > 0) {
-        const emp = emps[0];
-        await airtable.update(TABLES.EMPLOYEES, emp.id, {
-          XP: (emp.fields.XP || 0) + xpEarned,
+        await airtable.update(TABLES.EMPLOYEES, emps[0].id, {
+          XP: (emps[0].fields.XP || 0) + xpEarned,
         });
       }
     }
     return {
       status: 200,
-      data: { correct: isCorrect, xpEarned },
+      data: {
+        correct: isCorrect,
+        xpEarned,
+        correctAnswer,
+        explanation: explanation || "",
+      },
     };
   } catch (err: any) {
     return { status: 500, data: { error: "Failed to submit answer: " + err.message } };

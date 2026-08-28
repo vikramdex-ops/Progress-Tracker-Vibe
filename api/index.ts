@@ -25,7 +25,7 @@ import {
   handleGetAnnouncements,
   handleGetAllAnnouncements,
   handleCreateAnnouncement,
-  handleGetDailyQuiz,
+  handleGenerateQuiz,
   handleGetQuizStats,
   handleSubmitQuizAnswer,
   handleSubscribePush,
@@ -152,9 +152,10 @@ export default async function handler(req: any, res: any) {
       const result = await handleCreateAnnouncement(body);
       return res.status(result.status).json(result.data);
     }
-    // ── Engineering Quiz ──
-    if (path === "quiz/daily" && method === "GET") {
-      const result = await handleGetDailyQuiz(req.query as any);
+    // ── AI Engineering Quiz ──
+    if (path === "quiz/generate" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleGenerateQuiz(body);
       return res.status(result.status).json(result.data);
     }
     if (path === "quiz/stats" && method === "GET") {

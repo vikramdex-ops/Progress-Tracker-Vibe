@@ -39,8 +39,9 @@ export default function EmployeeDashboard() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [quiz, setQuiz] = useState<any>(null);
   const [quizAnswer, setQuizAnswer] = useState("");
-  const [quizResult, setQuizResult] = useState<{ correct: boolean; xp: number } | null>(null);
+  const [quizResult, setQuizResult] = useState<{ correct: boolean; xp: number; explanation: string; correctAnswer: string } | null>(null);
   const [quizStats, setQuizStats] = useState<any>(null);
+  const [generatingQuiz, setGeneratingQuiz] = useState(false);
   const [calendar, setCalendar] = useState<any[]>([]);
 
   const todayEntry = entries.find((e) => e.Date === today);
@@ -62,12 +63,11 @@ export default function EmployeeDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const [eRes, gRes, lRes, annRes, quizRes, qStats, calRes] = await Promise.all([
+      const [eRes, gRes, lRes, annRes, qStats, calRes] = await Promise.all([
         entriesApi.list({ employee: user?.name || "" }) as any,
         gamificationApi.get(user?.name || "") as any,
         leavesApi.list({ date: today }) as any,
         announcementsApi.list() as any,
-        quizApi.daily(today) as any,
         quizApi.stats(user?.name || "") as any,
         calendarApi.list() as any,
       ]);
@@ -86,7 +86,6 @@ export default function EmployeeDashboard() {
       }
       setLeaves(Array.isArray(lRes) ? lRes : []);
       setAnnouncements(Array.isArray(annRes) ? annRes : []);
-      if (quizRes) setQuiz(quizRes);
       if (qStats) setQuizStats(qStats);
       setCalendar(Array.isArray(calRes) ? calRes : []);
     } catch (e) {
@@ -152,15 +151,36 @@ export default function EmployeeDashboard() {
     try {
       const res: any = await quizApi.answer({
         employee: user?.name || "",
-        factId: quiz.id,
+        question: quiz.question,
         answer,
         correctAnswer: quiz.correctAnswer,
+        explanation: quiz.explanation,
       });
-      setQuizResult({ correct: res.correct, xp: res.xpEarned });
+      setQuizResult({
+        correct: res.correct,
+        xp: res.xpEarned,
+        explanation: quiz.explanation,
+        correctAnswer: quiz.correctAnswer,
+      });
       const gRes: any = await gamificationApi.get(user?.name || "");
       if (gRes) setGamification(gRes);
     } catch (e: any) {
       console.error(e);
+    }
+  };
+
+  const handleGenerateQuiz = async () => {
+    setGeneratingQuiz(true);
+    setQuiz(null);
+    setQuizAnswer("");
+    setQuizResult(null);
+    try {
+      const res: any = await quizApi.generate(user?.name || "");
+      setQuiz(res);
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setGeneratingQuiz(false);
     }
   };
 
@@ -344,7 +364,7 @@ export default function EmployeeDashboard() {
             </CardContent>
           </Card>
 
-          {/* Daily Quiz — full width */}
+          {/* AI Engineering Quiz — full width */}
           <Card className="lg:col-span-3 card-hover bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border-indigo-200/60 dark:border-indigo-800/30">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -354,7 +374,7 @@ export default function EmployeeDashboard() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">
-                      ⚙ DAILY PIPING QUIZ
+                      🤖 AI PIPING QUIZ
                     </span>
                     {quiz?.difficulty && (
                       <span className={cn(
@@ -371,27 +391,33 @@ export default function EmployeeDashboard() {
                     )}
                     {quizStats && (
                       <span className="ml-auto text-[10px] font-semibold text-[var(--color-text-muted)]">
-                        {quizStats.correct}/{quizStats.total} correct ({quizStats.accuracy}%)
+                        {quizStats.correct}/{quizStats.total} correct ({quizStats.accuracy}%) · {quizStats.uniqueQuestions} unique
                       </span>
                     )}
                   </div>
-                  {quiz ? (
+                  {generatingQuiz ? (
+                    <div className="flex flex-col items-center gap-3 py-8">
+                      <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                      <span className="text-sm text-indigo-500 font-medium">AI is generating your question...</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">Powered by MiniMax M3</span>
+                    </div>
+                  ) : quiz ? (
                     <div className="space-y-3">
                       <p className="text-sm text-[var(--color-text-primary)] leading-relaxed font-semibold">{quiz.question}</p>
                       <div className="grid grid-cols-2 gap-2">
                         {Object.entries(quiz.options).map(([key, val]) => {
                           const isSelected = quizAnswer === key;
-                          const isCorrect = quizResult && key === quiz.correctAnswer;
+                          const isCorrect = quizResult && key === quizResult.correctAnswer;
                           const isWrong = quizResult && isSelected && !quizResult.correct;
                           return (
                             <button
                               key={key}
                               onClick={() => handleQuizAnswer(key)}
-                              disabled={!!quizResult || quizStats?.answeredToday}
+                              disabled={!!quizResult}
                               className={cn(
                                 "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
-                                !quizResult && !quizStats?.answeredToday && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
-                                (quizResult || quizStats?.answeredToday) && "cursor-default",
+                                !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
+                                !!quizResult && "cursor-default",
                                 isCorrect && "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400",
                                 isWrong && "border-red-400 bg-red-50 dark:bg-red-950/20 text-red-600",
                                 !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
@@ -404,22 +430,38 @@ export default function EmployeeDashboard() {
                         })}
                       </div>
                       {quizResult && (
-                        <div className={cn(
-                          "p-3 rounded-xl text-sm font-medium animate-slide-up",
-                          quizResult.correct ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600" : "bg-red-50 dark:bg-red-950/20 text-red-500",
-                        )}>
-                          {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong answer. The correct answer is ${quiz.correctAnswer}.`}
-                          {quiz.explanation && (
-                            <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-normal">{quiz.explanation}</p>
+                        <div className="space-y-2 animate-slide-up">
+                          <div className={cn(
+                            "p-3 rounded-xl text-sm font-medium",
+                            quizResult.correct ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600" : "bg-red-50 dark:bg-red-950/20 text-red-500",
+                          )}>
+                            {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong! The correct answer is ${quizResult.correctAnswer}.`}
+                          </div>
+                          {quizResult.explanation && (
+                            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
+                              <p className="text-xs font-bold text-blue-600 mb-1">💡 EXPLANATION</p>
+                              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
+                            </div>
                           )}
+                          <button
+                            onClick={handleGenerateQuiz}
+                            className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors"
+                          >
+                            🔄 Next Question
+                          </button>
                         </div>
-                      )}
-                      {quizStats?.answeredToday && !quizResult && (
-                        <p className="text-xs text-[var(--color-text-muted)] font-medium">✅ Already answered today!</p>
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-[var(--color-text-muted)]">Loading today's quiz...</p>
+                    <div className="flex flex-col items-center gap-3 py-6">
+                      <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
+                      <button
+                        onClick={handleGenerateQuiz}
+                        className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors shadow-sm"
+                      >
+                        ✨ Generate Question
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
