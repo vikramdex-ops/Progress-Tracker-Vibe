@@ -1,4 +1,4 @@
-name: Build & Release
+name: Build, Release & Deploy
 
 on:
   push:
@@ -7,9 +7,16 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+# Only allow one deployment at a time
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,11 +35,42 @@ jobs:
 
       - name: Build
         run: bun run build
+        env:
+          VITE_API_URL: ${{ vars.API_BASE_URL }}
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: dist
 
       - name: Package build output
         run: |
           cd dist
-          zip -r ../progress-tracker-${{ github.sha }}.zip .
+          zip -r ../progress-tracker-${{ github.run_number }}.zip .
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -41,30 +79,29 @@ jobs:
           name: "Progress Tracker — Build #${{ github.run_number }}"
           body: |
             ## Progress Tracker — Production Build
-            
+
             **Commit:** ${{ github.sha }}
             **Workflow Run:** #${{ github.run_number }}
-            
-            ### Setup
-            1. Extract the zip
-            2. Host the `dist/` folder on any static host (Vercel, Netlify, Nginx)
-            3. The API runs on Vercel — deploy the `api/` directory alongside
-            
-            ### Environment Variables
-            - `AIRTABLE_PAT` — Your Airtable Personal Access Token
-            - `AIRTABLE_BASE_ID` — Your Airtable Base ID
-            
-            ### Quick Start
-            ```bash
-            # For local development
-            bun install
-            bun run dev
-            
-            # For production
-            bun run build
-            # Serve dist/ folder
+            **Live Site:** ${{ github.server_url }}/${{ github.repository }}
+
+            ### What's Included
+            - Complete frontend (React + Vite)
+            - Gamification (XP, badges, streaks, levels)
+            - Team lead dashboard with entry management
+            - Employee dashboard with EOD submission
+            - Light/dark mode, responsive design
+
+            ### Deployment
+            - **Frontend:** GitHub Pages (auto-deployed)
+            - **API:** Deploy `api/` folder to Vercel
+            - **Backend:** Airtable (free tier)
+
+            ### Environment Variables (Vercel)
             ```
-          files: progress-tracker-${{ github.sha }}.zip
+            AIRTABLE_PAT=your_pat_here
+            AIRTABLE_BASE_ID=appXXXXXXXXXX
+            ```
+          files: progress-tracker-${{ github.run_number }}.zip
           draft: false
           prerelease: false
         env:
