@@ -1,18 +1,15 @@
 {
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
+  "version": 2,
+  "installCommand": "npm install",
+  "buildCommand": "echo 'API-only'",
+  "outputDirectory": ".vercel/output/static",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/(auth|entries|employees|leaves|gamification|notifications|seed|calendar|announcements|quiz|ai|push|password-resets)(.*)",
-      "dest": "/api/index.ts"
-    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index.ts" }
   ]
 }
