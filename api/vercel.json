@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "outputDirectory": ".",
-  "publicDirectory": false,
+  "outputDirectory": "static",
   "functions": {
     "index.ts": {
       "runtime": "nodejs20.x",
@@ -9,6 +8,6 @@
     }
   },
   "rewrites": [
-    { "source": "/((?!index\\.ts).*)", "destination": "/index.ts" }
+    { "source": "/((?!index\\.ts|static).*)", "destination": "/index.ts" }
   ]
 }
