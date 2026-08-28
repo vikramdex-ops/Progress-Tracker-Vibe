@@ -1,7 +1,12 @@
 {
   "version": 2,
-  "outputDirectory": "static",
-  "rewrites": [
-    { "source": "/((?!index\\.ts|static).*)", "destination": "/index.ts" }
+  "builds": [
+    {
+      "src": "index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/index.ts" }
   ]
 }
