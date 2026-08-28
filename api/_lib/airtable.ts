@@ -27,28 +27,29 @@ async function request<T = any>(path: string, options: RequestInit = {}): Promis
 }
 
 export const airtable = {
-  async list(table: string, filterByFormula?: string, sort?: string, maxRecords?: number) {
+  async list(table: string, filterByFormula?: string, sort?: string, maxRecords?: number): Promise<{ id: string; fields: any }[]> {
     const params = new URLSearchParams();
     if (filterByFormula) params.set("filterByFormula", filterByFormula);
     if (sort) params.set("sort[0][field]", sort);
     if (maxRecords) params.set("maxRecords", String(maxRecords));
     const qs = params.toString();
-    return request<{ records: { id: string; fields: any }[]; offset?: string }>(
+    const data = await request<{ records: { id: string; fields: any }[]; offset?: string }>(
       `/${table}${qs ? "?" + qs : ""}`
     );
+    return data.records || [];
   },
 
-  async listAll(table: string, filterByFormula?: string) {
+  async listAll(table: string, filterByFormula?: string): Promise<{ id: string; fields: any }[]> {
     let all: { id: string; fields: any }[] = [];
     let offset = "";
     do {
       const params = new URLSearchParams();
       if (filterByFormula) params.set("filterByFormula", filterByFormula);
       if (offset) params.set("offset", offset);
-      const data = await request<{ records: any[]; offset?: string }>(
+      const data = await request<{ records: { id: string; fields: any }[]; offset?: string }>(
         `/${table}?${params.toString()}`
       );
-      all = all.concat(data.records);
+      all = all.concat(data.records || []);
       offset = data.offset || "";
     } while (offset);
     return all;
