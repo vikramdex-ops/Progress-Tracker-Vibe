@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { entriesApi, gamificationApi, leavesApi, announcementsApi, quizApi, calendarApi } from "@/lib/api";
+import { entriesApi, gamificationApi, leavesApi, announcementsApi, quizApi, calendarApi, aiInsightsApi } from "@/lib/api";
 import { PROJECTS, COMPLEXITY_COLORS } from "@/lib/constants";
 import { calculateLevel, cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -44,6 +44,8 @@ export default function EmployeeDashboard() {
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
   const [quizHistory, setQuizHistory] = useState<any[]>([]);
   const [quizTab, setQuizTab] = useState<"play" | "history">("play");
+  const [eodInsights, setEodInsights] = useState<any>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
   const [calendar, setCalendar] = useState<any[]>([]);
 
   const todayEntry = entries.find((e) => e.Date === today);
@@ -129,6 +131,16 @@ export default function EmployeeDashboard() {
       await loadData();
       setWorkItems([{ ...blankItem }]);
       setOverallRemarks("");
+      // Fetch AI insights
+      setLoadingInsights(true);
+      try {
+        const insights = await aiInsightsApi.eodInsights(user?.name || "", valid);
+        setEodInsights(insights);
+      } catch {
+        // Non-critical
+      } finally {
+        setLoadingInsights(false);
+      }
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -651,6 +663,7 @@ export default function EmployeeDashboard() {
             </Card>
           ) : todayEntry ? (
             /* Already submitted today */
+            <>
             <Card className="card-hover">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -692,6 +705,61 @@ export default function EmployeeDashboard() {
                 )}
               </CardContent>
             </Card>
+            {/* AI EOD Insights */}
+            {loadingInsights && (
+              <Card className="border-indigo-200/50 dark:border-indigo-800/30 animate-slide-up">
+                <CardContent className="p-5 flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                  <span className="text-sm text-indigo-500 font-medium">AI is analyzing your entry...</span>
+                </CardContent>
+              </Card>
+            )}
+            {eodInsights && !loadingInsights && (
+              <Card className="border-indigo-200/50 dark:border-indigo-800/30 bg-gradient-to-r from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/10 dark:to-purple-950/5 animate-slide-up">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-indigo-600">
+                    🤖 AI Insights
+                    <span className="ml-auto text-xs font-normal text-[var(--color-text-muted)] normal-case">
+                      Powered by GPT-OSS-20B
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm",
+                      eodInsights.productivityScore >= 7 ? "bg-emerald-500" : eodInsights.productivityScore >= 4 ? "bg-amber-500" : "bg-red-500",
+                    )}>{eodInsights.productivityScore}/10</div>
+                    <div>
+                      <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase">Productivity Score</p>
+                      <p className="text-sm font-semibold text-[var(--color-text-primary)]">{eodInsights.summary}</p>
+                    </div>
+                  </div>
+                  {eodInsights.highlights?.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase">Highlights</p>
+                      {eodInsights.highlights.map((h: string, i: number) => (
+                        <p key={i} className="text-xs text-[var(--color-text-secondary)] pl-3">✅ {h}</p>
+                      ))}
+                    </div>
+                  )}
+                  {eodInsights.suggestions?.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-amber-600 uppercase">Suggestions</p>
+                      {eodInsights.suggestions.map((s: string, i: number) => (
+                        <p key={i} className="text-xs text-[var(--color-text-secondary)] pl-3">💡 {s}</p>
+                      ))}
+                    </div>
+                  )}
+                  {eodInsights.complexityAnalysis && (
+                    <p className="text-[11px] text-[var(--color-text-muted)] bg-[var(--color-surface-hover)] rounded-lg px-3 py-2">
+                      📊 {eodInsights.complexityAnalysis}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+            </>
           ) : (
             /* EOD Form */
             <Card>

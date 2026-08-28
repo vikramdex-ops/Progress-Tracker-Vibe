@@ -164,6 +164,13 @@ export const quizApi = {
     apiRequest(`quiz/history?employee=${encodeURIComponent(employee)}`),
 };
 
+// AI Insights (GPT-OSS-20B)
+export const aiInsightsApi = {
+  eodInsights: (employee: string, entries: any[]) =>
+    apiRequest("ai/eod-insights", { method: "POST", body: JSON.stringify({ employee, entries }) }),
+  weeklyReport: () => apiRequest("ai/weekly-report"),
+};
+
 // Push Notifications
 export const pushApi = {
   subscribe: (data: { employeeName: string; endpoint: string; p256dh?: string; auth?: string }) =>

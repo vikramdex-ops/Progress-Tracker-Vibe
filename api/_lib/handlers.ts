@@ -835,6 +835,54 @@ export async function handleGetQuizHistory(params: URLSearchParams) {
   }
 }
 
+// ─── AI EOD Insights (GPT-OSS-20B) ──────────────────────────
+import { generateEodInsights, generateWeeklyReport } from "./nvidia-oss";
+
+export async function handleGetEodInsights(body: any) {
+  const { employee, entries } = body;
+  if (!employee || !entries?.length) {
+    return { status: 400, data: { error: "Employee and entries required" } };
+  }
+  try {
+    const insights = await generateEodInsights(entries, employee);
+    return { status: 200, data: insights };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to generate insights: " + err.message } };
+  }
+}
+
+export async function handleGetWeeklyReport() {
+  try {
+    const employees = await airtable.list(TABLES.EMPLOYEES, "{Active} = TRUE()");
+    const allEntries = await airtable.list(TABLES.ENTRIES);
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const weekStr = oneWeekAgo.toISOString().split("T")[0];
+
+    const teamData = employees.map((emp) => {
+      const name = emp.fields.Name;
+      const empEntries = allEntries.filter((e) => e.fields.EmployeeName === name);
+      const weekEntries = empEntries.filter((e) => e.fields.Date >= weekStr);
+      const avgComp = weekEntries.length > 0
+        ? Math.round(weekEntries.reduce((s, e) => s + (e.fields.CompletionPct || 0), 0) / weekEntries.length)
+        : 0;
+      return {
+        name,
+        entries: weekEntries.length,
+        avgCompletion: avgComp,
+        streak: emp.fields.CurrentStreak || 0,
+        xp: emp.fields.XP || 0,
+      };
+    });
+
+    const totalEntries = teamData.reduce((s, t) => s + t.entries, 0);
+    const report = await generateWeeklyReport(teamData, totalEntries, employees.length);
+    return { status: 200, data: report };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to generate report: " + err.message } };
+  }
+}
+
 // ─── Push Notifications ─────────────────────────────────────
 export async function handleSubscribePush(body: any) {
   const { employeeName, endpoint, p256dh, auth } = body;

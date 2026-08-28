@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
-import { entriesApi, employeesApi, leavesApi, passwordResetsApi, notificationsApi, announcementsApi, calendarApi, quizApi, gamificationApi } from "@/lib/api";
+import { entriesApi, employeesApi, leavesApi, passwordResetsApi, notificationsApi, announcementsApi, calendarApi, quizApi, gamificationApi, aiInsightsApi } from "@/lib/api";
 import { PROJECTS, RATING_OPTIONS, COMPLEXITY_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -53,6 +53,8 @@ export default function TeamLeadDashboard() {
   const [quizHistory, setQuizHistory] = useState<any[]>([]);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
   const [quizTab, setQuizTab] = useState<"play" | "history">("play");
+  const [weeklyReport, setWeeklyReport] = useState<any>(null);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -186,6 +188,18 @@ export default function TeamLeadDashboard() {
   };
 
   const sortedByStreak = [...teamNames].sort((a, b) => (streakMap[b] || 0) - (streakMap[a] || 0));
+
+  const loadWeeklyReport = async () => {
+    setLoadingReport(true);
+    try {
+      const report = await aiInsightsApi.weeklyReport();
+      setWeeklyReport(report);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingReport(false);
+    }
+  };
 
   // ── EOD Submission (for team lead) ──
   const todayMyEntry = myEntries.find((e: any) => e.Date === today);
@@ -692,6 +706,76 @@ export default function TeamLeadDashboard() {
             </div>
           ) : (
             <p className="text-sm text-[var(--color-text-muted)] text-center py-6">No activity yet today.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── AI Weekly Report ── */}
+      <Card className="card-hover border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-r from-purple-50/50 to-indigo-50/30 dark:from-purple-950/10 dark:to-indigo-950/5">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-purple-600 flex items-center gap-2">
+              📊 AI Weekly Report
+              <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case">GPT-OSS-20B</span>
+            </h3>
+            <button
+              onClick={loadWeeklyReport}
+              disabled={loadingReport}
+              className="px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-[10px] font-bold transition-colors disabled:opacity-50"
+            >
+              {loadingReport ? "Analyzing..." : "🔄 Generate"}
+            </button>
+          </div>
+          {loadingReport ? (
+            <div className="flex items-center gap-3 py-4">
+              <div className="w-5 h-5 rounded-full border-2 border-purple-400 border-t-transparent animate-spin" />
+              <span className="text-xs text-purple-500">AI is analyzing team performance...</span>
+            </div>
+          ) : weeklyReport ? (
+            <div className="space-y-3">
+              <div className="p-3 rounded-xl bg-[var(--color-surface)] border border-purple-200/30">
+                <p className="text-sm font-bold text-[var(--color-text-primary)]">{weeklyReport.headline}</p>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-1 leading-relaxed">{weeklyReport.teamPerformance}</p>
+              </div>
+              {weeklyReport.topPerformers?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">🏆 Top Performers</p>
+                  {weeklyReport.topPerformers.map((p: any, i: number) => (
+                    <div key={i} className="flex items-start gap-2 py-1">
+                      <span className="text-emerald-500">•</span>
+                      <span className="text-xs"><span className="font-semibold">{p.name}</span>: {p.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {weeklyReport.needsAttention?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">⚠️ Needs Attention</p>
+                  {weeklyReport.needsAttention.map((p: any, i: number) => (
+                    <div key={i} className="flex items-start gap-2 py-1">
+                      <span className="text-amber-500">•</span>
+                      <span className="text-xs"><span className="font-semibold">{p.name}</span>: {p.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {weeklyReport.actionableInsights?.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">💡 Actionable Insights</p>
+                  {weeklyReport.actionableInsights.map((insight: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 py-1">
+                      <span className="text-blue-500">•</span>
+                      <span className="text-xs text-[var(--color-text-secondary)]">{insight}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {weeklyReport.weekSummary && (
+                <p className="text-[11px] text-[var(--color-text-muted)] italic">{weeklyReport.weekSummary}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-[var(--color-text-muted)] text-center py-3">Click Generate to get AI-powered team analysis</p>
           )}
         </CardContent>
       </Card>

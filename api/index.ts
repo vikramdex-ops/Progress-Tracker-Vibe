@@ -29,6 +29,8 @@ import {
   handleGetQuizStats,
   handleSubmitQuizAnswer,
   handleGetQuizHistory,
+  handleGetEodInsights,
+  handleGetWeeklyReport,
   handleSubscribePush,
   handleUnsubscribePush,
   handleCheckReminders,
@@ -170,6 +172,16 @@ export default async function handler(req: any, res: any) {
     if (path === "quiz/answer" && method === "POST") {
       const body = await parseBody(req as any);
       const result = await handleSubmitQuizAnswer(body);
+      return res.status(result.status).json(result.data);
+    }
+    // ── AI Insights (GPT-OSS-20B) ──
+    if (path === "ai/eod-insights" && method === "POST") {
+      const body = await parseBody(req as any);
+      const result = await handleGetEodInsights(body);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "ai/weekly-report" && method === "GET") {
+      const result = await handleGetWeeklyReport();
       return res.status(result.status).json(result.data);
     }
     // ── Push Notifications ──
