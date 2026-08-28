@@ -47,11 +47,15 @@ export default async function handler(req: any, res: any) {
 
   // Extract path from URL — works with all Vercel routing modes
   const url = req.url || "/";
-  const urlPath = url.split("?")[0].replace(/^\//, "").replace(/\/$/, "");
+  let rawPath = url.split("?")[0].replace(/^\//, "").replace(/\/$/, "");
+  // Strip function prefix if Vercel prepends it (e.g. index.ts/auth/login)
+  if (rawPath.startsWith("index.ts")) rawPath = rawPath.replace(/^index\.ts\/?/, "");
+  if (rawPath.startsWith("api/index.ts")) rawPath = rawPath.replace(/^api\/index\.ts\/?/, "");
   // Also support req.query.path from file-based rewrites
   const queryPath = (req.query.path as string[] | string) || "";
-  const path = (Array.isArray(queryPath) ? queryPath.join("/") : queryPath) || urlPath;
+  const path = (Array.isArray(queryPath) ? queryPath.join("/") : queryPath) || rawPath;
   const method = req.method || "GET";
+  console.log(`[API] ${method} ${path} (raw: ${url})`);
 
   try {
     if (path === "auth/login" && method === "POST") {
