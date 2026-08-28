@@ -1,6 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
+  "buildCommand": "echo 'API-only deployment — no frontend build'",
+  "outputDirectory": ".",
   "functions": {
     "api/index.ts": {
       "runtime": "nodejs20.x",
