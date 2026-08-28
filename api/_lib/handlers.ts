@@ -143,7 +143,7 @@ export async function handleGetEmployees() {
     const records = await airtable.list(TABLES.EMPLOYEES, "{Active} = TRUE()");
     return {
       status: 200,
-      data: records.map((r) => ({ id: r.id, ...sanitizeEmp(r) })),
+      data: records.map((r) => sanitizeEmp(r)),
     };
   } catch (err: any) {
     console.error("Failed to fetch employees:", err);
