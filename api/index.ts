@@ -45,7 +45,12 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const path = (req.query.path as string[])?.join("/") || "";
+  // Extract path from URL — works with all Vercel routing modes
+  const url = req.url || "/";
+  const urlPath = url.split("?")[0].replace(/^\//, "").replace(/\/$/, "");
+  // Also support req.query.path from file-based rewrites
+  const queryPath = (req.query.path as string[] | string) || "";
+  const path = (Array.isArray(queryPath) ? queryPath.join("/") : queryPath) || urlPath;
   const method = req.method || "GET";
 
   try {
