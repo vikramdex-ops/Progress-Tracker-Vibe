@@ -36,7 +36,7 @@ export async function verifySession(token: string | undefined) {
     if (records.length === 0) return null;
     const emp = records[0];
     if (!emp.fields.Active) return null;
-    return { id: emp.id, ...emp.fields };
+    return { id: emp.id, fields: emp.fields };
   } catch (err) {
     console.error("Session verification failed:", err);
     return null;
@@ -58,7 +58,7 @@ export async function getEmployeeByEmail(emailOrName: string) {
       `{Email} = "${escapeFormula(clean)}"`
     );
     if (records.length > 0) {
-      return { id: records[0].id, ...records[0].fields };
+      return { id: records[0].id, fields: records[0].fields };
     }
 
     // Strategy 2: Case-insensitive email match
@@ -67,7 +67,7 @@ export async function getEmployeeByEmail(emailOrName: string) {
       `LOWER({Email}) = "${escapeFormula(clean.toLowerCase())}"`
     );
     if (records.length > 0) {
-      return { id: records[0].id, ...records[0].fields };
+      return { id: records[0].id, fields: records[0].fields };
     }
 
     // Strategy 3: Name match (exact)
@@ -76,7 +76,7 @@ export async function getEmployeeByEmail(emailOrName: string) {
       `{Name} = "${escapeFormula(clean)}"`
     );
     if (records.length > 0) {
-      return { id: records[0].id, ...records[0].fields };
+      return { id: records[0].id, fields: records[0].fields };
     }
 
     // Strategy 4: Case-insensitive name match
@@ -85,7 +85,7 @@ export async function getEmployeeByEmail(emailOrName: string) {
       `LOWER({Name}) = "${escapeFormula(clean.toLowerCase())}"`
     );
     if (records.length > 0) {
-      return { id: records[0].id, ...records[0].fields };
+      return { id: records[0].id, fields: records[0].fields };
     }
 
     return null;
