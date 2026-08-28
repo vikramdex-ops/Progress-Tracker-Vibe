@@ -1,22 +1,18 @@
 {
-  "version": 2,
-  "functions": {
-    "api/index.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
-    { "source": "/((?!api/|_next/|assets/|favicon\\.ico|.*\\.).*)", "destination": "/api/index.ts" }
-  ],
-  "headers": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization" }
-      ]
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/(auth|entries|employees|leaves|gamification|notifications|seed|calendar|announcements|quiz|ai|push|password-resets)(.*)",
+      "dest": "/api/index.ts"
     }
   ]
 }
