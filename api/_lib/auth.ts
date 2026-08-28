@@ -29,10 +29,9 @@ export async function verifySession(token: string | undefined) {
   if (!clean) return null;
 
   try {
-    // Airtable filterByFormula with CurrentValue for Data API
     const records = await airtable.list(
       TABLES.EMPLOYEES,
-      `CurrentValue.SessionToken = "${escapeFormula(clean)}"`
+      `{SessionToken} = "${escapeFormula(clean)}"`
     );
     if (records.length === 0) return null;
     const emp = records[0];
@@ -53,37 +52,37 @@ export async function getEmployeeByEmail(emailOrName: string) {
   if (!clean) return null;
 
   try {
-    // Strategy 1: Exact email match (case-insensitive via lower())
+    // Strategy 1: Exact email match
     let records = await airtable.list(
       TABLES.EMPLOYEES,
-      `LOWER(CurrentValue.Email) = "${escapeFormula(clean.toLowerCase())}"`
+      `{Email} = "${escapeFormula(clean)}"`
     );
     if (records.length > 0) {
       return { id: records[0].id, ...records[0].fields };
     }
 
-    // Strategy 2: Partial email match (user typed part of email)
+    // Strategy 2: Case-insensitive email match
     records = await airtable.list(
       TABLES.EMPLOYEES,
-      `SEARCH("${escapeFormula(clean.toLowerCase())}", LOWER(CurrentValue.Email))`
+      `LOWER({Email}) = "${escapeFormula(clean.toLowerCase())}"`
     );
     if (records.length > 0) {
       return { id: records[0].id, ...records[0].fields };
     }
 
-    // Strategy 3: Name match (exact, case-insensitive)
+    // Strategy 3: Name match (exact)
     records = await airtable.list(
       TABLES.EMPLOYEES,
-      `LOWER(CurrentValue.Name) = "${escapeFormula(clean.toLowerCase())}"`
+      `{Name} = "${escapeFormula(clean)}"`
     );
     if (records.length > 0) {
       return { id: records[0].id, ...records[0].fields };
     }
 
-    // Strategy 4: Partial name match
+    // Strategy 4: Case-insensitive name match
     records = await airtable.list(
       TABLES.EMPLOYEES,
-      `SEARCH("${escapeFormula(clean.toLowerCase())}", LOWER(CurrentValue.Name))`
+      `LOWER({Name}) = "${escapeFormula(clean.toLowerCase())}"`
     );
     if (records.length > 0) {
       return { id: records[0].id, ...records[0].fields };
