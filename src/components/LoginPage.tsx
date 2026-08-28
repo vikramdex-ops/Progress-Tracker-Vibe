@@ -35,15 +35,23 @@ export default function LoginPage() {
     }
   };
 
+  const [loginHint, setLoginHint] = useState("");
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoginHint("");
     setLoading(true);
     try {
       const result = await login(email, password);
       if (result.forcePasswordChange) setForceChange(true);
     } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+      const msg = err.message || "Invalid email or password";
+      setError(msg);
+      // Show a hint if the error mentions account not found
+      if (msg.includes("No account found")) {
+        setLoginHint("Try your full name or the email your team lead registered for you.");
+      }
     } finally {
       setLoading(false);
     }
@@ -297,9 +305,14 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                  {error}
+                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5" />
+                  <div>
+                    <div>{error}</div>
+                    {loginHint && (
+                      <div className="text-xs text-red-400 dark:text-red-500 mt-1 opacity-80">{loginHint}</div>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -1,32 +1,109 @@
 import { airtable, TABLES } from "./airtable";
 import { hashPassword, verifyPassword, generateToken, getEmployeeByEmail } from "./auth";
 
+/** Sanitize employee data — strip sensitive fields before sending to client */
+function sanitizeEmp(emp: any) {
+  return {
+    id: emp.id,
+    name: emp.fields.Name,
+    email: emp.fields.Email,
+    role: emp.fields.Role,
+    active: emp.fields.Active,
+    firstLogin: emp.fields.FirstLogin,
+    xp: emp.fields.XP || 0,
+    level: emp.fields.Level || 1,
+    levelTitle: emp.fields.LevelTitle || "Piping Trainee",
+    currentStreak: emp.fields.CurrentStreak || 0,
+    longestStreak: emp.fields.LongestStreak || 0,
+    totalEntries: emp.fields.TotalEntries || 0,
+  };
+}
+
+/** Safe Airtable filter formula */
+function ef(str: string): string {
+  return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 // ─── Auth ────────────────────────────────────────────────
 export async function handleLogin(body: any) {
   const { email, password } = body;
-  if (!email || !password) return { status: 400, data: { error: "Email and password required" } };
+  if (!email || !password) {
+    return { status: 400, data: { error: "Email and password are required" } };
+  }
 
   const emp = await getEmployeeByEmail(email);
-  if (!emp) return { status: 401, data: { error: "Invalid credentials" } };
-  if (!emp.Active) return { status: 403, data: { error: "Account deactivated" } };
+  if (!emp) {
+    return {
+      status: 401,
+      data: {
+        error: "No account found. Check your email or contact the team lead.",
+        hint: "You can also try logging in with your name instead of email.",
+      },
+    };
+  }
+
+  if (!emp.fields.Active) {
+    return {
+      status: 403,
+      data: {
+        error: "This account has been deactivated. Contact the team lead to reactivate it.",
+      },
+    };
+  }
 
   // First login: use temp password
-  if (emp.FirstLogin) {
-    if (password !== emp.TempPassword) {
-      return { status: 401, data: { error: "Invalid temporary password" } };
+  if (emp.fields.FirstLogin) {
+    if (!emp.fields.TempPassword) {
+      return {
+        status: 500,
+        data: {
+          error: "No temporary password set. Contact the team lead to reset your password.",
+        },
+      };
+    }
+    if (password !== emp.fields.TempPassword) {
+      return {
+        status: 401,
+        data: {
+          error: "Invalid temporary password. Check with your team lead for the correct password.",
+          hint: "If you've already changed your password, try your personal password instead.",
+        },
+      };
     }
     const token = generateToken();
     await airtable.update(TABLES.EMPLOYEES, emp.id, { SessionToken: token });
     return {
       status: 200,
-      data: { token, employee: sanitizeEmp(emp), forcePasswordChange: true },
+      data: {
+        token,
+        employee: sanitizeEmp(emp),
+        forcePasswordChange: true,
+        message: "Welcome! Please set your personal password to continue.",
+      },
     };
   }
 
-  // Normal login
-  if (!verifyPassword(password, emp.PasswordHash)) {
-    return { status: 401, data: { error: "Invalid password" } };
+  // Normal login — check password hash
+  if (!emp.fields.PasswordHash) {
+    // Password hash is empty — user needs a password reset
+    return {
+      status: 401,
+      data: {
+        error: "No password set for this account. Use 'Forgot Password?' or contact the team lead.",
+      },
+    };
   }
+
+  if (!verifyPassword(password, emp.fields.PasswordHash)) {
+    return {
+      status: 401,
+      data: {
+        error: "Incorrect password. Please try again or use 'Forgot Password?'.",
+        hint: "Passwords are case-sensitive.",
+      },
+    };
+  }
+
   const token = generateToken();
   await airtable.update(TABLES.EMPLOYEES, emp.id, { SessionToken: token });
   return {
@@ -40,10 +117,15 @@ export async function handleChangePassword(body: any, emp: any) {
   if (!newPassword || newPassword.length < 4)
     return { status: 400, data: { error: "Password must be at least 4 characters" } };
 
+  // On first login, skip old password verification
   if (!emp.FirstLogin) {
-    if (!oldPassword || !verifyPassword(oldPassword, emp.PasswordHash)) {
-      return { status: 401, data: { error: "Current password incorrect" } };
+    if (!oldPassword || !emp.PasswordHash || !verifyPassword(oldPassword, emp.PasswordHash)) {
+      return { status: 401, data: { error: "Current password is incorrect" } };
     }
+  }
+
+  if (newPassword === emp.TempPassword) {
+    return { status: 400, data: { error: "New password must be different from your temporary password" } };
   }
 
   const hash = hashPassword(newPassword);
@@ -52,16 +134,21 @@ export async function handleChangePassword(body: any, emp: any) {
     FirstLogin: false,
     TempPassword: "",
   });
-  return { status: 200, data: { success: true } };
+  return { status: 200, data: { success: true, message: "Password updated successfully" } };
 }
 
 // ─── Employees ───────────────────────────────────────────
 export async function handleGetEmployees() {
-  const records = await airtable.listAll(TABLES.EMPLOYEES, "{Active} = TRUE()");
-  return {
-    status: 200,
-    data: records.map((r) => ({ id: r.id, ...sanitizeEmp(r) })),
-  };
+  try {
+    const records = await airtable.list(TABLES.EMPLOYEES, "{Active} = TRUE()");
+    return {
+      status: 200,
+      data: records.map((r) => ({ id: r.id, ...sanitizeEmp(r) })),
+    };
+  } catch (err: any) {
+    console.error("Failed to fetch employees:", err);
+    return { status: 500, data: { error: "Failed to load employees: " + err.message } };
+  }
 }
 
 // ─── EOD Entries ─────────────────────────────────────────
@@ -70,20 +157,24 @@ export async function handleGetEntries(params: URLSearchParams) {
   const employee = params.get("employee");
   let filter = "";
   if (date && employee) {
-    filter = `AND({Date} = "${date}", {EmployeeName} = "${employee}")`;
+    filter = `AND({Date} = "${ef(date)}", {EmployeeName} = "${ef(employee)}")`;
   } else if (date) {
-    filter = `{Date} = "${date}"`;
+    filter = `{Date} = "${ef(date)}"`;
   } else if (employee) {
-    filter = `{EmployeeName} = "${employee}"`;
+    filter = `{EmployeeName} = "${ef(employee)}"`;
   }
-  const records = await airtable.listAll(TABLES.ENTRIES, filter || undefined);
-  return { status: 200, data: records.map((r) => ({ id: r.id, ...r.fields })) };
+  try {
+    const records = await airtable.list(TABLES.ENTRIES, filter || undefined);
+    return { status: 200, data: records.map((r) => ({ id: r.id, ...r.fields })) };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch entries: " + err.message } };
+  }
 }
 
 export async function handleCreateEntry(body: any) {
   const { EmployeeName, Date, workItems, OverallRemarks } = body;
   if (!EmployeeName || !Date || !workItems?.length) {
-    return { status: 400, data: { error: "Missing required fields" } };
+    return { status: 400, data: { error: "Missing required fields (EmployeeName, Date, or workItems)" } };
   }
 
   const results = [];
@@ -111,8 +202,13 @@ export async function handleCreateEntry(body: any) {
       XpAwarded: 0,
     };
 
-    const created = await airtable.create(TABLES.ENTRIES, fields);
-    results.push({ id: created.id, ...created.fields });
+    try {
+      const created = await airtable.create(TABLES.ENTRIES, fields);
+      results.push({ id: created.id, ...created.fields });
+    } catch (err: any) {
+      console.error("Failed to create entry:", err);
+      return { status: 500, data: { error: `Failed to save entry: ${err.message}` } };
+    }
   }
 
   // Award XP
@@ -123,37 +219,53 @@ export async function handleCreateEntry(body: any) {
 
 export async function handleRateEntry(body: any) {
   const { entryId, rating, ratingRemarks } = body;
-  if (!entryId || !rating) return { status: 400, data: { error: "Missing fields" } };
-  const updated = await airtable.update(TABLES.ENTRIES, entryId, {
-    Rating: rating,
-    RatingRemarks: ratingRemarks || "",
-  });
-  return { status: 200, data: { id: updated.id, ...updated.fields } };
+  if (!entryId || !rating) return { status: 400, data: { error: "Missing entryId or rating" } };
+  try {
+    const updated = await airtable.update(TABLES.ENTRIES, entryId, {
+      Rating: rating,
+      RatingRemarks: ratingRemarks || "",
+    });
+    return { status: 200, data: { id: updated.id, ...updated.fields } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to rate entry: " + err.message } };
+  }
 }
 
 // ─── Leaves ──────────────────────────────────────────────
 export async function handleGetLeaves(params: URLSearchParams) {
   const date = params.get("date");
-  const filter = date ? `{Date} = "${date}"` : "";
-  const records = await airtable.listAll(TABLES.LEAVES, filter || undefined);
-  return { status: 200, data: records.map((r) => ({ id: r.id, ...r.fields })) };
+  const filter = date ? `{Date} = "${ef(date)}"` : "";
+  try {
+    const records = await airtable.list(TABLES.LEAVES, filter || undefined);
+    return { status: 200, data: records.map((r) => ({ id: r.id, ...r.fields })) };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch leaves: " + err.message } };
+  }
 }
 
 export async function handleCreateLeave(body: any) {
   const { EmployeeName, Date, Reason, MarkedBy } = body;
-  if (!EmployeeName || !Date) return { status: 400, data: { error: "Missing fields" } };
-  const created = await airtable.create(TABLES.LEAVES, {
-    EmployeeName,
-    Date,
-    Reason: Reason || "",
-    MarkedBy: MarkedBy || "",
-  });
-  return { status: 201, data: { id: created.id, ...created.fields } };
+  if (!EmployeeName || !Date) return { status: 400, data: { error: "EmployeeName and Date required" } };
+  try {
+    const created = await airtable.create(TABLES.LEAVES, {
+      EmployeeName,
+      Date,
+      Reason: Reason || "",
+      MarkedBy: MarkedBy || "",
+    });
+    return { status: 201, data: { id: created.id, ...created.fields } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to mark leave: " + err.message } };
+  }
 }
 
 export async function handleDeleteLeave(id: string) {
-  await airtable.remove(TABLES.LEAVES, id);
-  return { status: 200, data: { success: true } };
+  try {
+    await airtable.remove(TABLES.LEAVES, id);
+    return { status: 200, data: { success: true } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to remove leave: " + err.message } };
+  }
 }
 
 // ─── Gamification ────────────────────────────────────────
@@ -173,19 +285,26 @@ async function awardEntryXp(employeeName: string, workItems: any[]) {
   });
   if (allComplete && workItems.length > 0) totalXp += 20;
 
-  // Update employee XP
-  const emps = await airtable.listAll(TABLES.EMPLOYEES, `{Name} = "${employeeName}"`);
-  if (emps.length > 0) {
-    const emp = emps[0];
-    const currentXp = emp.fields.XP || 0;
-    const newXp = currentXp + totalXp;
-    const levelInfo = calculateLevel(newXp);
-    await airtable.update(TABLES.EMPLOYEES, emp.id, {
-      XP: newXp,
-      Level: levelInfo.level,
-      LevelTitle: levelInfo.title,
-      TotalEntries: (emp.fields.TotalEntries || 0) + 1,
-    });
+  try {
+    // Find employee by name
+    const emps = await airtable.list(
+      TABLES.EMPLOYEES,
+      `{Name} = "${ef(employeeName)}"`
+    );
+    if (emps.length > 0) {
+      const emp = emps[0];
+      const currentXp = emp.fields.XP || 0;
+      const newXp = currentXp + totalXp;
+      const levelInfo = calculateLevel(newXp);
+      await airtable.update(TABLES.EMPLOYEES, emp.id, {
+        XP: newXp,
+        Level: levelInfo.level,
+        LevelTitle: levelInfo.title,
+        TotalEntries: (emp.fields.TotalEntries || 0) + 1,
+      });
+    }
+  } catch (err) {
+    console.error("XP award failed (non-critical):", err);
   }
 
   return { amount: totalXp, earlyBird: hour < 17, fullCompletion: allComplete };
@@ -213,81 +332,91 @@ function calculateLevel(xp: number) {
 
 export async function handleGetGamification(params: URLSearchParams) {
   const employee = params.get("employee");
-  if (!employee) return { status: 400, data: { error: "Employee required" } };
+  if (!employee) return { status: 400, data: { error: "Employee parameter required" } };
 
-  const emps = await airtable.listAll(TABLES.EMPLOYEES, `{Name} = "${employee}"`);
-  const emp = emps[0];
-  if (!emp) return { status: 404, data: { error: "Employee not found" } };
+  try {
+    const emps = await airtable.list(TABLES.EMPLOYEES, `{Name} = "${ef(employee)}"`);
+    const emp = emps[0];
+    if (!emp) return { status: 404, data: { error: "Employee not found" } };
 
-  const badges = await airtable.listAll(
-    TABLES.EARNED_BADGES,
-    `{EmployeeName} = "${employee}"`
-  );
+    const badges = await airtable.list(
+      TABLES.EARNED_BADGES,
+      `{EmployeeName} = "${ef(employee)}"`
+    );
 
-  return {
-    status: 200,
-    data: {
-      xp: emp.fields.XP || 0,
-      level: emp.fields.Level || 1,
-      levelTitle: emp.fields.LevelTitle || "Piping Trainee",
-      currentStreak: emp.fields.CurrentStreak || 0,
-      longestStreak: emp.fields.LongestStreak || 0,
-      totalEntries: emp.fields.TotalEntries || 0,
-      badges: badges.map((b) => ({ id: b.id, ...b.fields })),
-    },
-  };
+    return {
+      status: 200,
+      data: {
+        xp: emp.fields.XP || 0,
+        level: emp.fields.Level || 1,
+        levelTitle: emp.fields.LevelTitle || "Piping Trainee",
+        currentStreak: emp.fields.CurrentStreak || 0,
+        longestStreak: emp.fields.LongestStreak || 0,
+        totalEntries: emp.fields.TotalEntries || 0,
+        badges: badges.map((b) => ({ id: b.id, ...b.fields })),
+      },
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to load gamification data: " + err.message } };
+  }
 }
 
-// ─── Seed ────────────────────────────────────────────────
 // ─── Forgot Password ───────────────────────────────────
 export async function handleForgotPassword(body: any) {
   const { email } = body;
-  if (!email) return { status: 400, data: { error: "Email required" } };
+  if (!email) return { status: 400, data: { error: "Email is required" } };
 
-  // Find the employee by email
-  const emps = await airtable.listAll(TABLES.EMPLOYEES, `{Email} = "${email}"`);
-  if (emps.length === 0) {
-    // Don't reveal whether the email exists
-    return { status: 200, data: { success: true, message: "If an account exists, the team lead has been notified." } };
+  try {
+    // Find the employee by email
+    const emp = await getEmployeeByEmail(email);
+    if (!emp) {
+      // Don't reveal whether the email exists
+      return { status: 200, data: { success: true, message: "If an account exists, the team lead has been notified." } };
+    }
+
+    const empName = emp.fields.Name;
+
+    // Create a notification for the team lead
+    const now = new Date().toISOString();
+    await airtable.create(TABLES.NOTIFICATIONS, {
+      EmployeeName: "Vikram",
+      Type: "system",
+      Title: "Password Reset Request",
+      Message: `${empName} (${emp.fields.Email}) has requested a password reset. Please generate a new temporary password and share it with them.`,
+      Read: false,
+      Timestamp: now,
+    });
+
+    // Also store a password reset request record in Settings for tracking
+    await airtable.create(TABLES.SETTINGS, {
+      Key: `pwd_reset_${Date.now()}`,
+      Value: JSON.stringify({ employeeName: empName, email: emp.fields.Email, requestedAt: now, status: "pending" }),
+    });
+
+    return {
+      status: 200,
+      data: { success: true, message: "Your request has been sent to the team lead. They will reset your password shortly." },
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to process request: " + err.message } };
   }
-
-  const emp = emps[0];
-  const empName = emp.fields.Name;
-
-  // Create a notification for the team lead
-  const now = new Date().toISOString();
-  await airtable.create(TABLES.NOTIFICATIONS, {
-    EmployeeName: "Vikram",
-    Type: "system",
-    Title: "Password Reset Request",
-    Message: `${empName} (${email}) has requested a password reset. Please generate a new temporary password and share it with them.`,
-    Read: false,
-    Timestamp: now,
-  });
-
-  // Also store a password reset request record in Settings for tracking
-  await airtable.create(TABLES.SETTINGS, {
-    Key: `pwd_reset_${Date.now()}`,
-    Value: JSON.stringify({ employeeName: empName, email, requestedAt: now, status: "pending" }),
-  });
-
-  return {
-    status: 200,
-    data: { success: true, message: "Your request has been sent to the team lead. They will reset your password shortly." },
-  };
 }
 
 // ─── Password Reset Requests (team lead) ────────────────
 export async function handleGetPasswordResets() {
-  const settings = await airtable.listAll(TABLES.SETTINGS);
-  const resets = settings
-    .filter((s) => s.fields.Key?.startsWith("pwd_reset_"))
-    .map((s) => {
-      const val = JSON.parse(s.fields.Value || "{}");
-      return { id: s.id, ...val };
-    })
-    .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
-  return { status: 200, data: resets };
+  try {
+    const settings = await airtable.list(TABLES.SETTINGS);
+    const resets = settings
+      .filter((s) => s.fields.Key?.startsWith("pwd_reset_"))
+      .map((s) => {
+        const val = JSON.parse(s.fields.Value || "{}");
+        return { id: s.id, ...val };
+      })
+      .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+    return { status: 200, data: resets };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch reset requests: " + err.message } };
+  }
 }
 
 export async function handleApprovePasswordReset(body: any) {
@@ -295,61 +424,73 @@ export async function handleApprovePasswordReset(body: any) {
   if (!requestId || !newTempPassword)
     return { status: 400, data: { error: "Request ID and new temp password required" } };
 
-  // Get the request record
-  const record = await airtable.listAll(TABLES.SETTINGS, `{Key} = "${requestId}"`);
-  if (record.length === 0) return { status: 404, data: { error: "Reset request not found" } };
+  try {
+    // Get the request record
+    const record = await airtable.list(TABLES.SETTINGS, `{Key} = "${ef(requestId)}"`);
+    if (record.length === 0) return { status: 404, data: { error: "Reset request not found" } };
 
-  const data = JSON.parse(record[0].fields.Value || "{}");
-  if (data.status === "completed") return { status: 400, data: { error: "Already completed" } };
+    const data = JSON.parse(record[0].fields.Value || "{}");
+    if (data.status === "completed") return { status: 400, data: { error: "This reset has already been completed" } };
 
-  // Reset the employee's password
-  const emps = await airtable.listAll(TABLES.EMPLOYEES, `{Name} = "${data.employeeName}"`);
-  if (emps.length === 0) return { status: 404, data: { error: "Employee not found" } };
+    // Reset the employee's password
+    const emps = await airtable.list(TABLES.EMPLOYEES, `{Name} = "${ef(data.employeeName)}"`);
+    if (emps.length === 0) return { status: 404, data: { error: "Employee not found — they may have been removed" } };
 
-  const emp = emps[0];
-  await airtable.update(TABLES.EMPLOYEES, emp.id, {
-    TempPassword: newTempPassword,
-    FirstLogin: true,
-    PasswordHash: "",
-  });
+    const emp = emps[0];
+    await airtable.update(TABLES.EMPLOYEES, emp.id, {
+      TempPassword: newTempPassword,
+      FirstLogin: true,
+      PasswordHash: "",
+    });
 
-  // Mark the request as completed
-  await airtable.update(TABLES.SETTINGS, record[0].id, {
-    Value: JSON.stringify({ ...data, status: "completed", completedAt: new Date().toISOString() }),
-  });
+    // Mark the request as completed
+    await airtable.update(TABLES.SETTINGS, record[0].id, {
+      Value: JSON.stringify({ ...data, status: "completed", completedAt: new Date().toISOString() }),
+    });
 
-  // Notify the employee
-  const now = new Date().toISOString();
-  await airtable.create(TABLES.NOTIFICATIONS, {
-    EmployeeName: data.employeeName,
-    Type: "system",
-    Title: "Password Reset",
-    Message: `Your password has been reset. Contact the team lead for your new temporary password. You'll be asked to set a new password on next login.`,
-    Read: false,
-    Timestamp: now,
-  });
+    // Notify the employee
+    const now = new Date().toISOString();
+    await airtable.create(TABLES.NOTIFICATIONS, {
+      EmployeeName: data.employeeName,
+      Type: "system",
+      Title: "Password Reset",
+      Message: `Your password has been reset. Contact the team lead for your new temporary password. You'll be asked to set a new password on next login.`,
+      Read: false,
+      Timestamp: now,
+    });
 
-  return { status: 200, data: { success: true, message: `Password reset for ${data.employeeName}. New temp password: ${newTempPassword}` } };
+    return { status: 200, data: { success: true, message: `Password reset for ${data.employeeName}. New temp password: ${newTempPassword}` } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to approve reset: " + err.message } };
+  }
 }
 
 // ─── Notifications ──────────────────────────────────────
 export async function handleGetNotifications(params: URLSearchParams) {
   const employee = params.get("employee");
-  const filter = employee ? `{EmployeeName} = "${employee}"` : "";
-  const records = await airtable.listAll(TABLES.NOTIFICATIONS, filter || undefined);
-  return {
-    status: 200,
-    data: records.map((r) => ({ id: r.id, ...r.fields })).sort((a, b) => {
-      const ta = a.Timestamp ? new Date(a.Timestamp).getTime() : 0;
-      const tb = b.Timestamp ? new Date(b.Timestamp).getTime() : 0;
-      return tb - ta;
-    }),
-  };
+  const filter = employee ? `{EmployeeName} = "${ef(employee)}"` : "";
+  try {
+    const records = await airtable.list(TABLES.NOTIFICATIONS, filter || undefined);
+    return {
+      status: 200,
+      data: records.map((r) => ({ id: r.id, ...r.fields })).sort((a, b) => {
+        const ta = a.Timestamp ? new Date(a.Timestamp).getTime() : 0;
+        const tb = b.Timestamp ? new Date(b.Timestamp).getTime() : 0;
+        return tb - ta;
+      }),
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to load notifications: " + err.message } };
+  }
 }
 
 export async function handleMarkNotificationRead(id: string) {
-  await airtable.update(TABLES.NOTIFICATIONS, id, { Read: true });
-  return { status: 200, data: { success: true } };
+  try {
+    await airtable.update(TABLES.NOTIFICATIONS, id, { Read: true });
+    return { status: 200, data: { success: true } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to mark notification: " + err.message } };
+  }
 }
 
 // ─── Team Lead: Reset Employee Password ────────────────
@@ -358,49 +499,35 @@ export async function handleResetEmployeePassword(body: any) {
   if (!employeeName || !newTempPassword)
     return { status: 400, data: { error: "Employee name and new temp password required" } };
 
-  const emps = await airtable.listAll(TABLES.EMPLOYEES, `{Name} = "${employeeName}"`);
-  if (emps.length === 0) return { status: 404, data: { error: "Employee not found" } };
+  try {
+    const emps = await airtable.list(TABLES.EMPLOYEES, `{Name} = "${ef(employeeName)}"`);
+    if (emps.length === 0) return { status: 404, data: { error: "Employee not found" } };
 
-  const emp = emps[0];
-  await airtable.update(TABLES.EMPLOYEES, emp.id, {
-    TempPassword: newTempPassword,
-    FirstLogin: true,
-    PasswordHash: "",
-  });
+    const emp = emps[0];
+    await airtable.update(TABLES.EMPLOYEES, emp.id, {
+      TempPassword: newTempPassword,
+      FirstLogin: true,
+      PasswordHash: "",
+    });
 
-  // Notify the employee
-  const now = new Date().toISOString();
-  await airtable.create(TABLES.NOTIFICATIONS, {
-    EmployeeName: employeeName,
-    Type: "system",
-    Title: "Password Reset",
-    Message: `Your password has been reset by the team lead. Use the new temporary password to log in. You'll be asked to set a new password on next login.`,
-    Read: false,
-    Timestamp: now,
-  });
+    // Notify the employee
+    const now = new Date().toISOString();
+    await airtable.create(TABLES.NOTIFICATIONS, {
+      EmployeeName: employeeName,
+      Type: "system",
+      Title: "Password Reset",
+      Message: `Your password has been reset by the team lead. Use the new temporary password to log in. You'll be asked to set a new password on next login.`,
+      Read: false,
+      Timestamp: now,
+    });
 
-  return { status: 200, data: { success: true, message: `Password reset for ${employeeName}` } };
+    return { status: 200, data: { success: true, message: `Password reset for ${employeeName}` } };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to reset password: " + err.message } };
+  }
 }
 
 // ─── Seed ────────────────────────────────────────────────
 export async function handleSeed() {
   return { status: 200, data: { success: true, message: "Database already seeded via setup script" } };
-}
-
-// ─── Helpers ─────────────────────────────────────────────
-function sanitizeEmp(emp: any) {
-  return {
-    id: emp.id,
-    name: emp.fields.Name,
-    email: emp.fields.Email,
-    role: emp.fields.Role,
-    active: emp.fields.Active,
-    firstLogin: emp.fields.FirstLogin,
-    xp: emp.fields.XP || 0,
-    level: emp.fields.Level || 1,
-    levelTitle: emp.fields.LevelTitle || "Piping Trainee",
-    currentStreak: emp.fields.CurrentStreak || 0,
-    longestStreak: emp.fields.LongestStreak || 0,
-    totalEntries: emp.fields.TotalEntries || 0,
-  };
 }
