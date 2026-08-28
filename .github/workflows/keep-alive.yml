@@ -16,7 +16,7 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
             -X OPTIONS \
             "${{ vars.VERCEL_API_URL }}/api/seed" \
-            -H "Origin: ${{ vars.GITHUB_PAGES_URL }}" \
+            -H "Origin: ${{ vars.SITE_URL }}" \
             -H "Access-Control-Request-Method: POST" \
             || echo "000")
           echo "Vercel API status: $STATUS"
@@ -25,9 +25,9 @@ jobs:
         run: |
           echo "[$(date -u)] Pinging GitHub Pages..."
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "${{ vars.GITHUB_PAGES_URL }}" \
+            "${{ vars.SITE_URL }}" \
             || echo "000")
-          echo "GitHub Pages status: $STATUS"
+          echo "Site status: $STATUS"
 
       - name: Summary
         run: echo "✅ Keep-alive ping completed at $(date -u)"
