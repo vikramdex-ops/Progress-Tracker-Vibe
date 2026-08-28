@@ -679,20 +679,47 @@ async function saveAskedQuestion(employee: string, question: string) {
   }
 }
 
-/** Generate a fresh AI-powered quiz question */
+/** Daily quiz cap */
+const DAILY_QUIZ_LIMIT = 3;
+
+/** Check how many quizzes answered today */
+async function getTodayQuizCount(employee: string): Promise<number> {
+  const today = new Date().toISOString().split("T")[0];
+  const records = await airtable.list(
+    TABLES.QUIZ_HISTORY,
+    `AND({EmployeeName} = "${ef(employee)}", LEFT({AnsweredAt}, 10) = "${today}")`
+  );
+  return records.length;
+}
+
+/** Generate a fresh AI-powered quiz question (capped at 3/day) */
 export async function handleGenerateQuiz(body: any) {
   const { employee } = body;
   if (!employee) return { status: 400, data: { error: "Employee name required" } };
   try {
+    const todayCount = await getTodayQuizCount(employee);
+    if (todayCount >= DAILY_QUIZ_LIMIT) {
+      return {
+        status: 429,
+        data: {
+          error: `Daily quiz limit reached (${DAILY_QUIZ_LIMIT}/${DAILY_QUIZ_LIMIT}). Come back tomorrow!`,
+          limitReached: true,
+          count: todayCount,
+          limit: DAILY_QUIZ_LIMIT,
+        },
+      };
+    }
     const previousQuestions = await getAskedQuestions(employee);
     const question = await generateQuizQuestion(previousQuestions);
-    // Save this question to history
     await saveAskedQuestion(employee, question.question);
     return {
       status: 200,
       data: {
         id: `ai_${Date.now()}`,
         ...question,
+        todayCount: todayCount + 1,
+        dailyLimit: DAILY_QUIZ_LIMIT,
+        remaining: DAILY_QUIZ_LIMIT - todayCount - 1,
       },
     };
   } catch (err: any) {
@@ -726,15 +753,38 @@ export async function handleGetQuizStats(params: URLSearchParams) {
   }
 }
 
-/** Submit a quiz answer and get explanation */
+/** Submit a quiz answer, save to history, and get explanation */
 export async function handleSubmitQuizAnswer(body: any) {
-  const { employee, question, answer, correctAnswer, explanation } = body;
+  const { employee, question, answer, correctAnswer, explanation, options, difficulty, category } = body;
   if (!employee || !question || !answer || !correctAnswer) {
     return { status: 400, data: { error: "Missing required fields" } };
   }
   const isCorrect = answer === correctAnswer;
   const xpEarned = isCorrect ? 5 : 0;
   try {
+    // Save to QuizHistory for revisiting
+    try {
+      await airtable.create(TABLES.QUIZ_HISTORY, {
+        EmployeeName: employee,
+        Question: question,
+        OptionA: options?.A || "",
+        OptionB: options?.B || "",
+        OptionC: options?.C || "",
+        OptionD: options?.D || "",
+        CorrectAnswer: correctAnswer,
+        UserAnswer: answer,
+        IsCorrect: isCorrect,
+        Explanation: explanation || "",
+        Difficulty: difficulty || "Medium",
+        Category: category || "",
+        AnsweredAt: new Date().toISOString(),
+        XpEarned: xpEarned,
+      });
+    } catch (histErr) {
+      console.error("QuizHistory save failed (non-critical):", histErr);
+    }
+
+    // Log XP
     await airtable.create(TABLES.XP_LOG, {
       EmployeeName: employee,
       Action: isCorrect ? "quiz_correct" : "quiz_wrong",
@@ -760,6 +810,28 @@ export async function handleSubmitQuizAnswer(body: any) {
     };
   } catch (err: any) {
     return { status: 500, data: { error: "Failed to submit answer: " + err.message } };
+  }
+}
+
+/** Get quiz history for an employee */
+export async function handleGetQuizHistory(params: URLSearchParams) {
+  const employee = params.get("employee");
+  if (!employee) return { status: 400, data: { error: "Employee parameter required" } };
+  try {
+    const records = await airtable.list(
+      TABLES.QUIZ_HISTORY,
+      `{EmployeeName} = "${ef(employee)}"`
+    );
+    return {
+      status: 200,
+      data: records.map((r) => ({ id: r.id, ...r.fields })).sort((a, b) => {
+        const ta = a.AnsweredAt ? new Date(a.AnsweredAt).getTime() : 0;
+        const tb = b.AnsweredAt ? new Date(b.AnsweredAt).getTime() : 0;
+        return tb - ta;
+      }),
+    };
+  } catch (err: any) {
+    return { status: 500, data: { error: "Failed to fetch quiz history: " + err.message } };
   }
 }
 

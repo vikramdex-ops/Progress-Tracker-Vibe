@@ -104,4 +104,5 @@ export const TABLES = {
   ANNOUNCEMENTS: "Announcements",
   ENG_FACTS: "EngineeringFacts",
   PUSH_SUBS: "PushSubscriptions",
+  QUIZ_HISTORY: "QuizHistory",
 } as const;

@@ -28,6 +28,7 @@ import {
   handleGenerateQuiz,
   handleGetQuizStats,
   handleSubmitQuizAnswer,
+  handleGetQuizHistory,
   handleSubscribePush,
   handleUnsubscribePush,
   handleCheckReminders,
@@ -160,6 +161,10 @@ export default async function handler(req: any, res: any) {
     }
     if (path === "quiz/stats" && method === "GET") {
       const result = await handleGetQuizStats(req.query as any);
+      return res.status(result.status).json(result.data);
+    }
+    if (path === "quiz/history" && method === "GET") {
+      const result = await handleGetQuizHistory(req.query as any);
       return res.status(result.status).json(result.data);
     }
     if (path === "quiz/answer" && method === "POST") {

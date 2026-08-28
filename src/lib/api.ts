@@ -158,8 +158,10 @@ export const quizApi = {
     apiRequest("quiz/generate", { method: "POST", body: JSON.stringify({ employee }) }),
   stats: (employee: string) =>
     apiRequest(`quiz/stats?employee=${encodeURIComponent(employee)}`),
-  answer: (data: { employee: string; question: string; answer: string; correctAnswer: string; explanation: string }) =>
+  answer: (data: { employee: string; question: string; answer: string; correctAnswer: string; explanation: string; options?: any; difficulty?: string; category?: string }) =>
     apiRequest("quiz/answer", { method: "POST", body: JSON.stringify(data) }),
+  history: (employee: string) =>
+    apiRequest(`quiz/history?employee=${encodeURIComponent(employee)}`),
 };
 
 // Push Notifications

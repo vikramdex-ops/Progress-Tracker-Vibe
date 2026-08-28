@@ -42,6 +42,8 @@ export default function EmployeeDashboard() {
   const [quizResult, setQuizResult] = useState<{ correct: boolean; xp: number; explanation: string; correctAnswer: string } | null>(null);
   const [quizStats, setQuizStats] = useState<any>(null);
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
+  const [quizHistory, setQuizHistory] = useState<any[]>([]);
+  const [quizTab, setQuizTab] = useState<"play" | "history">("play");
   const [calendar, setCalendar] = useState<any[]>([]);
 
   const todayEntry = entries.find((e) => e.Date === today);
@@ -63,13 +65,14 @@ export default function EmployeeDashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const [eRes, gRes, lRes, annRes, qStats, calRes] = await Promise.all([
+      const [eRes, gRes, lRes, annRes, qStats, calRes, qHist] = await Promise.all([
         entriesApi.list({ employee: user?.name || "" }) as any,
         gamificationApi.get(user?.name || "") as any,
         leavesApi.list({ date: today }) as any,
         announcementsApi.list() as any,
         quizApi.stats(user?.name || "") as any,
         calendarApi.list() as any,
+        quizApi.history(user?.name || "") as any,
       ]);
       setEntries(Array.isArray(eRes) ? eRes.sort((a: any, b: any) => b.Date?.localeCompare(a.Date)) : []);
       if (gRes) {
@@ -88,6 +91,7 @@ export default function EmployeeDashboard() {
       setAnnouncements(Array.isArray(annRes) ? annRes : []);
       if (qStats) setQuizStats(qStats);
       setCalendar(Array.isArray(calRes) ? calRes : []);
+      setQuizHistory(Array.isArray(qHist) ? qHist : []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -155,6 +159,9 @@ export default function EmployeeDashboard() {
         answer,
         correctAnswer: quiz.correctAnswer,
         explanation: quiz.explanation,
+        options: quiz.options,
+        difficulty: quiz.difficulty,
+        category: quiz.category,
       });
       setQuizResult({
         correct: res.correct,
@@ -176,7 +183,11 @@ export default function EmployeeDashboard() {
     setQuizResult(null);
     try {
       const res: any = await quizApi.generate(user?.name || "");
-      setQuiz(res);
+      if (res.limitReached) {
+        setQuiz({ limitReached: true, count: res.count, limit: res.limit });
+      } else {
+        setQuiz(res);
+      }
     } catch (e: any) {
       console.error(e);
     } finally {
@@ -367,104 +378,202 @@ export default function EmployeeDashboard() {
           {/* AI Engineering Quiz — full width */}
           <Card className="lg:col-span-3 card-hover bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border-indigo-200/60 dark:border-indigo-800/30">
             <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-5 h-5 text-indigo-500" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">
-                      🤖 AI PIPING QUIZ
-                    </span>
-                    {quiz?.difficulty && (
-                      <span className={cn(
-                        "px-2 py-0.5 rounded-full text-[9px] font-bold",
-                        quiz.difficulty === "Easy" && "bg-emerald-100 text-emerald-600",
-                        quiz.difficulty === "Medium" && "bg-amber-100 text-amber-600",
-                        quiz.difficulty === "Hard" && "bg-red-100 text-red-500",
-                      )}>{quiz.difficulty}</span>
-                    )}
-                    {quiz?.category && (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-surface-hover)] text-[9px] font-semibold text-[var(--color-text-muted)]">
-                        {quiz.category}
-                      </span>
-                    )}
-                    {quizStats && (
-                      <span className="ml-auto text-[10px] font-semibold text-[var(--color-text-muted)]">
-                        {quizStats.correct}/{quizStats.total} correct ({quizStats.accuracy}%) · {quizStats.uniqueQuestions} unique
-                      </span>
-                    )}
+              {/* Header with tabs */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-indigo-500" />
                   </div>
-                  {generatingQuiz ? (
-                    <div className="flex flex-col items-center gap-3 py-8">
-                      <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                      <span className="text-sm text-indigo-500 font-medium">AI is generating your question...</span>
-                      <span className="text-xs text-[var(--color-text-muted)]">Powered by MiniMax M3</span>
-                    </div>
-                  ) : quiz ? (
-                    <div className="space-y-3">
-                      <p className="text-sm text-[var(--color-text-primary)] leading-relaxed font-semibold">{quiz.question}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.entries(quiz.options).map(([key, val]) => {
-                          const isSelected = quizAnswer === key;
-                          const isCorrect = quizResult && key === quizResult.correctAnswer;
-                          const isWrong = quizResult && isSelected && !quizResult.correct;
-                          return (
-                            <button
-                              key={key}
-                              onClick={() => handleQuizAnswer(key)}
-                              disabled={!!quizResult}
-                              className={cn(
-                                "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
-                                !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
-                                !!quizResult && "cursor-default",
-                                isCorrect && "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400",
-                                isWrong && "border-red-400 bg-red-50 dark:bg-red-950/20 text-red-600",
-                                !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
-                              )}
-                            >
-                              <span className="text-[10px] font-bold text-[var(--color-text-muted)] mr-1.5">{key}.</span>
-                              {String(val)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {quizResult && (
-                        <div className="space-y-2 animate-slide-up">
-                          <div className={cn(
-                            "p-3 rounded-xl text-sm font-medium",
-                            quizResult.correct ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600" : "bg-red-50 dark:bg-red-950/20 text-red-500",
-                          )}>
-                            {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong! The correct answer is ${quizResult.correctAnswer}.`}
-                          </div>
-                          {quizResult.explanation && (
-                            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
-                              <p className="text-xs font-bold text-blue-600 mb-1">💡 EXPLANATION</p>
-                              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
-                            </div>
-                          )}
-                          <button
-                            onClick={handleGenerateQuiz}
-                            className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors"
-                          >
-                            🔄 Next Question
-                          </button>
-                        </div>
+                  <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">🤖 AI PIPING QUIZ</span>
+                </div>
+                <div className="flex gap-1 p-0.5 bg-[var(--color-surface-hover)] rounded-lg">
+                  {(["play", "history"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setQuizTab(tab)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
+                        quizTab === tab ? "bg-indigo-500 text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]",
                       )}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 py-6">
-                      <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
-                      <button
-                        onClick={handleGenerateQuiz}
-                        className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors shadow-sm"
-                      >
-                        ✨ Generate Question
-                      </button>
-                    </div>
-                  )}
+                    >
+                      {tab === "play" ? "🎯 Play" : `📖 History (${quizHistory.length})`}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Stats bar */}
+              {quizStats && (
+                <div className="flex gap-3 mb-4 flex-wrap">
+                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] text-[10px] font-semibold">
+                    <span className="text-[var(--color-text-muted)]">Score:</span>{" "}
+                    <span className="text-[var(--color-text-primary)]">{quizStats.correct}/{quizStats.total}</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] text-[10px] font-semibold">
+                    <span className="text-[var(--color-text-muted)]">Accuracy:</span>{" "}
+                    <span className="text-[var(--color-text-primary)]">{quizStats.accuracy}%</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] text-[10px] font-semibold">
+                    <span className="text-[var(--color-text-muted)]">Unique:</span>{" "}
+                    <span className="text-[var(--color-text-primary)]">{quizStats.uniqueQuestions}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Play Tab */}
+              {quizTab === "play" && (
+                generatingQuiz ? (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                    <span className="text-sm text-indigo-500 font-medium">AI is generating your question...</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">Powered by MiniMax M3</span>
+                  </div>
+                ) : quiz?.limitReached ? (
+                  <div className="text-center py-6">
+                    <div className="text-3xl mb-2">🎯</div>
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">Daily Limit Reached</p>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">You've answered {quiz.count}/{quiz.limit} questions today. Come back tomorrow!</p>
+                    <div className="mt-3 flex justify-center">
+                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 text-xs font-semibold">
+                        📖 Review History
+                      </button>
+                    </div>
+                  </div>
+                ) : quiz && quiz.options ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      {quiz.difficulty && (
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[9px] font-bold",
+                          quiz.difficulty === "Easy" && "bg-emerald-100 text-emerald-600",
+                          quiz.difficulty === "Medium" && "bg-amber-100 text-amber-600",
+                          quiz.difficulty === "Hard" && "bg-red-100 text-red-500",
+                        )}>{quiz.difficulty}</span>
+                      )}
+                      {quiz.category && (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-surface-hover)] text-[9px] font-semibold text-[var(--color-text-muted)]">
+                          {quiz.category}
+                        </span>
+                      )}
+                      {quiz.remaining !== undefined && (
+                        <span className="ml-auto px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-[9px] font-bold text-indigo-600">
+                          {quiz.remaining} left today
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-[var(--color-text-primary)] leading-relaxed font-semibold">{quiz.question}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(quiz.options).map(([key, val]) => {
+                        const isSelected = quizAnswer === key;
+                        const isCorrect = quizResult && key === quizResult.correctAnswer;
+                        const isWrong = quizResult && isSelected && !quizResult.correct;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => handleQuizAnswer(key)}
+                            disabled={!!quizResult}
+                            className={cn(
+                              "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
+                              !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
+                              !!quizResult && "cursor-default",
+                              isCorrect && "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400",
+                              isWrong && "border-red-400 bg-red-50 dark:bg-red-950/20 text-red-600",
+                              !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
+                            )}
+                          >
+                            <span className="text-[10px] font-bold text-[var(--color-text-muted)] mr-1.5">{key}.</span>
+                            {String(val)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {quizResult && (
+                      <div className="space-y-2 animate-slide-up">
+                        <div className={cn(
+                          "p-3 rounded-xl text-sm font-medium",
+                          quizResult.correct ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600" : "bg-red-50 dark:bg-red-950/20 text-red-500",
+                        )}>
+                          {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong! The correct answer is ${quizResult.correctAnswer}.`}
+                        </div>
+                        {quizResult.explanation && (
+                          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
+                            <p className="text-xs font-bold text-blue-600 mb-1">💡 EXPLANATION</p>
+                            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
+                          </div>
+                        )}
+                        <button
+                          onClick={handleGenerateQuiz}
+                          className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors"
+                        >
+                          🔄 Next Question
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-6">
+                    <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
+                    <button
+                      onClick={handleGenerateQuiz}
+                      className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors shadow-sm"
+                    >
+                      ✨ Generate Question
+                    </button>
+                  </div>
+                )
+              )}
+
+              {/* History Tab */}
+              {quizTab === "history" && (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {quizHistory.length === 0 ? (
+                    <p className="text-sm text-[var(--color-text-muted)] text-center py-8">No questions answered yet. Start playing!</p>
+                  ) : (
+                    quizHistory.map((h) => (
+                      <div key={h.id} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm text-[var(--color-text-primary)] font-medium leading-snug flex-1">{h.Question}</p>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <span className={cn(
+                              "px-1.5 py-0.5 rounded text-[8px] font-bold",
+                              h.IsCorrect ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500",
+                            )}>{h.IsCorrect ? "✓" : "✗"}</span>
+                            {h.Difficulty && (
+                              <span className={cn(
+                                "px-1.5 py-0.5 rounded text-[8px] font-bold",
+                                h.Difficulty === "Easy" && "bg-emerald-50 text-emerald-500",
+                                h.Difficulty === "Medium" && "bg-amber-50 text-amber-500",
+                                h.Difficulty === "Hard" && "bg-red-50 text-red-400",
+                              )}>{h.Difficulty}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 text-[10px]">
+                          {(["A", "B", "C", "D"] as const).map((k) => {
+                            const isCorrect = k === h.CorrectAnswer;
+                            const isUser = k === h.UserAnswer;
+                            return (
+                              <span key={k} className={cn(
+                                "px-2 py-0.5 rounded font-medium",
+                                isCorrect && "bg-emerald-100 text-emerald-700",
+                                isUser && !isCorrect && "bg-red-100 text-red-600",
+                                !isCorrect && !isUser && "bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]",
+                              )}>{k}. {h[`Option${k}`] || ""}</span>
+                            );
+                          })}
+                        </div>
+                        {h.Explanation && (
+                          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed bg-blue-50/50 dark:bg-blue-950/10 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>
+                        )}
+                        <div className="flex items-center gap-2 text-[9px] text-[var(--color-text-muted)]">
+                          {h.AnsweredAt && <span>{new Date(h.AnsweredAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>}
+                          {h.XpEarned > 0 && <span className="text-amber-500 font-bold">+{h.XpEarned} XP</span>}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
