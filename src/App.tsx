@@ -33,7 +33,7 @@ function AppInner() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] bg-mesh">
       <Header />
-      <main className="pb-12">
+      <main className="pb-16 lg:pb-20">
         {user.role === "team_lead" ? <TeamLeadDashboard /> : <EmployeeDashboard />}
       </main>
     </div>

@@ -243,6 +243,12 @@ input:focus, select:focus, textarea:focus {
   color: inherit;
 }
 
+/* ─── Desktop layout helpers ─── */
+@media (min-width: 1024px) {
+  .lg\:gap-6 { gap: 1.5rem; }
+  .lg\:gap-8 { gap: 2rem; }
+}
+
 /* ─── Glass card ─── */
 .glass {
   background: rgba(255, 255, 255, 0.7);

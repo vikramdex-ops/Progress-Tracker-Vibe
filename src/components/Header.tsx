@@ -38,7 +38,7 @@ export default function Header() {
     <header className="sticky top-0 z-30">
       {/* Main header bar */}
       <div className="glass border-b border-[var(--color-border)]/50">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
@@ -94,14 +94,14 @@ export default function Header() {
       </div>
 
       {/* Ticker */}
-      <div className="border-b border-[var(--color-border)]/30 bg-[var(--color-surface)]/60 overflow-hidden h-9 flex items-center">
-        <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-bold tracking-[0.15em] px-4 h-full flex items-center z-10 shadow-sm">
+      <div className="border-b border-[var(--color-border)]/30 bg-[var(--color-surface)]/60 overflow-hidden h-10 lg:h-11 flex items-center">
+        <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] lg:text-[10px] font-bold tracking-[0.15em] px-4 h-full flex items-center z-10 shadow-sm">
           LIVE FEED
         </div>
         <div className="overflow-hidden flex-1">
           <div className="ticker-track flex gap-12 whitespace-nowrap px-5">
             {doubled.map((msg, i) => (
-              <span key={i} className="text-[11px] text-[var(--color-text-muted)] flex items-center gap-2.5">
+              <span key={i} className="text-[11px] lg:text-xs text-[var(--color-text-muted)] flex items-center gap-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-sm shadow-emerald-400/30" />
                 {msg}
               </span>

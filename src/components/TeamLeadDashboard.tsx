@@ -331,7 +331,7 @@ export default function TeamLeadDashboard() {
       {/* ── Floating Chatbot ── */}
       <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
-          <div className="mb-3 w-80 bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
+          <div className="mb-3 w-80 lg:w-96 bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
             <div className="p-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🤖</span>
@@ -388,7 +388,7 @@ export default function TeamLeadDashboard() {
 }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-8 space-y-7">
+    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-8 lg:py-10 space-y-7 lg:space-y-9">
       {/* ── Tabs ── */}
       <div className="flex gap-1.5 p-1 bg-[var(--color-surface-hover)] rounded-xl w-fit border border-[var(--color-border)]/50">
         {([
@@ -415,16 +415,16 @@ export default function TeamLeadDashboard() {
       {activeTab === "team" && (
       <>
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger-children">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 stagger-children">
         {[
           { icon: <CheckCircle2 className="w-5 h-5" />, label: "Filled Today", value: `${todaysEntries.length}/${teamNames.length || "—"}`, color: "emerald", gradient: "from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/10" },
           { icon: <AlertTriangle className="w-5 h-5" />, label: "Missing Today", value: `${missingToday.length}`, color: "red", gradient: "from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/10" },
           { icon: <BarChart3 className="w-5 h-5" />, label: "Avg Completion", value: `${avgComp}%`, color: "blue", gradient: "from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/10" },
           { icon: <Star className="w-5 h-5" />, label: "Awaiting Rating", value: `${pendingRatings}`, color: "amber", gradient: "from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/10" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover p-4", stat.gradient)}>
+          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover p-4 lg:p-5", stat.gradient)}>
             <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0",
+              <div className={cn("w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center flex-shrink-0",
                 stat.color === "emerald" && "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
                 stat.color === "red" && "bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400",
                 stat.color === "blue" && "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
@@ -433,8 +433,8 @@ export default function TeamLeadDashboard() {
                 {stat.icon}
               </div>
               <div className="min-w-0">
-                <div className={cn("text-lg font-bold tabular-nums leading-tight", stat.color === "red" ? "text-red-500" : "text-[var(--color-text-primary)]")}>{stat.value}</div>
-                <div className="text-[11px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-tight mt-0.5">{stat.label}</div>
+                <div className={cn("text-lg lg:text-xl font-bold tabular-nums leading-tight", stat.color === "red" ? "text-red-500" : "text-[var(--color-text-primary)]")}>{stat.value}</div>
+                <div className="text-[11px] lg:text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-tight mt-0.5">{stat.label}</div>
               </div>
             </div>
           </Card>
@@ -543,11 +543,11 @@ export default function TeamLeadDashboard() {
       )}
 
       {/* ── Compact Widgets Row ── */}
-      <div className="grid md:grid-cols-3 gap-4 stagger-children">
+      <div className="grid md:grid-cols-3 gap-4 lg:gap-6 stagger-children">
         {/* Streak Leaderboard */}
         <Card className="card-hover">
-          <CardHeader className="mb-3"><CardTitle className="flex items-center gap-1.5">🔥 Streak Leaderboard</CardTitle></CardHeader>
-          <CardContent className="space-y-1">
+          <CardHeader className="mb-3"><CardTitle className="flex items-center gap-1.5 lg:text-base">🔥 Streak Leaderboard</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5">
             {sortedByStreak.map((name, i) => (
               <div key={name} className="flex items-center justify-between py-2 px-1 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
                 <div className="flex items-center gap-2.5">
@@ -572,7 +572,7 @@ export default function TeamLeadDashboard() {
 
         {/* Needs Attention */}
         <Card className="card-hover border-red-200/30 dark:border-red-800/20">
-          <CardHeader className="mb-3"><CardTitle className="flex items-center gap-1.5">⚠️ Needs Attention</CardTitle></CardHeader>
+          <CardHeader className="mb-3"><CardTitle className="flex items-center gap-1.5 lg:text-base">⚠️ Needs Attention</CardTitle></CardHeader>
           <CardContent className="space-y-1">
             {needsAttention.length === 0 ? (
               <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">All good! 🎉</p>
@@ -646,18 +646,18 @@ export default function TeamLeadDashboard() {
       </div>
 
       {/* ── Entry Table ── */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+      <Card className="overflow-hidden">
+        <CardHeader className="px-6 py-5 lg:px-8">
+          <CardTitle className="flex items-center justify-between lg:text-lg">
             <span>Team Entries</span>
             <span className="text-[10px] font-normal text-[var(--color-text-muted)] font-mono normal-case tracking-normal">
               search · filter · rate
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
           {/* Filters */}
-          <div className="flex flex-wrap gap-2.5 mb-5 p-3 rounded-xl bg-[var(--color-surface-hover)]/50 border border-[var(--color-border)]/30">
+          <div className="flex flex-wrap gap-2.5 lg:gap-3 mb-5 p-3 lg:p-4 rounded-xl bg-[var(--color-surface-hover)]/50 border border-[var(--color-border)]/30">
             <div className="relative flex-1 min-w-[200px]">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               <Input
@@ -705,8 +705,8 @@ export default function TeamLeadDashboard() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm lg:text-[15px]">
               <thead>
                 <tr className="text-left text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border)]">
                   {["Date", "Employee", "Project", "Task", "Description", "Planned", "Actual", "Complete", "Complexity", "Rating"].map((h) => (
@@ -761,18 +761,18 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── Announcements Live Feed ── */}
-      <Card className="card-hover">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="card-hover overflow-hidden">
+        <CardHeader className="px-6 py-5 lg:px-8">
+          <CardTitle className="flex items-center gap-2 lg:text-lg">
             <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
             <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case tracking-normal ml-auto">
               who filled & when
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
           {announcements.length > 0 ? (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2.5 max-h-80 lg:max-h-96 overflow-y-auto">
               {announcements.slice(0, 15).map((ann) => (
                 <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--color-surface-hover)] transition-colors">
                   <div className={cn(
@@ -803,8 +803,8 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Weekly Report ── */}
-      <Card className="card-hover border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-r from-purple-50/50 to-indigo-50/30 dark:from-purple-950/10 dark:to-indigo-950/5">
-        <CardContent className="p-5">
+      <Card className="card-hover border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-r from-purple-50/50 to-indigo-50/30 dark:from-purple-950/10 dark:to-indigo-950/5 overflow-hidden">
+        <CardContent className="p-5 lg:p-7">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-purple-600 flex items-center gap-2">
               📊 AI Weekly Report
@@ -873,8 +873,8 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Deep Team Analytics (DeepSeek V4) ── */}
-      <Card className="card-hover border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5">
-        <CardContent className="p-5">
+      <Card className="card-hover border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5 overflow-hidden">
+        <CardContent className="p-5 lg:p-7">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-cyan-600 flex items-center gap-2">
               🔍 Deep Team Analytics
