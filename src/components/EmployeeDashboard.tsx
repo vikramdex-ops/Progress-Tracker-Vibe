@@ -265,7 +265,7 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-14 py-6 lg:py-8 space-y-5 lg:space-y-7">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 py-5 sm:py-6 lg:py-8 space-y-4 sm:space-y-5 lg:space-y-7">
       {celebration && (
         <CelebrationModal xp={celebration.xp} streak={celebration.streak} onClose={() => setCelebration(null)} />
       )}
@@ -320,13 +320,13 @@ export default function EmployeeDashboard() {
 
       {/* ═══════════════════════════ OVERVIEW ═══════════════════════════ */}
       {activeTab === "overview" && (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 stagger-children">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 stagger-children">
           {/* Today's Mission — full width */}
           <Card className={cn(
             "lg:col-span-3 border-amber-200/60 dark:border-amber-800/30 p-0 overflow-hidden",
             "bg-gradient-to-r from-amber-50/80 via-orange-50/40 to-amber-50/60 dark:from-amber-950/15 dark:via-orange-950/10 dark:to-amber-950/15"
           )}>
-            <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
                 <Target className="w-6 h-6 text-white" />
               </div>
@@ -674,9 +674,8 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* ═══════════════════════════ EOD ENTRY TAB ═══════════════════════════ */}
-      {activeTab === "entries" && (
-        <div className="max-w-4xl space-y-6 animate-fade-in">
+      {/* ═══════════════════════════ EOD ENTRY TAB ═══════════════════════════ */}          {activeTab === "entries" && (
+        <div className="max-w-4xl lg:max-w-5xl space-y-5 sm:space-y-6 animate-fade-in">
           {/* Leave button */}
           {!todayEntry && !onLeaveToday && (
             <div className="flex justify-end">
@@ -815,7 +814,7 @@ export default function EmployeeDashboard() {
                   <span className="ml-auto text-sm font-bold text-amber-500 normal-case tracking-normal">+10 XP</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5 px-5 lg:px-8 pb-5 lg:pb-7">
+              <CardContent className="space-y-5 px-4 sm:px-5 lg:px-8 pb-5 lg:pb-7">
                 {workItems.map((item, i) => (
                   <div
                     key={i}

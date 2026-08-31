@@ -243,8 +243,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative">
+      {/* Right form panel */}        <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-14 xl:p-20 relative">
         {/* Subtle background pattern for light mode */}
         <div className="absolute inset-0 bg-mesh opacity-50" />
 
@@ -264,7 +263,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form card */}
-          <div className="bg-[var(--color-surface)] rounded-3xl p-8 sm:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[var(--color-border)]/60">
+          <div className="bg-[var(--color-surface)] rounded-3xl p-7 sm:p-8 lg:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-[var(--color-border)]/60">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1">Welcome back</h2>
               <p className="text-sm text-[var(--color-text-muted)]">Sign in to access your dashboard</p>

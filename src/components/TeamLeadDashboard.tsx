@@ -333,7 +333,7 @@ export default function TeamLeadDashboard() {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-14 py-6 lg:py-8 space-y-5 lg:space-y-7">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 py-5 sm:py-6 lg:py-8 space-y-4 sm:space-y-5 lg:space-y-7">
       {/* ── Tabs ── */}
       <div className="flex gap-1.5 p-1 bg-[var(--color-surface-hover)] rounded-xl w-fit border border-[var(--color-border)]/50">
         {([
@@ -488,7 +488,7 @@ export default function TeamLeadDashboard() {
       )}
 
       {/* ── Compact Widgets Row ── */}
-      <div className="grid md:grid-cols-3 gap-3 lg:gap-5 stagger-children">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 xl:gap-5 stagger-children">
         {/* Streak Leaderboard */}
         <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
           <CardHeader className="mb-3 pb-2"><CardTitle className="flex items-center gap-1.5 text-sm lg:text-[15px] font-bold">🔥 Streak Leaderboard</CardTitle></CardHeader>
@@ -592,7 +592,7 @@ export default function TeamLeadDashboard() {
 
       {/* ── Entry Table ── */}
       <Card className="shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
-        <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
+        <CardHeader className="px-4 sm:px-5 py-4 lg:px-8 lg:py-5">
           <CardTitle className="flex items-center justify-between text-base lg:text-lg font-bold">
             <span>Team Entries</span>
             <span className="text-[10px] font-normal text-[var(--color-text-muted)] font-mono normal-case tracking-normal">
@@ -600,10 +600,9 @@ export default function TeamLeadDashboard() {
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-5 lg:px-8 pb-5 lg:pb-7">
-          {/* Filters */}
+        <CardContent className="px-4 sm:px-5 lg:px-8 pb-5 lg:pb-7">
           <div className="flex flex-wrap gap-2 lg:gap-3 mb-4 p-3 lg:p-4 rounded-xl bg-[var(--color-surface-hover)]/50 border border-[var(--color-border)]/30">
-            <div className="relative flex-1 min-w-[200px]">
+            <div className="relative flex-1 min-w-[200px] lg:min-w-[300px]">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               <Input
                 placeholder="Search project / task / description..."
@@ -615,7 +614,7 @@ export default function TeamLeadDashboard() {
             <select
               value={fUser}
               onChange={(e) => setFUser(e.target.value)}
-              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
+              className="h-10 min-w-[140px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
             >
               <option value="">All employees</option>
               {teamNames.map((n) => (
@@ -625,7 +624,7 @@ export default function TeamLeadDashboard() {
             <select
               value={fProject}
               onChange={(e) => setFProject(e.target.value)}
-              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
+              className="h-10 min-w-[140px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
             >
               <option value="">All projects</option>
               {PROJECTS.map((p) => (
@@ -636,12 +635,12 @@ export default function TeamLeadDashboard() {
               type="date"
               value={fDate}
               onChange={(e) => setFDate(e.target.value)}
-              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
+              className="h-10 min-w-[140px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
             />
             <select
               value={fRange}
               onChange={(e) => setFRange(e.target.value)}
-              className="h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
+              className="h-10 min-w-[120px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-all"
             >
               <option value="all">All time</option>
               <option value="7">Last 7 days</option>
