@@ -38,7 +38,7 @@ export default function Header() {
     <header className="sticky top-0 z-30">
       {/* Main header bar */}
       <div className="glass border-b border-[var(--color-border)]/50">
-        <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-14 h-16 lg:h-[72px] flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
@@ -94,7 +94,7 @@ export default function Header() {
       </div>
 
       {/* Ticker */}
-      <div className="border-b border-[var(--color-border)]/30 bg-[var(--color-surface)]/60 overflow-hidden h-10 lg:h-11 flex items-center">
+      <div className="border-b border-[var(--color-border)]/30 bg-[var(--color-surface)]/60 overflow-hidden h-10 lg:h-[44px] flex items-center">
         <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] lg:text-[10px] font-bold tracking-[0.15em] px-4 h-full flex items-center z-10 shadow-sm">
           LIVE FEED
         </div>

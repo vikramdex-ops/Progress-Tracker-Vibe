@@ -328,67 +328,12 @@ export default function TeamLeadDashboard() {
           <div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
           <span className="text-sm text-[var(--color-text-muted)]">Loading team data...</span>
         </div>
-      {/* ── Floating Chatbot ── */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {chatOpen && (
-          <div className="mb-3 w-80 lg:w-96 bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
-            <div className="p-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">🤖</span>
-                <span className="text-xs font-bold">Piping Assistant</span>
-                <span className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded-full">DeepSeek V4</span>
-              </div>
-              <button onClick={() => setChatOpen(false)} className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
-            </div>
-            <div className="h-72 overflow-y-auto p-3 space-y-3">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-                  <div className={cn(
-                    "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
-                    msg.role === "user" ? "bg-cyan-500 text-white rounded-br-md" : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
-                  )}>{msg.content}</div>
-                </div>
-              ))}
-              {chatLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
-                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"300ms"}} /></div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="p-3 border-t border-[var(--color-border)]">
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleChat()}
-                  placeholder="Ask about piping codes, standards..."
-                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-cyan-400"
-                />
-                <button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="w-9 h-9 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white flex items-center justify-center disabled:opacity-50">
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setChatOpen(!chatOpen)}
-          className={cn(
-            "w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300",
-            chatOpen ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90" : "bg-gradient-to-br from-cyan-500 to-teal-600 hover:scale-110",
-          )}
-        >
-          {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}
-        </button>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-8 lg:py-10 space-y-7 lg:space-y-9">
+    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-14 py-6 lg:py-8 space-y-5 lg:space-y-7">
       {/* ── Tabs ── */}
       <div className="flex gap-1.5 p-1 bg-[var(--color-surface-hover)] rounded-xl w-fit border border-[var(--color-border)]/50">
         {([
@@ -415,16 +360,16 @@ export default function TeamLeadDashboard() {
       {activeTab === "team" && (
       <>
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 stagger-children">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 stagger-children">
         {[
           { icon: <CheckCircle2 className="w-5 h-5" />, label: "Filled Today", value: `${todaysEntries.length}/${teamNames.length || "—"}`, color: "emerald", gradient: "from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/10" },
           { icon: <AlertTriangle className="w-5 h-5" />, label: "Missing Today", value: `${missingToday.length}`, color: "red", gradient: "from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/10" },
           { icon: <BarChart3 className="w-5 h-5" />, label: "Avg Completion", value: `${avgComp}%`, color: "blue", gradient: "from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/10" },
           { icon: <Star className="w-5 h-5" />, label: "Awaiting Rating", value: `${pendingRatings}`, color: "amber", gradient: "from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/10" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover p-4 lg:p-5", stat.gradient)}>
-            <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center flex-shrink-0",
+          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
                 stat.color === "emerald" && "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
                 stat.color === "red" && "bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400",
                 stat.color === "blue" && "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
@@ -433,8 +378,8 @@ export default function TeamLeadDashboard() {
                 {stat.icon}
               </div>
               <div className="min-w-0">
-                <div className={cn("text-lg lg:text-xl font-bold tabular-nums leading-tight", stat.color === "red" ? "text-red-500" : "text-[var(--color-text-primary)]")}>{stat.value}</div>
-                <div className="text-[11px] lg:text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-tight mt-0.5">{stat.label}</div>
+                <div className={cn("text-xl lg:text-2xl font-extrabold tabular-nums leading-none", stat.color === "red" ? "text-red-500" : "text-[var(--color-text-primary)]")}>{stat.value}</div>
+                <div className="text-[10px] lg:text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-widest leading-tight mt-1">{stat.label}</div>
               </div>
             </div>
           </Card>
@@ -543,11 +488,11 @@ export default function TeamLeadDashboard() {
       )}
 
       {/* ── Compact Widgets Row ── */}
-      <div className="grid md:grid-cols-3 gap-4 lg:gap-6 stagger-children">
+      <div className="grid md:grid-cols-3 gap-3 lg:gap-5 stagger-children">
         {/* Streak Leaderboard */}
-        <Card className="card-hover">
-          <CardHeader className="mb-3"><CardTitle className="flex items-center gap-1.5 lg:text-base">🔥 Streak Leaderboard</CardTitle></CardHeader>
-          <CardContent className="space-y-1.5">
+        <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+          <CardHeader className="mb-3 pb-2"><CardTitle className="flex items-center gap-1.5 text-sm lg:text-[15px] font-bold">🔥 Streak Leaderboard</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
             {sortedByStreak.map((name, i) => (
               <div key={name} className="flex items-center justify-between py-2 px-1 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
                 <div className="flex items-center gap-2.5">
@@ -571,8 +516,8 @@ export default function TeamLeadDashboard() {
         </Card>
 
         {/* Needs Attention */}
-        <Card className="card-hover border-red-200/30 dark:border-red-800/20">
-          <CardHeader className="mb-3"><CardTitle className="flex items-center gap-1.5 lg:text-base">⚠️ Needs Attention</CardTitle></CardHeader>
+        <Card className="card-hover shadow-sm border border-red-200/30 dark:border-red-800/20">
+          <CardHeader className="mb-3 pb-2"><CardTitle className="flex items-center gap-1.5 text-sm lg:text-[15px] font-bold">⚠️ Needs Attention</CardTitle></CardHeader>
           <CardContent className="space-y-1">
             {needsAttention.length === 0 ? (
               <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">All good! 🎉</p>
@@ -591,8 +536,8 @@ export default function TeamLeadDashboard() {
         </Card>
 
         {/* Mini Leaderboard Tabs */}
-        <Card className="card-hover">
-          <CardHeader className="mb-3">
+        <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+          <CardHeader className="mb-3 pb-2">
             <div className="flex gap-1 p-1 bg-[var(--color-surface-hover)] rounded-lg w-fit">
               {(["streak", "completion", "xp", "entries"] as const).map((tab) => (
                 <button
@@ -646,18 +591,18 @@ export default function TeamLeadDashboard() {
       </div>
 
       {/* ── Entry Table ── */}
-      <Card className="overflow-hidden">
-        <CardHeader className="px-6 py-5 lg:px-8">
-          <CardTitle className="flex items-center justify-between lg:text-lg">
+      <Card className="shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
+        <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
+          <CardTitle className="flex items-center justify-between text-base lg:text-lg font-bold">
             <span>Team Entries</span>
             <span className="text-[10px] font-normal text-[var(--color-text-muted)] font-mono normal-case tracking-normal">
               search · filter · rate
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
+        <CardContent className="px-5 lg:px-8 pb-5 lg:pb-7">
           {/* Filters */}
-          <div className="flex flex-wrap gap-2.5 lg:gap-3 mb-5 p-3 lg:p-4 rounded-xl bg-[var(--color-surface-hover)]/50 border border-[var(--color-border)]/30">
+          <div className="flex flex-wrap gap-2 lg:gap-3 mb-4 p-3 lg:p-4 rounded-xl bg-[var(--color-surface-hover)]/50 border border-[var(--color-border)]/30">
             <div className="relative flex-1 min-w-[200px]">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-text-muted)]" />
               <Input
@@ -705,26 +650,26 @@ export default function TeamLeadDashboard() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto -mx-2 px-2">
-            <table className="w-full text-sm lg:text-[15px]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border)]">
+                <tr className="text-left text-[10px] lg:text-[11px] text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border)]">
                   {["Date", "Employee", "Project", "Task", "Description", "Planned", "Actual", "Complete", "Complexity", "Rating"].map((h) => (
-                    <th key={h} className="pb-3 font-semibold pr-4">{h}</th>
+                    <th key={h} className="pb-3 font-semibold pr-5 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredEntries.map((e) => (
                   <tr key={e.id} className="border-b border-[var(--color-border)]/30 hover:bg-[var(--color-surface-hover)] transition-colors">
-                    <td className="py-3 pr-4 font-mono text-xs whitespace-nowrap text-[var(--color-text-muted)]">{e.Date}</td>
-                    <td className="py-3 pr-4 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{e.EmployeeName}</td>
-                    <td className="py-3 pr-4 font-medium text-[var(--color-text-secondary)]">{e.Project}</td>
-                    <td className="py-3 pr-4 text-[var(--color-text-secondary)]">{e.Task}</td>
-                    <td className="py-3 pr-4 max-w-[200px] truncate text-[var(--color-text-muted)] text-xs">{e.Description}</td>
-                    <td className="py-3 pr-4 font-mono tabular-nums">{e.PlannedQty}</td>
-                    <td className="py-3 pr-4 font-mono tabular-nums">{e.ActualQty}</td>
-                    <td className="py-3 pr-4 font-mono tabular-nums font-medium">{e.CompletionPct}%</td>
+                    <td className="py-3.5 pr-5 font-mono text-xs whitespace-nowrap text-[var(--color-text-muted)]">{e.Date}</td>
+                    <td className="py-3.5 pr-5 font-medium text-[var(--color-text-secondary)] whitespace-nowrap">{e.EmployeeName}</td>
+                    <td className="py-3.5 pr-5 font-medium text-[var(--color-text-secondary)]">{e.Project}</td>
+                    <td className="py-3.5 pr-5 text-[var(--color-text-secondary)]">{e.Task}</td>
+                    <td className="py-3.5 pr-5 max-w-[220px] truncate text-[var(--color-text-muted)] text-xs">{e.Description}</td>
+                    <td className="py-3.5 pr-5 font-mono tabular-nums">{e.PlannedQty}</td>
+                    <td className="py-3.5 pr-5 font-mono tabular-nums">{e.ActualQty}</td>
+                    <td className="py-3.5 pr-5 font-mono tabular-nums font-medium">{e.CompletionPct}%</td>
                     <td className="py-3 pr-4">
                       <span className={cn(
                         "px-2.5 py-0.5 rounded-full text-[10px] font-bold border",
@@ -761,18 +706,18 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── Announcements Live Feed ── */}
-      <Card className="card-hover overflow-hidden">
-        <CardHeader className="px-6 py-5 lg:px-8">
-          <CardTitle className="flex items-center gap-2 lg:text-lg">
+      <Card className="card-hover shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
+        <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
+          <CardTitle className="flex items-center gap-2 text-base lg:text-lg font-bold">
             <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
             <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case tracking-normal ml-auto">
               who filled & when
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
+        <CardContent>
           {announcements.length > 0 ? (
-            <div className="space-y-2.5 max-h-80 lg:max-h-96 overflow-y-auto">
+            <div className="space-y-2 max-h-64 overflow-y-auto">
               {announcements.slice(0, 15).map((ann) => (
                 <div key={ann.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-[var(--color-surface-hover)] transition-colors">
                   <div className={cn(
@@ -803,8 +748,8 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Weekly Report ── */}
-      <Card className="card-hover border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-r from-purple-50/50 to-indigo-50/30 dark:from-purple-950/10 dark:to-indigo-950/5 overflow-hidden">
-        <CardContent className="p-5 lg:p-7">
+      <Card className="card-hover shadow-sm border border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-r from-purple-50/50 to-indigo-50/30 dark:from-purple-950/10 dark:to-indigo-950/5 overflow-hidden">
+        <CardContent className="p-5 lg:p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-purple-600 flex items-center gap-2">
               📊 AI Weekly Report
@@ -873,8 +818,8 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Deep Team Analytics (DeepSeek V4) ── */}
-      <Card className="card-hover border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5 overflow-hidden">
-        <CardContent className="p-5 lg:p-7">
+      <Card className="card-hover shadow-sm border border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5 overflow-hidden">
+        <CardContent className="p-5 lg:p-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-cyan-600 flex items-center gap-2">
               🔍 Deep Team Analytics
@@ -1160,6 +1105,62 @@ export default function TeamLeadDashboard() {
           </Card>
         </div>
       )}
+
+      {/* ── Floating Chatbot ── */}
+      <div className="fixed bottom-6 right-6 z-50">
+        {chatOpen && (
+          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
+            <div className="p-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🤖</span>
+                <span className="text-xs font-bold">Piping Assistant</span>
+                <span className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded-full">DeepSeek V4</span>
+              </div>
+              <button onClick={() => setChatOpen(false)} className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="h-72 overflow-y-auto p-3 space-y-3">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                  <div className={cn(
+                    "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
+                    msg.role === "user" ? "bg-cyan-500 text-white rounded-br-md" : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
+                  )}>{msg.content}</div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
+                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"300ms"}} /></div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-[var(--color-border)]">
+              <div className="flex gap-2">
+                <input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleChat()}
+                  placeholder="Ask about piping codes, standards..."
+                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-cyan-400"
+                />
+                <button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="w-9 h-9 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white flex items-center justify-center disabled:opacity-50">
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={() => setChatOpen(!chatOpen)}
+          className={cn(
+            "w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300",
+            chatOpen ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90" : "bg-gradient-to-br from-cyan-500 to-teal-600 hover:scale-110",
+          )}
+        >
+          {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}
+        </button>
+      </div>
     </div>
   );
 }

@@ -265,22 +265,22 @@ export default function EmployeeDashboard() {
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-8 lg:py-10 space-y-7 lg:space-y-9">
+    <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-14 py-6 lg:py-8 space-y-5 lg:space-y-7">
       {celebration && (
         <CelebrationModal xp={celebration.xp} streak={celebration.streak} onClose={() => setCelebration(null)} />
       )}
 
       {/* ── Top Stats Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 stagger-children">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 stagger-children">
         {[
           { icon: <Star className="w-5 h-5" />, label: "Total XP", value: `${gamification?.xp || 0}`, color: "amber", gradient: "from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/10" },
           { icon: <Award className="w-5 h-5" />, label: levelInfo.title, value: `Level ${levelInfo.level}`, color: "indigo", gradient: "from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/10" },
           { icon: <Flame className="w-5 h-5" />, label: "Current Streak", value: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}`, color: "orange", gradient: "from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/10" },
           { icon: <Check className="w-5 h-5" />, label: "Total Entries", value: `${gamification?.totalEntries || 0}`, color: "emerald", gradient: "from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/10" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover p-4 lg:p-5", stat.gradient)}>
-            <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center flex-shrink-0",
+          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
                 stat.color === "amber" && "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
                 stat.color === "indigo" && "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
                 stat.color === "orange" && "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
@@ -289,8 +289,8 @@ export default function EmployeeDashboard() {
                 {stat.icon}
               </div>
               <div className="min-w-0">
-                <div className="text-lg lg:text-xl font-bold text-[var(--color-text-primary)] tabular-nums leading-tight">{stat.value}</div>
-                <div className="text-[11px] lg:text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider leading-tight mt-0.5">{stat.label}</div>
+                <div className="text-xl lg:text-2xl font-extrabold text-[var(--color-text-primary)] tabular-nums leading-none">{stat.value}</div>
+                <div className="text-[10px] lg:text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-widest leading-tight mt-1">{stat.label}</div>
               </div>
             </div>
           </Card>
@@ -320,7 +320,7 @@ export default function EmployeeDashboard() {
 
       {/* ═══════════════════════════ OVERVIEW ═══════════════════════════ */}
       {activeTab === "overview" && (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-7 stagger-children">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 stagger-children">
           {/* Today's Mission — full width */}
           <Card className={cn(
             "lg:col-span-3 border-amber-200/60 dark:border-amber-800/30 p-0 overflow-hidden",
@@ -355,17 +355,17 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Progress Ring */}
-          <Card className="flex flex-col items-center justify-center card-hover">
-            <CardHeader className="w-full"><CardTitle className="lg:text-base">THIS WEEK</CardTitle></CardHeader>
+          <Card className="flex flex-col items-center justify-center card-hover shadow-sm border border-[var(--color-border)]/40">
+            <CardHeader className="w-full"><CardTitle className="text-sm lg:text-[15px] font-bold">THIS WEEK</CardTitle></CardHeader>
             <CardContent className="pb-2">
               <ProgressRing value={weeklyCompletion} size={140} strokeWidth={10} />
             </CardContent>
           </Card>
 
           {/* Quick Stats */}
-          <Card className="card-hover">
-            <CardHeader><CardTitle className="lg:text-base">Quick Stats</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
+          <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+            <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Quick Stats</CardTitle></CardHeader>
+            <CardContent className="space-y-3.5">
               {[
                 { emoji: "🔥", label: "Current Streak", val: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}` },
                 { emoji: "⭐", label: "Total XP", val: `${gamification?.xp || 0}` },
@@ -381,8 +381,8 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Level Progression */}
-          <Card className="card-hover">
-            <CardHeader><CardTitle className="lg:text-base">Level Progression</CardTitle></CardHeader>
+          <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+            <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Level Progression</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20 flex-shrink-0">
@@ -401,7 +401,7 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Badges — full width */}
-          <Card className="lg:col-span-3 card-hover overflow-hidden">
+          <Card className="lg:col-span-3 card-hover shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-500" /> YOUR ACHIEVEMENTS
@@ -434,8 +434,8 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* AI Engineering Quiz — full width */}
-          <Card className="lg:col-span-3 card-hover bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border-indigo-200/60 dark:border-indigo-800/30 overflow-hidden">
-            <CardContent className="p-6 lg:p-8">
+          <Card className="lg:col-span-3 card-hover shadow-sm bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/60 dark:border-indigo-800/30 overflow-hidden">
+            <CardContent className="p-5 lg:p-7">
               {/* Header with tabs */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -808,18 +808,18 @@ export default function EmployeeDashboard() {
             </>
           ) : (
             /* EOD Form */
-            <Card className="overflow-hidden">
-              <CardHeader className="px-6 py-5 lg:px-8">
-                <CardTitle className="flex items-center gap-2 lg:text-lg">
+            <Card className="shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
+              <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
+                <CardTitle className="flex items-center gap-2 text-base lg:text-lg font-bold">
                   <Send className="w-4 h-4" /> TODAY'S EOD ENTRY
                   <span className="ml-auto text-sm font-bold text-amber-500 normal-case tracking-normal">+10 XP</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5 px-6 lg:px-8 pb-6 lg:pb-8">
+              <CardContent className="space-y-5 px-5 lg:px-8 pb-5 lg:pb-7">
                 {workItems.map((item, i) => (
                   <div
                     key={i}
-                    className="p-5 lg:p-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-hover)]/50 space-y-4"
+                    className="p-4 lg:p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-hover)]/50 space-y-4"
                   >
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
@@ -925,11 +925,11 @@ export default function EmployeeDashboard() {
 
           {/* History */}
           {entries.length > 0 && (
-            <Card className="overflow-hidden">
-              <CardHeader className="px-6 py-5 lg:px-8"><CardTitle className="lg:text-lg">My History</CardTitle></CardHeader>
-              <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
-                <div className="overflow-x-auto -mx-2 px-2">
-                  <table className="w-full text-sm lg:text-[15px]">
+            <Card className="shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
+              <CardHeader className="px-5 py-4 lg:px-8 lg:py-5"><CardTitle className="text-base lg:text-lg font-bold">My History</CardTitle></CardHeader>
+              <CardContent className="px-5 lg:px-8 pb-5 lg:pb-7">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border)]">
                         <th className="pb-3 font-semibold pr-4">Date</th>
@@ -972,7 +972,7 @@ export default function EmployeeDashboard() {
       {/* ── Floating Chatbot ── */}
       <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
-          <div className="mb-3 w-80 lg:w-96 bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
+          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
             <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🤖</span>
