@@ -33,3 +33,5 @@ scripts/*.mjs
 # Misc
 *.log
 coverage/
+.vercel
+.env*

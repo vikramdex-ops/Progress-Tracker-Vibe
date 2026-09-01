@@ -2,8 +2,8 @@
   "version": 2,
   "outputDirectory": "dist",
   "routes": [
-    { "handle": "filesystem" },
-    { "src": "/assets/.*", "dest": "/assets/$1" },
-    { "src": "/.*", "dest": "/index.html" }
+    { "src": "/api/.*", "dest": "/api/index.ts" },
+    { "src": "/assets/.*", "dest": "/$0" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
