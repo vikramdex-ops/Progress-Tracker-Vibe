@@ -1,4 +1,9 @@
 {
   "outputDirectory": "dist",
-  "cleanUrls": true
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/$1" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/404.html", "dest": "/404.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
