@@ -1,9 +1,9 @@
 {
+  "version": 2,
   "outputDirectory": "dist",
-  "buildCommand": "",
-  "installCommand": "",
-  "rewrites": [
-    { "source": "/assets/(.*)", "destination": "/assets/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/api/.*", "dest": "/404.html" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
