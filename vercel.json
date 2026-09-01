@@ -1,8 +1,9 @@
 {
-  "buildCommand": "",
+  "buildCommand": "cd api && npm install && npx tsc",
   "outputDirectory": "dist",
+  "installCommand": "npm install",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/api/(.*)", "destination": "/api/dist/index.js" },
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
