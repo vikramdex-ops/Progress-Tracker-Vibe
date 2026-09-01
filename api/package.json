@@ -1,6 +1,7 @@
 {
   "name": "progress-tracker-api",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=18"
   }
