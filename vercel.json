@@ -1,8 +1,5 @@
 {
+  "buildCommand": "",
   "outputDirectory": "dist",
-  "ignoreCommand": "rm -rf api",
-  "routes": [
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  "installCommand": ""
 }
