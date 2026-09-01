@@ -3,7 +3,8 @@
   "outputDirectory": "dist",
   "routes": [
     { "src": "/api/.*", "dest": "/api/index.ts" },
-    { "src": "/assets/.*", "dest": "/$0" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/404.html", "dest": "/404.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
