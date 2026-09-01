@@ -66,6 +66,43 @@ export interface EarnedBadge {
   IsNew: boolean;
 }
 
+export interface Announcement {
+  id: string;
+  EmployeeName: string;
+  Message: string;
+  Type: string;
+  Timestamp: string;
+  Read: boolean;
+}
+
+export interface Notification {
+  id: string;
+  EmployeeName: string;
+  Type: string;
+  Title: string;
+  Message: string;
+  Read: boolean;
+  Timestamp: string;
+}
+
+export interface PushSubscription {
+  id: string;
+  EmployeeName: string;
+  Endpoint: string;
+  P256dh: string;
+  Auth: string;
+  Active: boolean;
+  ReminderCount: number;
+}
+
+export interface CalendarEntry {
+  id: string;
+  Date: string;
+  DayType: string;
+  Description: string;
+  EmployeeName: string;
+}
+
 export interface GamificationData {
   xp: number;
   level: number;
@@ -74,6 +111,10 @@ export interface GamificationData {
   longestStreak: number;
   totalEntries: number;
   badges: EarnedBadge[];
+  // Level progression metadata (from backend)
+  currentXpInLevel: number;
+  nextLevelXp: number;
+  progressToNextLevel: number;
 }
 
 export interface AuthResponse {

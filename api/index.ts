@@ -144,10 +144,14 @@ export default async function handler(req: any, res: any) {
       return res.status(result.status).json(result.data);
     }
     // ── Calendar ──
-    if (path === "calendar" && method === "GET") {
-      const result = await handleGetAllCalendar();
-      return res.status(result.status).json(result.data);
-    }
+        if (path === "calendar" && method === "GET") {
+          const result = await handleGetCalendar(req.query as any);
+          return res.status(result.status).json(result.data);
+        }
+        if (path === "calendar/all" && method === "GET") {
+          const result = await handleGetAllCalendar();
+          return res.status(result.status).json(result.data);
+        }
     if (path === "calendar" && method === "POST") {
       const body = await parseBody(req as any);
       const result = await handleCreateCalendarEntry(body);
@@ -159,11 +163,15 @@ export default async function handler(req: any, res: any) {
       return res.status(result.status).json(result.data);
     }
     // ── Announcements ──
-    if (path === "announcements" && method === "GET") {
-      const result = await handleGetAllAnnouncements();
-      return res.status(result.status).json(result.data);
-    }
-    if (path === "announcements" && method === "POST") {
+        if (path === "announcements" && method === "GET") {
+          const result = await handleGetAnnouncements(req.query as any);
+          return res.status(result.status).json(result.data);
+        }
+        if (path === "announcements/all" && method === "GET") {
+          const result = await handleGetAllAnnouncements();
+          return res.status(result.status).json(result.data);
+        }
+        if (path === "announcements" && method === "POST") {
       const body = await parseBody(req as any);
       const result = await handleCreateAnnouncement(body);
       return res.status(result.status).json(result.data);

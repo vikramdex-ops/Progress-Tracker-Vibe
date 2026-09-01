@@ -105,11 +105,11 @@ export async function handleLogin(body: any) {
   }
 
   const token = generateToken();
-  await airtable.update(TABLES.EMPLOYEES, emp.id, { SessionToken: token });
-  return {
-    status: 200,
-    data: { token, employee: sanitizeEmp(emp), forcePasswordChange: false },
-  };
+    await airtable.update(TABLES.EMPLOYEES, emp.id, { SessionToken: token });
+    return {
+      status: 200,
+      data: { token, employee: sanitizeEmp(emp), forcePasswordChange: false, message: "Logged in successfully" },
+    };
 }
 
 export async function handleChangePassword(body: any, emp: any) {
@@ -178,10 +178,10 @@ export async function handleCreateEntry(body: any) {
   }
 
   const results = [];
-  for (const item of workItems) {
-    const planned = Number(item.plannedQty) || 0;
-    const actual = Number(item.actualQty) || 0;
-    const completionPct = planned > 0 ? Math.round((actual / planned) * 100) : 0;
+    for (const item of workItems) {
+      const planned = Number(item.plannedQty) || 0;
+      const actual = Number(item.actualQty) || 0;
+      const completionPct = planned > 0 ? Math.min(999, Math.round((actual / planned) * 100)) : 0;
     const now = new Date();
     const filledAt = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
@@ -215,12 +215,12 @@ export async function handleCreateEntry(body: any) {
   const xpResult = await awardEntryXp(EmployeeName, workItems);
 
   // Auto-create announcement for live feed
-  try {
-    const filledAt = results[0]?.fields?.FilledAt || "now";
-    const totalItems = workItems.length;
-    const avgCompletion = results.length > 0
-      ? Math.round(results.reduce((s: number, r: any) => s + (r.fields?.CompletionPct || 0), 0) / results.length)
-      : 0;
+    try {
+      const filledAt = results[0]?.FilledAt || "now";
+      const totalItems = workItems.length;
+      const avgCompletion = results.length > 0
+        ? Math.round(results.reduce((s: number, r: any) => s + (r.CompletionPct || 0), 0) / results.length)
+        : 0;
     await airtable.create(TABLES.ANNOUNCEMENTS, {
       EmployeeName,
       Message: `filled ${totalItems} task${totalItems > 1 ? "s" : ""} at ${filledAt} — ${avgCompletion}% completion`,
@@ -340,22 +340,24 @@ async function awardEntryXp(employeeName: string, workItems: any[]) {
   return { amount: totalXp, earlyBird: hour < 17, fullCompletion: allComplete };
 }
 
+// ─── Level Calculation (module-level for reuse) ───────────────
+const LEVELS = [
+  { level: 1, xp: 0, title: "Piping Trainee" },
+  { level: 2, xp: 50, title: "Piping Explorer" },
+  { level: 3, xp: 150, title: "Piping Practitioner" },
+  { level: 4, xp: 350, title: "Piping Specialist" },
+  { level: 5, xp: 600, title: "Piping Expert" },
+  { level: 6, xp: 1000, title: "Piping Champion" },
+  { level: 7, xp: 1500, title: "Piping Master" },
+  { level: 8, xp: 2200, title: "Piping Legend" },
+  { level: 9, xp: 3000, title: "Piping Guru" },
+  { level: 10, xp: 5000, title: "Piping Wizard" },
+];
+
 function calculateLevel(xp: number) {
-  const levels = [
-    { level: 1, xp: 0, title: "Piping Trainee" },
-    { level: 2, xp: 50, title: "Piping Explorer" },
-    { level: 3, xp: 150, title: "Piping Practitioner" },
-    { level: 4, xp: 350, title: "Piping Specialist" },
-    { level: 5, xp: 600, title: "Piping Expert" },
-    { level: 6, xp: 1000, title: "Piping Champion" },
-    { level: 7, xp: 1500, title: "Piping Master" },
-    { level: 8, xp: 2200, title: "Piping Legend" },
-    { level: 9, xp: 3000, title: "Piping Guru" },
-    { level: 10, xp: 5000, title: "Piping Wizard" },
-  ];
-  let current = levels[0];
-  for (let i = levels.length - 1; i >= 0; i--) {
-    if (xp >= levels[i].xp) { current = levels[i]; break; }
+  let current = LEVELS[0];
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= LEVELS[i].xp) { current = LEVELS[i]; break; }
   }
   return current;
 }
@@ -370,26 +372,37 @@ export async function handleGetGamification(params: URLSearchParams) {
     if (!emp) return { status: 404, data: { error: "Employee not found" } };
 
     const badges = await airtable.list(
-      TABLES.EARNED_BADGES,
-      `{EmployeeName} = "${ef(employee)}"`
-    );
+          TABLES.EARNED_BADGES,
+          `{EmployeeName} = "${ef(employee)}"`
+        );
 
-    return {
-      status: 200,
-      data: {
-        xp: emp.fields.XP || 0,
-        level: emp.fields.Level || 1,
-        levelTitle: emp.fields.LevelTitle || "Piping Trainee",
-        currentStreak: emp.fields.CurrentStreak || 0,
-        longestStreak: emp.fields.LongestStreak || 0,
-        totalEntries: emp.fields.TotalEntries || 0,
-        badges: badges.map((b) => ({ id: b.id, ...b.fields })),
-      },
-    };
-  } catch (err: any) {
-    return { status: 500, data: { error: "Failed to load gamification data: " + err.message } };
-  }
-}
+        const xp = emp.fields.XP || 0;
+        const levelInfo = calculateLevel(xp);
+
+        return {
+          status: 200,
+          data: {
+            xp,
+            level: emp.fields.Level || 1,
+            levelTitle: emp.fields.LevelTitle || "Piping Trainee",
+            currentStreak: emp.fields.CurrentStreak || 0,
+            longestStreak: emp.fields.LongestStreak || 0,
+            totalEntries: emp.fields.TotalEntries || 0,
+            badges: badges.map((b) => ({ id: b.id, ...b.fields })),
+            // Level progression metadata
+            currentXpInLevel: xp - levelInfo.xp,
+            nextLevelXp: levelInfo.level < 10
+              ? LEVELS.find(l => l.level === levelInfo.level + 1)?.xp || levelInfo.xp
+              : levelInfo.xp,
+            progressToNextLevel: levelInfo.level < 10
+              ? ((xp - levelInfo.xp) / (LEVELS.find(l => l.level === levelInfo.level + 1)?.xp - levelInfo.xp)) * 100
+              : 100,
+          },
+        };
+      } catch (err: any) {
+        return { status: 500, data: { error: "Failed to load gamification data: " + err.message } };
+      }
+    }
 
 // ─── Forgot Password ───────────────────────────────────
 export async function handleForgotPassword(body: any) {
@@ -568,7 +581,18 @@ export async function handleGetCalendar(params: URLSearchParams) {
   const filter = date ? `{Date} = "${ef(date)}"` : "";
   try {
     const records = await airtable.list(TABLES.CALENDAR, filter || undefined);
-    return { status: 200, data: records.map((r) => ({ id: r.id, ...r.fields })) };
+    return {
+      status: 200,
+      data: records.map((r) => {
+        const fields = r.fields;
+        // Normalize "Day Type" → DayType for frontend compatibility
+        const normalized = { ...fields };
+        if ("Day Type" in fields && !("DayType" in fields)) {
+          (normalized as any).DayType = fields["Day Type"];
+        }
+        return { id: r.id, ...normalized };
+      }),
+    };
   } catch (err: any) {
     return { status: 500, data: { error: "Failed to fetch calendar: " + err.message } };
   }
@@ -580,7 +604,7 @@ export async function handleCreateCalendarEntry(body: any) {
   try {
     const created = await airtable.create(TABLES.CALENDAR, {
       Date: date,
-      "Day Type": DayType,
+      DayType: DayType,
       Description: Reason || "",
       EmployeeName: EmployeeName || "All",
     });
@@ -1007,7 +1031,11 @@ export async function handleCheckReminders() {
 
     const filledNames = entries.map((e) => e.fields.EmployeeName);
     const onLeaveNames = leaves.map((l) => l.fields.EmployeeName);
-    const isWorkingDay = calendar.length === 0 || calendar.some((c) => c.fields["Day Type"] === "Working");
+        // Normalize DayType field for calendar check (handles both "Day Type" and DayType)
+        const isWorkingDay = calendar.length === 0 || calendar.some((c) => {
+          const fields = c.fields as any;
+          return fields.DayType === "Working" || fields["Day Type"] === "Working";
+        });
 
     const needReminders: string[] = [];
     for (const emp of employees) {
@@ -1056,7 +1084,15 @@ export async function handleGetAllCalendar() {
     const records = await airtable.list(TABLES.CALENDAR);
     return {
       status: 200,
-      data: records.map((r) => ({ id: r.id, ...r.fields })),
+      data: records.map((r) => {
+        const fields = r.fields;
+        // Normalize "Day Type" → DayType for frontend compatibility
+        const normalized = { ...fields };
+        if ("Day Type" in fields && !("DayType" in fields)) {
+          (normalized as any).DayType = fields["Day Type"];
+        }
+        return { id: r.id, ...normalized };
+      }),
     };
   } catch (err: any) {
     return { status: 500, data: { error: "Failed to fetch calendar: " + err.message } };
