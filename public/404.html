@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Redirecting...</title>
-    <script>
-      // GitHub Pages SPA redirect — sends all 404s to index.html
-      var pathSegmentsToKeep = 1; // Keep /repo-name/
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
-    </script>
-  </head>
-  <body></body>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecting...</title>
+  <script>
+    // GitHub Pages SPA redirect — handles both root and sub-route 404s
+    (function(l) {
+      // Extract path after repo prefix
+      var base = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '');
+      var pathname = l.pathname;
+      
+      // Remove trailing slash, then find the repo name segment
+      // For /Progress-Tracker-Vibe/ or /Progress-Tracker-Vibe/employee
+      var segments = pathname.split('/').filter(Boolean);
+      var repoName = segments[0] || '';
+      
+      // Build the target path: /repo-name/?/remaining-path
+      var remaining = segments.slice(1).join('/');
+      var query = remaining ? '?/' + remaining : '';
+      
+      // Redirect to index.html with hash-based routing
+      l.replace(base + '/' + repoName + '/index.html' + query + l.search + l.hash);
+    }(window.location));
+  </script>
+</head>
+<body>
+  <p>If you are not redirected automatically, <a href="/Progress-Tracker-Vibe/">go back</a>.</p>
+</body>
 </html>
