@@ -1,3 +1,5 @@
+%(supplementary)
+
 # Backend API Audit — `api/` gateway
 
 Scope: `api/index.ts` (Vercel serverless router), `api/_lib/handlers.ts` (handlers), `api/_lib/airtable.ts` (Airtable CRUD + TABLE constants), `api/_lib/auth.ts`. Cross-checked against frontend types `src/lib/types.ts`, client `src/lib/api.ts`, and usage in `src/components/EmployeeDashboard.tsx` + `src/components/TeamLeadDashboard.tsx`.

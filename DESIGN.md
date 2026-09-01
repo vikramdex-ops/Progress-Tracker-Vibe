@@ -159,3 +159,12 @@ Form: vertical stack of inputs with labels above. Review grid: rows of card-styl
 - Don't put gray text on colored backgrounds (brand surfaces use dark text; dark surfaces use light text).
 - Don't add shadow to flat progress/status bars — color track + number is sufficient.
 - Don't invent new component variants outside `Surface`, `Button`, `Badge`, `Notification` — extend via props or new sub-components, not new shapes.
+
+---
+
+## See Also
+
+- **DESIGN-SYSTEM.md** — Full component specification, migration map, acceptance checklist
+- **ARCHITECTURE-REVIEW.md** — Architecture decisions and technical review (Enthiran)
+- **BACKEND-AUDIT.md** — Backend security audit (Kaithi)
+

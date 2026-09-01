@@ -347,7 +347,7 @@ export default function TeamLeadDashboard() {
             className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200",
               activeTab === t.id
-                ? "bg-[var(--color-surface)] text-amber-600 shadow-sm border border-amber-200/50 dark:border-amber-800/30"
+                ? "bg-[var(--color-surface)] text-(--color-warning) shadow-sm border border-(--color-progress-200)/30 dark:border-amber-800/30"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
@@ -360,20 +360,20 @@ export default function TeamLeadDashboard() {
       {activeTab === "team" && (
       <>
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 stagger-children">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 ">
         {[
           { icon: <CheckCircle2 className="w-5 h-5" />, label: "Filled Today", value: `${todaysEntries.length}/${teamNames.length || "—"}`, color: "emerald", gradient: "from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/10" },
           { icon: <AlertTriangle className="w-5 h-5" />, label: "Missing Today", value: `${missingToday.length}`, color: "red", gradient: "from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/10" },
           { icon: <BarChart3 className="w-5 h-5" />, label: "Avg Completion", value: `${avgComp}%`, color: "blue", gradient: "from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/10" },
           { icon: <Star className="w-5 h-5" />, label: "Awaiting Rating", value: `${pendingRatings}`, color: "amber", gradient: "from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/10" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
+          <Card key={stat.label} className={cn("bg-gradient-to-br  shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
             <div className="flex items-center gap-3 lg:gap-4">
               <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
-                stat.color === "emerald" && "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
-                stat.color === "red" && "bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400",
+                stat.color === "emerald" && "bg-(--color-surface-completion) text-(--color-completion) dark:bg-emerald-900/30 dark:text-emerald-400",
+                stat.color === "red" && "bg-(--color-surface-alert) text-red-500 dark:bg-red-900/30 dark:text-red-400",
                 stat.color === "blue" && "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
-                stat.color === "amber" && "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+                stat.color === "amber" && "bg-(--color-surface-progress) text-(--color-warning) dark:bg-amber-900/30 dark:text-amber-400",
               )}>
                 {stat.icon}
               </div>
@@ -388,7 +388,7 @@ export default function TeamLeadDashboard() {
 
       {/* ── Password Reset Requests ── */}
       {pendingResets.length > 0 && (
-        <Card className="border-blue-200/50 dark:border-blue-800/30 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 dark:from-blue-950/10 dark:to-indigo-950/5 animate-slide-down">
+        <Card className="border-(--color-brand-200)/30 dark:border-blue-800/30 bg-(--color-surface-brand) ">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-blue-500 flex items-center gap-2">
@@ -404,7 +404,7 @@ export default function TeamLeadDashboard() {
                     <span className="text-xs text-[var(--color-text-muted)] ml-2">({r.email})</span>
                     <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">Requested {r.requestedAt ? new Date(r.requestedAt).toLocaleString() : ""}</div>
                   </div>
-                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600" onClick={() => { setResetModal(r); setNewTempPw(""); }}>
+                  <Button size="sm" className="bg-(--color-surface-progress)0 hover:bg-blue-600" onClick={() => { setResetModal(r); setNewTempPw(""); }}>
                     Reset Password
                   </Button>
                 </div>
@@ -416,7 +416,7 @@ export default function TeamLeadDashboard() {
 
       {/* ── Reset Password Modal ── */}
       {resetModal && (
-        <Card className="border-blue-200/50 dark:border-blue-800/30 animate-slide-down">
+        <Card className="border-(--color-brand-200)/30 dark:border-blue-800/30 ">
           <CardContent className="p-5 flex gap-3 items-end">
             <div className="flex-1">
               <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
@@ -428,7 +428,7 @@ export default function TeamLeadDashboard() {
                 placeholder="New temp password (min 4 chars)"
               />
             </div>
-            <Button onClick={handleApproveReset} className="bg-blue-500 hover:bg-blue-600">Set & Notify</Button>
+            <Button onClick={handleApproveReset} className="bg-(--color-surface-progress)0 hover:bg-blue-600">Set & Notify</Button>
             <Button variant="ghost" onClick={() => { setResetModal(null); setNewTempPw(""); }}>
               <X className="w-4 h-4" />
             </Button>
@@ -438,7 +438,7 @@ export default function TeamLeadDashboard() {
 
       {/* ── Missing Today Alert ── */}
       {missingToday.length > 0 && (
-        <Card className="border-red-200/50 dark:border-red-800/30 bg-gradient-to-r from-red-50/50 to-rose-50/30 dark:from-red-950/10 dark:to-rose-950/5 animate-slide-down">
+        <Card className="border-(--color-red-200)/30 dark:border-red-800/30 bg-(--color-surface-alert) ">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-red-500 flex items-center gap-2">
@@ -450,9 +450,9 @@ export default function TeamLeadDashboard() {
               {missingToday.map((n) => (
                 <div
                   key={n}
-                  className="flex items-center gap-2 bg-[var(--color-surface)] border border-red-200/50 dark:border-red-800/20 rounded-full px-3.5 py-2 shadow-sm"
+                  className="flex items-center gap-2 bg-[var(--color-surface)] border border-(--color-red-200)/30 dark:border-red-800/20 rounded-full px-3.5 py-2 shadow-sm"
                 >
-                  <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-500 text-[10px] font-bold">
+                  <div className="w-6 h-6 rounded-full bg-(--color-surface-alert) dark:bg-red-900/30 flex items-center justify-center text-red-500 text-[10px] font-bold">
                     {n[0]}
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-secondary)]">{n}</span>
@@ -471,7 +471,7 @@ export default function TeamLeadDashboard() {
 
       {/* ── Leave Modal ── */}
       {leaveModal && (
-        <Card className="border-orange-200/50 dark:border-orange-800/30 animate-slide-down">
+        <Card className="border-orange-200/50 dark:border-orange-800/30 ">
           <CardContent className="p-5 flex gap-3 items-end">
             <div className="flex-1">
               <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
@@ -488,9 +488,9 @@ export default function TeamLeadDashboard() {
       )}
 
       {/* ── Compact Widgets Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 xl:gap-5 stagger-children">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 xl:gap-5 ">
         {/* Streak Leaderboard */}
-        <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+        <Card className=" shadow-sm border border-[var(--color-border)]/40">
           <CardHeader className="mb-3 pb-2"><CardTitle className="flex items-center gap-1.5 text-sm lg:text-[15px] font-bold">🔥 Streak Leaderboard</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {sortedByStreak.map((name, i) => (
@@ -516,7 +516,7 @@ export default function TeamLeadDashboard() {
         </Card>
 
         {/* Needs Attention */}
-        <Card className="card-hover shadow-sm border border-red-200/30 dark:border-red-800/20">
+        <Card className=" shadow-sm border border-red-200/30 dark:border-red-800/20">
           <CardHeader className="mb-3 pb-2"><CardTitle className="flex items-center gap-1.5 text-sm lg:text-[15px] font-bold">⚠️ Needs Attention</CardTitle></CardHeader>
           <CardContent className="space-y-1">
             {needsAttention.length === 0 ? (
@@ -536,7 +536,7 @@ export default function TeamLeadDashboard() {
         </Card>
 
         {/* Mini Leaderboard Tabs */}
-        <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+        <Card className=" shadow-sm border border-[var(--color-border)]/40">
           <CardHeader className="mb-3 pb-2">
             <div className="flex gap-1 p-1 bg-[var(--color-surface-hover)] rounded-lg w-fit">
               {(["streak", "completion", "xp", "entries"] as const).map((tab) => (
@@ -546,7 +546,7 @@ export default function TeamLeadDashboard() {
                   className={cn(
                     "px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all duration-200",
                     lbTab === tab
-                      ? "bg-amber-500 text-white shadow-sm"
+                      ? "bg-(--color-progress) text-white shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                   )}
                 >
@@ -705,7 +705,7 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── Announcements Live Feed ── */}
-      <Card className="card-hover shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
+      <Card className=" shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
         <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
           <CardTitle className="flex items-center gap-2 text-base lg:text-lg font-bold">
             <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
@@ -723,7 +723,7 @@ export default function TeamLeadDashboard() {
                     "w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0",
                     ann.Type === "entry" && "bg-emerald-400",
                     ann.Type === "leave" && "bg-orange-400",
-                    ann.Type === "badge" && "bg-amber-400",
+                    ann.Type === "badge" && "bg-(--color-progress)",
                     ann.Type === "system" && "bg-blue-400",
                   )} />
                   <div className="flex-1 min-w-0">
@@ -747,10 +747,10 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Weekly Report ── */}
-      <Card className="card-hover shadow-sm border border-purple-200/50 dark:border-purple-800/30 bg-gradient-to-r from-purple-50/50 to-indigo-50/30 dark:from-purple-950/10 dark:to-indigo-950/5 overflow-hidden">
+      <Card className="stat-card-spring bg-(--color-surface-brand) shadow-(--shadow-elevated) border border-(--color-brand-200)/30 dark:border-(--color-brand-800)/50 overflow-hidden">
         <CardContent className="p-5 lg:p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-purple-600 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-(--color-brand-600) flex items-center gap-2">
               📊 AI Weekly Report
               <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case">GPT-OSS-20B</span>
             </h3>
@@ -765,7 +765,7 @@ export default function TeamLeadDashboard() {
           {loadingReport ? (
             <div className="flex items-center gap-3 py-4">
               <div className="w-5 h-5 rounded-full border-2 border-purple-400 border-t-transparent animate-spin" />
-              <span className="text-xs text-purple-500">AI is analyzing team performance...</span>
+              <span className="text-xs text-(--color-brand)">AI is analyzing team performance...</span>
             </div>
           ) : weeklyReport ? (
             <div className="space-y-3">
@@ -775,7 +775,7 @@ export default function TeamLeadDashboard() {
               </div>
               {weeklyReport.topPerformers?.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">🏆 Top Performers</p>
+                  <p className="text-[10px] font-bold text-(--color-completion) uppercase mb-1">🏆 Top Performers</p>
                   {weeklyReport.topPerformers.map((p: any, i: number) => (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <span className="text-emerald-500">•</span>
@@ -786,7 +786,7 @@ export default function TeamLeadDashboard() {
               )}
               {weeklyReport.needsAttention?.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">⚠️ Needs Attention</p>
+                  <p className="text-[10px] font-bold text-(--color-warning) uppercase mb-1">⚠️ Needs Attention</p>
                   {weeklyReport.needsAttention.map((p: any, i: number) => (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <span className="text-amber-500">•</span>
@@ -817,17 +817,17 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Deep Team Analytics (DeepSeek V4) ── */}
-      <Card className="card-hover shadow-sm border border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5 overflow-hidden">
+      <Card className=" shadow-sm border border-cyan-200/50 dark:border-cyan-800/30 bg-gradient-to-r from-cyan-50/50 to-teal-50/30 dark:from-cyan-950/10 dark:to-teal-950/5 overflow-hidden">
         <CardContent className="p-5 lg:p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-cyan-600 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-(--color-brand-600) flex items-center gap-2">
               🔍 Deep Team Analytics
               <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case">DeepSeek V4</span>
             </h3>
             <button
               onClick={loadTeamAnalytics}
               disabled={loadingAnalytics}
-              className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-600 text-white text-[10px] font-bold transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg bg-(--color-brand) hover:bg-cyan-600 text-white text-[10px] font-bold transition-colors disabled:opacity-50"
             >
               {loadingAnalytics ? "Analyzing..." : "🔄 Deep Analyze"}
             </button>
@@ -835,7 +835,7 @@ export default function TeamLeadDashboard() {
           {loadingAnalytics ? (
             <div className="flex items-center gap-3 py-4">
               <div className="w-5 h-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-              <span className="text-xs text-cyan-500">Deep reasoning in progress...</span>
+              <span className="text-xs text-(--color-brand)">Deep reasoning in progress...</span>
             </div>
           ) : teamAnalytics ? (
             <div className="space-y-3">
@@ -844,7 +844,7 @@ export default function TeamLeadDashboard() {
               </div>
               {teamAnalytics.patterns?.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold text-cyan-600 uppercase mb-1">🔍 Patterns Detected</p>
+                  <p className="text-[10px] font-bold text-(--color-brand-600) uppercase mb-1">🔍 Patterns Detected</p>
                   {teamAnalytics.patterns.map((p: any, i: number) => (
                     <div key={i} className="py-1">
                       <span className="text-xs font-semibold">{p.pattern}</span>
@@ -855,7 +855,7 @@ export default function TeamLeadDashboard() {
               )}
               {teamAnalytics.recommendations?.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">💡 Recommendations</p>
+                  <p className="text-[10px] font-bold text-(--color-completion) uppercase mb-1">💡 Recommendations</p>
                   {teamAnalytics.recommendations.map((r: string, i: number) => (
                     <p key={i} className="text-xs text-[var(--color-text-secondary)] py-0.5">• {r}</p>
                   ))}
@@ -889,7 +889,7 @@ export default function TeamLeadDashboard() {
             </div>
           )}
           {showLeaveForm && (
-            <Card className="border-orange-200/60 dark:border-orange-800/30 animate-slide-down">
+            <Card className="border-orange-200/60 dark:border-orange-800/30 ">
               <CardContent className="p-5 flex gap-3 items-end">
                 <div className="flex-1">
                   <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Reason (optional)</label>
@@ -909,9 +909,9 @@ export default function TeamLeadDashboard() {
               </CardContent>
             </Card>
           ) : todayMyEntry ? (
-            <Card className="card-hover">
+            <Card className="">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-emerald-600">
+                <CardTitle className="flex items-center gap-2 text-(--color-completion)">
                   <CheckCircle2 className="w-5 h-5" /> Today's Entry Submitted
                 </CardTitle>
               </CardHeader>
@@ -921,7 +921,7 @@ export default function TeamLeadDashboard() {
                     <div className="text-2xl font-bold text-amber-500">{todayMyEntry.PlannedQty}</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase">Planned</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/15">
+                  <div className="p-3 rounded-xl bg-(--color-surface-completion) dark:bg-emerald-950/15">
                     <div className="text-2xl font-bold text-emerald-500">{todayMyEntry.ActualQty}</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase">Actual</div>
                   </div>
@@ -1006,16 +1006,16 @@ export default function TeamLeadDashboard() {
       {/* ═══════════ MY QUIZ TAB ═══════════ */}
       {activeTab === "myquiz" && (
         <div className="max-w-4xl space-y-6 animate-fade-in">
-          <Card className="bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border-indigo-200/60 dark:border-indigo-800/30">
+          <Card className="stat-card-spring bg-(--color-surface) shadow-(--shadow-elevated) border border-(--color-border)">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-indigo-500" />
+                  <BookOpen className="w-5 h-5 text-(--color-brand)" />
                   <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">🤖 AI PIPING QUIZ</span>
                 </div>
                 <div className="flex gap-1 p-0.5 bg-[var(--color-surface-hover)] rounded-lg">
                   {(["play", "history"] as const).map((tab) => (
-                    <button key={tab} onClick={() => setQuizTab(tab)} className={cn("px-3 py-1.5 rounded-md text-[10px] font-bold transition-all", quizTab === tab ? "bg-indigo-500 text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]")}>
+                    <button key={tab} onClick={() => setQuizTab(tab)} className={cn("px-3 py-1.5 rounded-md text-[10px] font-bold transition-all", quizTab === tab ? "bg-(--color-brand) text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]")}>
                       {tab === "play" ? "🎯 Play" : `📖 History (${quizHistory.length})`}
                     </button>
                   ))}
@@ -1032,7 +1032,7 @@ export default function TeamLeadDashboard() {
                 generatingQuiz ? (
                   <div className="flex flex-col items-center gap-3 py-8">
                     <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                    <span className="text-sm text-indigo-500 font-medium">AI is generating your question...</span>
+                    <span className="text-sm text-(--color-brand) font-medium">AI is generating your question...</span>
                   </div>
                 ) : quiz?.limitReached ? (
                   <div className="text-center py-6">
@@ -1043,8 +1043,8 @@ export default function TeamLeadDashboard() {
                 ) : quiz && quiz.options ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      {quiz.difficulty && <span className={cn("px-2 py-0.5 rounded-full text-[9px] font-bold", quiz.difficulty === "Easy" && "bg-emerald-100 text-emerald-600", quiz.difficulty === "Medium" && "bg-amber-100 text-amber-600", quiz.difficulty === "Hard" && "bg-red-100 text-red-500")}>{quiz.difficulty}</span>}
-                      {quiz.remaining !== undefined && <span className="ml-auto px-2 py-0.5 rounded-full bg-indigo-100 text-[9px] font-bold text-indigo-600">{quiz.remaining} left today</span>}
+                      {quiz.difficulty && <span className={cn("px-2 py-0.5 rounded-full text-[9px] font-bold", quiz.difficulty === "Easy" && "bg-(--color-surface-completion) text-(--color-completion)", quiz.difficulty === "Medium" && "bg-(--color-surface-progress) text-(--color-warning)", quiz.difficulty === "Hard" && "bg-(--color-surface-alert) text-red-500")}>{quiz.difficulty}</span>}
+                      {quiz.remaining !== undefined && <span className="ml-auto px-2 py-0.5 rounded-full bg-indigo-100 text-[9px] font-bold text-(--color-brand-600)">{quiz.remaining} left today</span>}
                     </div>
                     <p className="text-sm font-semibold leading-relaxed">{quiz.question}</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -1053,31 +1053,31 @@ export default function TeamLeadDashboard() {
                         const isCorrect = quizResult && key === quizResult.correctAnswer;
                         const isWrong = quizResult && isSelected && !quizResult.correct;
                         return (
-                          <button key={key} onClick={() => handleQuizAnswer(key)} disabled={!!quizResult} className={cn("p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border", !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer", !!quizResult && "cursor-default", isCorrect && "border-emerald-400 bg-emerald-50 text-emerald-700", isWrong && "border-red-400 bg-red-50 text-red-600", !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]")}>
+                          <button key={key} onClick={() => handleQuizAnswer(key)} disabled={!!quizResult} className={cn("p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border", !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer", !!quizResult && "cursor-default", isCorrect && "border-emerald-400 bg-(--color-surface-completion) text-(--color-completion-700)", isWrong && "border-red-400 bg-(--color-surface-alert) text-red-600", !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]")}>
                           <span className="text-[10px] font-bold text-[var(--color-text-muted)] mr-1.5">{key}.</span>{String(val)}
                         </button>
                       );
                     })}
                     </div>
                     {quizResult && (
-                      <div className="space-y-2 animate-slide-up">
-                        <div className={cn("p-3 rounded-xl text-sm font-medium", quizResult.correct ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500")}>
+                      <div className="space-y-2 ">
+                        <div className={cn("p-3 rounded-xl text-sm font-medium", quizResult.correct ? "bg-(--color-surface-completion) text-(--color-completion)" : "bg-(--color-surface-alert) text-red-500")}>
                           {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP` : `❌ Wrong! Answer: ${quizResult.correctAnswer}`}
                         </div>
                         {quizResult.explanation && (
-                          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200/50">
+                          <div className="p-3 rounded-xl bg-(--color-surface-progress) border border-(--color-brand-200)/30">
                             <p className="text-xs font-bold text-blue-600 mb-1">💡 EXPLANATION</p>
                             <p className="text-sm leading-relaxed">{quizResult.explanation}</p>
                           </div>
                         )}
-                        <button onClick={handleGenerateQuiz} className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold">🔄 Next Question</button>
+                        <button onClick={handleGenerateQuiz} className="w-full py-2.5 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white text-sm font-semibold">🔄 Next Question</button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3 py-6">
                     <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
-                    <button onClick={handleGenerateQuiz} className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold shadow-sm">✨ Generate Question</button>
+                    <button onClick={handleGenerateQuiz} className="px-6 py-2.5 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white text-sm font-semibold shadow-sm">✨ Generate Question</button>
                   </div>
                 )
               ) : (
@@ -1088,14 +1088,14 @@ export default function TeamLeadDashboard() {
                     <div key={h.id} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium leading-snug flex-1">{h.Question}</p>
-                        <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-bold", h.IsCorrect ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500")}>{h.IsCorrect ? "✓" : "✗"}</span>
+                        <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-bold", h.IsCorrect ? "bg-(--color-surface-completion) text-(--color-completion)" : "bg-(--color-surface-alert) text-red-500")}>{h.IsCorrect ? "✓" : "✗"}</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5 text-[10px]">
                         {(["A", "B", "C", "D"] as const).map((k) => (
-                          <span key={k} className={cn("px-2 py-0.5 rounded font-medium", k === h.CorrectAnswer ? "bg-emerald-100 text-emerald-700" : k === h.UserAnswer ? "bg-red-100 text-red-600" : "bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]")}>{k}. {h[`Option${k}`] || ""}</span>
+                          <span key={k} className={cn("px-2 py-0.5 rounded font-medium", k === h.CorrectAnswer ? "bg-(--color-surface-completion) text-(--color-completion-700)" : k === h.UserAnswer ? "bg-(--color-surface-alert) text-red-600" : "bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]")}>{k}. {h[`Option${k}`] || ""}</span>
                         ))}
                       </div>
-                      {h.Explanation && <p className="text-[11px] text-[var(--color-text-muted)] bg-blue-50/50 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>}
+                      {h.Explanation && <p className="text-[11px] text-[var(--color-text-muted)] bg-(--color-surface-progress)/50 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>}
                     </div>
                   ))}
                 </div>
@@ -1108,8 +1108,8 @@ export default function TeamLeadDashboard() {
       {/* ── Floating Chatbot ── */}
       <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
-          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
-            <div className="p-3 bg-gradient-to-r from-cyan-500 to-teal-600 text-white flex items-center justify-between">
+          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-(--shadow-elevated) border border-[var(--color-border)] overflow-hidden ">
+            <div className="p-3 bg-(--color-brand) text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🤖</span>
                 <span className="text-xs font-bold">Piping Assistant</span>
@@ -1122,14 +1122,14 @@ export default function TeamLeadDashboard() {
                 <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                   <div className={cn(
                     "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
-                    msg.role === "user" ? "bg-cyan-500 text-white rounded-br-md" : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
+                    msg.role === "user" ? "bg-(--color-brand) text-white rounded-br-md" : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
                   )}>{msg.content}</div>
                 </div>
               ))}
               {chatLoading && (
                 <div className="flex justify-start">
                   <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
-                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"300ms"}} /></div>
+                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"300ms"}} /></div>
                   </div>
                 </div>
               )}
@@ -1143,7 +1143,7 @@ export default function TeamLeadDashboard() {
                   placeholder="Ask about piping codes, standards..."
                   className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-cyan-400"
                 />
-                <button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="w-9 h-9 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white flex items-center justify-center disabled:opacity-50">
+                <button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="w-9 h-9 rounded-xl bg-(--color-brand) hover:bg-cyan-600 text-white flex items-center justify-center disabled:opacity-50">
                   <Send className="w-4 h-4" />
                 </button>
               </div>
@@ -1153,8 +1153,8 @@ export default function TeamLeadDashboard() {
         <button
           onClick={() => setChatOpen(!chatOpen)}
           className={cn(
-            "w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300",
-            chatOpen ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90" : "bg-gradient-to-br from-cyan-500 to-teal-600 hover:scale-110",
+            "w-14 h-14 rounded-2xl shadow-(--shadow-elevated) flex items-center justify-center transition-all duration-300",
+            chatOpen ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90" : "bg-(--color-brand) hover:scale-110",
           )}
         >
           {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}

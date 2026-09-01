@@ -1,3 +1,5 @@
+%(supplementary)
+
 # Architecture Review — Progress-Tracker-Vibe GUI Overhaul
 
 **Reviewer:** Enthiran (systems architect) · **Scope:** `src/` + `api/` (`C:\Users\vikram\projects\Progress-Tracker-Vibe`)

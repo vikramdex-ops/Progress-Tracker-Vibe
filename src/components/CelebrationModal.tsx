@@ -62,11 +62,11 @@ export default function CelebrationModal({ xp, streak, newBadges = [], onClose }
 
       {/* Modal */}
       <div
-        className="relative bg-[var(--color-surface)] rounded-3xl p-8 sm:p-10 text-center shadow-2xl max-w-sm mx-4 border border-[var(--color-border)]/50"
+        className="relative bg-[var(--color-surface)] rounded-3xl p-8 sm:p-10 text-center shadow-(--shadow-elevated) max-w-sm mx-4 border border-[var(--color-border)]/50"
         style={{
           transform: visible ? "scale(1) translateY(0)" : "scale(0.9) translateY(10px)",
           opacity: visible ? 1 : 0,
-          transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          transition: "all 0.2s cubic-bezier(0.20, 0.00, 0.00, 1.00)",
         }}
       >
         {/* Glow ring */}
@@ -74,7 +74,7 @@ export default function CelebrationModal({ xp, streak, newBadges = [], onClose }
 
         <div className="relative">
           {/* Icon */}
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-amber-500/30 animate-bounce-in">
+          <div className="w-20 h-20 rounded-3xl bg-(--color-progress) flex items-center justify-center mx-auto mb-5 shadow-elevated">
             <span className="text-4xl">🎉</span>
           </div>
 

@@ -13,10 +13,10 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
     const percentage = Math.min(Math.round((value / max) * 100), 100);
 
     const colors: Record<string, string> = {
-      primary: "bg-gradient-to-r from-amber-400 to-orange-400",
-      secondary: "bg-gradient-to-r from-indigo-400 to-purple-400",
-      accent: "bg-gradient-to-r from-emerald-400 to-teal-400",
-      destructive: "bg-gradient-to-r from-red-400 to-rose-400",
+      primary: "bg-(--color-progress)",
+      secondary: "bg-(--color-brand)",
+      accent: "bg-(--color-completion)",
+      destructive: "bg-(--color-alert)",
     };
 
     return (

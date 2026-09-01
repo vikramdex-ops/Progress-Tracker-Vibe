@@ -271,20 +271,20 @@ export default function EmployeeDashboard() {
       )}
 
       {/* ── Top Stats Row ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 stagger-children">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 ">
         {[
-          { icon: <Star className="w-5 h-5" />, label: "Total XP", value: `${gamification?.xp || 0}`, color: "amber", gradient: "from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/10" },
-          { icon: <Award className="w-5 h-5" />, label: levelInfo.title, value: `Level ${levelInfo.level}`, color: "indigo", gradient: "from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/10" },
+          { icon: <Star className="w-5 h-5" />, label: "Total XP", value: `${gamification?.xp || 0}`, color: "amber", gradient: "bg-(--color-surface-progress)" },
+          { icon: <Award className="w-5 h-5" />, label: levelInfo.title, value: `Level ${levelInfo.level}`, color: "indigo", gradient: "bg-(--color-surface-brand)" },
           { icon: <Flame className="w-5 h-5" />, label: "Current Streak", value: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}`, color: "orange", gradient: "from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/10" },
           { icon: <Check className="w-5 h-5" />, label: "Total Entries", value: `${gamification?.totalEntries || 0}`, color: "emerald", gradient: "from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/10" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("bg-gradient-to-br card-hover shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
+          <Card key={stat.label} className={cn("stat-card-spring border border-(--color-border) p-4 lg:p-5", stat.gradient)}>
             <div className="flex items-center gap-3 lg:gap-4">
               <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
-                stat.color === "amber" && "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
-                stat.color === "indigo" && "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
+                stat.color === "amber" && "bg-(--color-surface-progress) text-(--color-warning) dark:bg-amber-900/30 dark:text-amber-400",
+                stat.color === "indigo" && "bg-indigo-100 text-(--color-brand-600) dark:bg-indigo-900/30 dark:text-indigo-400",
                 stat.color === "orange" && "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
-                stat.color === "emerald" && "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+                stat.color === "emerald" && "bg-(--color-surface-completion) text-(--color-completion) dark:bg-emerald-900/30 dark:text-emerald-400",
               )}>
                 {stat.icon}
               </div>
@@ -309,7 +309,7 @@ export default function EmployeeDashboard() {
             className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200",
               activeTab === t.id
-                ? "bg-[var(--color-surface)] text-amber-600 shadow-sm border border-amber-200/50 dark:border-amber-800/30"
+                ? "bg-[var(--color-surface)] text-(--color-warning) shadow-sm border border-(--color-progress-200)/30 dark:border-amber-800/30"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
@@ -320,18 +320,18 @@ export default function EmployeeDashboard() {
 
       {/* ═══════════════════════════ OVERVIEW ═══════════════════════════ */}
       {activeTab === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 stagger-children">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 ">
           {/* Today's Mission — full width */}
           <Card className={cn(
-            "lg:col-span-3 border-amber-200/60 dark:border-amber-800/30 p-0 overflow-hidden",
+            "lg:col-span-3 border-(--color-progress-200)/30 dark:border-amber-800/30 p-0 overflow-hidden",
             "bg-gradient-to-r from-amber-50/80 via-orange-50/40 to-amber-50/60 dark:from-amber-950/15 dark:via-orange-950/10 dark:to-amber-950/15"
           )}>
             <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-(--shadow-elevated) flex-shrink-0">
                 <Target className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <div className="text-[10px] font-bold text-amber-600 uppercase tracking-[0.15em] mb-0.5">Today's Mission</div>
+                <div className="text-[10px] font-bold text-(--color-warning) uppercase tracking-[0.15em] mb-0.5">Today's Mission</div>
                 <div className="text-lg font-bold text-[var(--color-text-primary)]">
                   {todayEntry || onLeaveToday ? "✅ Mission Complete!" : "Complete today's EOD entry"}
                 </div>
@@ -341,13 +341,13 @@ export default function EmployeeDashboard() {
               </div>
               {!todayEntry && !onLeaveToday && (
                 <div className="flex gap-2.5">
-                  <div className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30 text-center">
-                    <div className="text-[11px] font-bold text-emerald-600">⚡ Early Bird</div>
+                  <div className="px-4 py-2.5 rounded-xl bg-(--color-surface-completion) dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30 text-center">
+                    <div className="text-[11px] font-bold text-(--color-completion)">⚡ Early Bird</div>
                     <div className="text-[10px] text-emerald-500 font-medium">+5 XP before 5 PM</div>
                   </div>
-                  <div className="px-4 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-800/30 text-center">
-                    <div className="text-[11px] font-bold text-indigo-600">🎯 100% Plan</div>
-                    <div className="text-[10px] text-indigo-500 font-medium">+20 XP bonus</div>
+                  <div className="px-4 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 border border-(--color-brand-200)/30 dark:border-indigo-800/30 text-center">
+                    <div className="text-[11px] font-bold text-(--color-brand-600)">🎯 100% Plan</div>
+                    <div className="text-[10px] text-(--color-brand) font-medium">+20 XP bonus</div>
                   </div>
                 </div>
               )}
@@ -355,7 +355,7 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Progress Ring */}
-          <Card className="flex flex-col items-center justify-center card-hover shadow-sm border border-[var(--color-border)]/40">
+          <Card className="flex flex-col items-center justify-center  shadow-sm border border-[var(--color-border)]/40">
             <CardHeader className="w-full"><CardTitle className="text-sm lg:text-[15px] font-bold">THIS WEEK</CardTitle></CardHeader>
             <CardContent className="pb-2">
               <ProgressRing value={weeklyCompletion} size={140} strokeWidth={10} />
@@ -363,7 +363,7 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Quick Stats */}
-          <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+          <Card className=" shadow-sm border border-[var(--color-border)]/40">
             <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Quick Stats</CardTitle></CardHeader>
             <CardContent className="space-y-3.5">
               {[
@@ -381,11 +381,11 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Level Progression */}
-          <Card className="card-hover shadow-sm border border-[var(--color-border)]/40">
+          <Card className=" shadow-sm border border-[var(--color-border)]/40">
             <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Level Progression</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20 flex-shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-(--color-brand) flex items-center justify-center text-white font-bold text-xl shadow-(--shadow-elevated) shadow-(--shadow-brand) flex-shrink-0">
                   {levelInfo.level}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -401,7 +401,7 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* Badges — full width */}
-          <Card className="lg:col-span-3 card-hover shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
+          <Card className="lg:col-span-3  shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-500" /> YOUR ACHIEVEMENTS
@@ -414,7 +414,7 @@ export default function EmployeeDashboard() {
                     <div
                       key={b.id}
                       className={cn(
-                        "p-3.5 rounded-2xl border text-center transition-all duration-200 card-hover cursor-default",
+                        "p-3.5 rounded-2xl border text-center transition-all duration-200  cursor-default",
                         b.IsNew
                           ? "border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800/30 shadow-sm shadow-amber-200/30"
                           : "border-[var(--color-border)] bg-[var(--color-surface-hover)]"
@@ -434,13 +434,13 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* AI Engineering Quiz — full width */}
-          <Card className="lg:col-span-3 card-hover shadow-sm bg-gradient-to-r from-indigo-50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/60 dark:border-indigo-800/30 overflow-hidden">
+          <Card className="lg:col-span-3 stat-card-spring bg-(--color-surface) shadow-(--shadow-elevated) border border-(--color-border) overflow-hidden">
             <CardContent className="p-5 lg:p-7">
               {/* Header with tabs */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-indigo-500" />
+                    <BookOpen className="w-4 h-4 text-(--color-brand)" />
                   </div>
                   <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">🤖 AI PIPING QUIZ</span>
                 </div>
@@ -451,7 +451,7 @@ export default function EmployeeDashboard() {
                       onClick={() => setQuizTab(tab)}
                       className={cn(
                         "px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
-                        quizTab === tab ? "bg-indigo-500 text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]",
+                        quizTab === tab ? "bg-(--color-brand) text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]",
                       )}
                     >
                       {tab === "play" ? "🎯 Play" : `📖 History (${quizHistory.length})`}
@@ -483,7 +483,7 @@ export default function EmployeeDashboard() {
                 generatingQuiz ? (
                   <div className="flex flex-col items-center gap-3 py-8">
                     <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                    <span className="text-sm text-indigo-500 font-medium">AI is generating your question...</span>
+                    <span className="text-sm text-(--color-brand) font-medium">AI is generating your question...</span>
                     <span className="text-xs text-[var(--color-text-muted)]">Powered by MiniMax M3</span>
                   </div>
                 ) : quiz?.limitReached ? (
@@ -492,7 +492,7 @@ export default function EmployeeDashboard() {
                     <p className="text-sm font-semibold text-[var(--color-text-primary)]">Daily Limit Reached</p>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">You've answered {quiz.count}/{quiz.limit} questions today. Come back tomorrow!</p>
                     <div className="mt-3 flex justify-center">
-                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 text-xs font-semibold">
+                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-(--color-brand-600) text-xs font-semibold">
                         📖 Review History
                       </button>
                     </div>
@@ -503,9 +503,9 @@ export default function EmployeeDashboard() {
                       {quiz.difficulty && (
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] font-bold",
-                          quiz.difficulty === "Easy" && "bg-emerald-100 text-emerald-600",
-                          quiz.difficulty === "Medium" && "bg-amber-100 text-amber-600",
-                          quiz.difficulty === "Hard" && "bg-red-100 text-red-500",
+                          quiz.difficulty === "Easy" && "bg-(--color-surface-completion) text-(--color-completion)",
+                          quiz.difficulty === "Medium" && "bg-(--color-surface-progress) text-(--color-warning)",
+                          quiz.difficulty === "Hard" && "bg-(--color-surface-alert) text-red-500",
                         )}>{quiz.difficulty}</span>
                       )}
                       {quiz.category && (
@@ -514,7 +514,7 @@ export default function EmployeeDashboard() {
                         </span>
                       )}
                       {quiz.remaining !== undefined && (
-                        <span className="ml-auto px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-[9px] font-bold text-indigo-600">
+                        <span className="ml-auto px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-[9px] font-bold text-(--color-brand-600)">
                           {quiz.remaining} left today
                         </span>
                       )}
@@ -534,8 +534,8 @@ export default function EmployeeDashboard() {
                               "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
                               !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
                               !!quizResult && "cursor-default",
-                              isCorrect && "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400",
-                              isWrong && "border-red-400 bg-red-50 dark:bg-red-950/20 text-red-600",
+                              isCorrect && "border-emerald-400 bg-(--color-surface-completion) dark:bg-emerald-950/20 text-(--color-completion-700) dark:text-emerald-400",
+                              isWrong && "border-red-400 bg-(--color-surface-alert) dark:bg-red-950/20 text-red-600",
                               !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
                             )}
                           >
@@ -546,22 +546,22 @@ export default function EmployeeDashboard() {
                       })}
                     </div>
                     {quizResult && (
-                      <div className="space-y-2 animate-slide-up">
+                      <div className="space-y-2 ">
                         <div className={cn(
                           "p-3 rounded-xl text-sm font-medium",
-                          quizResult.correct ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600" : "bg-red-50 dark:bg-red-950/20 text-red-500",
+                          quizResult.correct ? "bg-(--color-surface-completion) dark:bg-emerald-950/20 text-(--color-completion)" : "bg-(--color-surface-alert) dark:bg-red-950/20 text-red-500",
                         )}>
                           {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong! The correct answer is ${quizResult.correctAnswer}.`}
                         </div>
                         {quizResult.explanation && (
-                          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
+                          <div className="p-3 rounded-xl bg-(--color-surface-progress) dark:bg-blue-950/20 border border-(--color-brand-200)/30 dark:border-blue-800/30">
                             <p className="text-xs font-bold text-blue-600 mb-1">💡 EXPLANATION</p>
                             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
                           </div>
                         )}
                         <button
                           onClick={handleGenerateQuiz}
-                          className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors"
+                          className="w-full py-2.5 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white text-sm font-semibold transition-colors"
                         >
                           🔄 Next Question
                         </button>
@@ -573,7 +573,7 @@ export default function EmployeeDashboard() {
                     <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
                     <button
                       onClick={handleGenerateQuiz}
-                      className="px-6 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold transition-colors shadow-sm"
+                      className="px-6 py-2.5 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white text-sm font-semibold transition-colors shadow-sm"
                     >
                       ✨ Generate Question
                     </button>
@@ -594,14 +594,14 @@ export default function EmployeeDashboard() {
                           <div className="flex gap-1 flex-shrink-0">
                             <span className={cn(
                               "px-1.5 py-0.5 rounded text-[8px] font-bold",
-                              h.IsCorrect ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500",
+                              h.IsCorrect ? "bg-(--color-surface-completion) text-(--color-completion)" : "bg-(--color-surface-alert) text-red-500",
                             )}>{h.IsCorrect ? "✓" : "✗"}</span>
                             {h.Difficulty && (
                               <span className={cn(
                                 "px-1.5 py-0.5 rounded text-[8px] font-bold",
-                                h.Difficulty === "Easy" && "bg-emerald-50 text-emerald-500",
+                                h.Difficulty === "Easy" && "bg-(--color-surface-completion) text-emerald-500",
                                 h.Difficulty === "Medium" && "bg-amber-50 text-amber-500",
-                                h.Difficulty === "Hard" && "bg-red-50 text-red-400",
+                                h.Difficulty === "Hard" && "bg-(--color-surface-alert) text-red-400",
                               )}>{h.Difficulty}</span>
                             )}
                           </div>
@@ -613,15 +613,15 @@ export default function EmployeeDashboard() {
                             return (
                               <span key={k} className={cn(
                                 "px-2 py-0.5 rounded font-medium",
-                                isCorrect && "bg-emerald-100 text-emerald-700",
-                                isUser && !isCorrect && "bg-red-100 text-red-600",
+                                isCorrect && "bg-(--color-surface-completion) text-(--color-completion-700)",
+                                isUser && !isCorrect && "bg-(--color-surface-alert) text-red-600",
                                 !isCorrect && !isUser && "bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]",
                               )}>{k}. {h[`Option${k}`] || ""}</span>
                             );
                           })}
                         </div>
                         {h.Explanation && (
-                          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed bg-blue-50/50 dark:bg-blue-950/10 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>
+                          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed bg-(--color-surface-progress)/50 dark:bg-blue-950/10 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>
                         )}
                         <div className="flex items-center gap-2 text-[9px] text-[var(--color-text-muted)]">
                           {h.AnsweredAt && <span>{new Date(h.AnsweredAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>}
@@ -637,7 +637,7 @@ export default function EmployeeDashboard() {
 
           {/* Announcements Live Feed — full width */}
           {announcements.length > 0 && (
-            <Card className="lg:col-span-3 card-hover">
+            <Card className="lg:col-span-3 ">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
@@ -651,7 +651,7 @@ export default function EmployeeDashboard() {
                         "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
                         ann.Type === "entry" && "bg-emerald-400",
                         ann.Type === "leave" && "bg-orange-400",
-                        ann.Type === "badge" && "bg-amber-400",
+                        ann.Type === "badge" && "bg-(--color-progress)",
                         ann.Type === "system" && "bg-blue-400",
                       )} />
                       <div className="flex-1 min-w-0">
@@ -686,7 +686,7 @@ export default function EmployeeDashboard() {
           )}
 
           {showLeaveForm && (
-            <Card className="border-orange-200/60 dark:border-orange-800/30 animate-slide-down">
+            <Card className="border-orange-200/60 dark:border-orange-800/30 ">
               <CardContent className="p-5 flex gap-3 items-end">
                 <div className="flex-1">
                   <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Reason (optional)</label>
@@ -709,10 +709,10 @@ export default function EmployeeDashboard() {
           ) : todayEntry ? (
             /* Already submitted today */
             <>
-            <Card className="card-hover overflow-hidden">
+            <Card className=" overflow-hidden">
               <CardHeader className="px-6 py-5 lg:px-8">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-emerald-600 lg:text-lg">
+                  <CardTitle className="flex items-center gap-2 text-(--color-completion) lg:text-lg">
                     <Check className="w-5 h-5" /> Today's Entry Submitted
                   </CardTitle>
                   <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5 font-mono">
@@ -726,7 +726,7 @@ export default function EmployeeDashboard() {
                     <div className="text-2xl font-bold text-amber-500 tabular-nums">{todayEntry.PlannedQty}</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-1">Planned</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/15">
+                  <div className="p-3 rounded-xl bg-(--color-surface-completion) dark:bg-emerald-950/15">
                     <div className="text-2xl font-bold text-emerald-500 tabular-nums">{todayEntry.ActualQty}</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-1">Actual</div>
                   </div>
@@ -752,17 +752,17 @@ export default function EmployeeDashboard() {
             </Card>
             {/* AI EOD Insights */}
             {loadingInsights && (
-              <Card className="border-indigo-200/50 dark:border-indigo-800/30 animate-slide-up overflow-hidden">
+              <Card className="border-(--color-brand-200)/30 dark:border-indigo-800/30  overflow-hidden">
                 <CardContent className="p-5 flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                  <span className="text-sm text-indigo-500 font-medium">AI is analyzing your entry...</span>
+                  <span className="text-sm text-(--color-brand) font-medium">AI is analyzing your entry...</span>
                 </CardContent>
               </Card>
             )}
             {eodInsights && !loadingInsights && (
-              <Card className="border-indigo-200/50 dark:border-indigo-800/30 bg-gradient-to-r from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/10 dark:to-purple-950/5 animate-slide-up overflow-hidden">
+              <Card className="border-(--color-brand-200)/30 dark:border-indigo-800/30 bg-(--color-surface-brand)  overflow-hidden">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-indigo-600">
+                  <CardTitle className="flex items-center gap-2 text-(--color-brand-600)">
                     🤖 AI Insights
                     <span className="ml-auto text-xs font-normal text-[var(--color-text-muted)] normal-case">
                       Powered by GPT-OSS-20B
@@ -773,7 +773,7 @@ export default function EmployeeDashboard() {
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm",
-                      eodInsights.productivityScore >= 7 ? "bg-emerald-500" : eodInsights.productivityScore >= 4 ? "bg-amber-500" : "bg-red-500",
+                      eodInsights.productivityScore >= 7 ? "bg-(--color-surface-completion)0" : eodInsights.productivityScore >= 4 ? "bg-(--color-progress)" : "bg-(--color-surface-alert)0",
                     )}>{eodInsights.productivityScore}/10</div>
                     <div>
                       <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase">Productivity Score</p>
@@ -782,7 +782,7 @@ export default function EmployeeDashboard() {
                   </div>
                   {eodInsights.highlights?.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase">Highlights</p>
+                      <p className="text-[10px] font-bold text-(--color-completion) uppercase">Highlights</p>
                       {eodInsights.highlights.map((h: string, i: number) => (
                         <p key={i} className="text-xs text-[var(--color-text-secondary)] pl-3">✅ {h}</p>
                       ))}
@@ -790,7 +790,7 @@ export default function EmployeeDashboard() {
                   )}
                   {eodInsights.suggestions?.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-amber-600 uppercase">Suggestions</p>
+                      <p className="text-[10px] font-bold text-(--color-warning) uppercase">Suggestions</p>
                       {eodInsights.suggestions.map((s: string, i: number) => (
                         <p key={i} className="text-xs text-[var(--color-text-secondary)] pl-3">💡 {s}</p>
                       ))}
@@ -827,7 +827,7 @@ export default function EmployeeDashboard() {
                       {workItems.length > 1 && (
                         <button
                           onClick={() => setWorkItems(workItems.filter((_, j) => j !== i))}
-                          className="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20"
+                          className="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-(--color-surface-alert) dark:hover:bg-red-950/20"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -858,7 +858,7 @@ export default function EmployeeDashboard() {
                             type="button"
                             onClick={() => handleAutoDescribe(i)}
                             disabled={!item.task || autoDescribeIdx === i}
-                            className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 disabled:opacity-40 flex items-center gap-1"
+                            className="text-[10px] font-bold text-(--color-brand) hover:text-(--color-brand-600) disabled:opacity-40 flex items-center gap-1"
                           >
                             {autoDescribeIdx === i ? (
                               <><div className="w-3 h-3 rounded-full border border-indigo-400 border-t-transparent animate-spin" /> Generating...</>
@@ -971,8 +971,8 @@ export default function EmployeeDashboard() {
       {/* ── Floating Chatbot ── */}
       <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
-          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden animate-slide-up">
-            <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-between">
+          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-(--shadow-elevated) border border-[var(--color-border)] overflow-hidden ">
+            <div className="p-3 bg-(--color-brand) text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🤖</span>
                 <span className="text-xs font-bold">Piping Assistant</span>
@@ -986,7 +986,7 @@ export default function EmployeeDashboard() {
                   <div className={cn(
                     "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
                     msg.role === "user"
-                      ? "bg-indigo-500 text-white rounded-br-md"
+                      ? "bg-(--color-brand) text-white rounded-br-md"
                       : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
                   )}>{msg.content}</div>
                 </div>
@@ -994,7 +994,7 @@ export default function EmployeeDashboard() {
               {chatLoading && (
                 <div className="flex justify-start">
                   <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
-                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] animate-bounce" style={{animationDelay:"300ms"}} /></div>
+                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"300ms"}} /></div>
                   </div>
                 </div>
               )}
@@ -1011,7 +1011,7 @@ export default function EmployeeDashboard() {
                 <button
                   onClick={handleChat}
                   disabled={!chatInput.trim() || chatLoading}
-                  className="w-9 h-9 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center disabled:opacity-50"
+                  className="w-9 h-9 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white flex items-center justify-center disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -1022,10 +1022,10 @@ export default function EmployeeDashboard() {
         <button
           onClick={() => setChatOpen(!chatOpen)}
           className={cn(
-            "w-14 h-14 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300",
+            "w-14 h-14 rounded-2xl shadow-(--shadow-elevated) flex items-center justify-center transition-all duration-300",
             chatOpen
               ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90"
-              : "bg-gradient-to-br from-indigo-500 to-purple-600 hover:scale-110",
+              : "bg-(--color-brand) hover:scale-110",
           )}
         >
           {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}
