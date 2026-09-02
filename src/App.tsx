@@ -105,7 +105,7 @@ function NotFound() {
 export default function App() {
   return (
     <ToastProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           {/* Public route */}
           <Route path="/login" element={<LoginPage />} />
