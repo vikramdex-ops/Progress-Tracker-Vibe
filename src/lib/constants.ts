@@ -8,16 +8,16 @@ export const RATING_OPTIONS = [
 ] as const;
 
 export const RATING_COLORS: Record<string, string> = {
-  M: "bg-slate-100 text-slate-600",
-  S: "bg-emerald-50 text-emerald-600",
-  N: "bg-red-50 text-red-500",
-  E: "bg-amber-50 text-amber-600",
+  M: "bg-[var(--color-surface-brand)] text-[var(--color-brand)] border-[var(--color-brand-200)]",
+  S: "bg-[var(--color-surface-completion)] text-[var(--color-emerald-700)] border-[var(--color-emerald-200)]",
+  N: "bg-[var(--color-surface-alert)] text-[var(--color-red-700)] border-[var(--color-red-200)]",
+  E: "bg-[var(--color-surface-progress)] text-[var(--color-amber-700)] border-[var(--color-amber-200)]",
 };
 
 export const COMPLEXITY_COLORS: Record<string, string> = {
-  Low: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  Moderate: "bg-amber-50 text-amber-600 border-amber-200",
-  High: "bg-red-50 text-red-500 border-red-200",
+  Low: "bg-[var(--color-surface-completion)] text-[var(--color-emerald-700)] border-[var(--color-emerald-200)]",
+  Moderate: "bg-[var(--color-surface-progress)] text-[var(--color-amber-700)] border-[var(--color-amber-200)]",
+  High: "bg-[var(--color-surface-alert)] text-[var(--color-red-700)] border-[var(--color-red-200)]",
 };
 
 export const TICKER_MESSAGES = [

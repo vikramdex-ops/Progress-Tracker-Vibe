@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { TICKER_MESSAGES } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import { Zap, LogOut, Sun, Moon, Bell } from "lucide-react";
+import { Sun, Moon, LogOut } from "lucide-react";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const [clock, setClock] = useState("");
   const [dark, setDark] = useState(() => localStorage.getItem("theme") === "dark");
-  const [showNotif, setShowNotif] = useState(false);
 
   useEffect(() => {
     const tick = () =>
@@ -36,12 +34,12 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-30">
-      {/* Main header bar */}
-      <div className="glass border-b border-[var(--color-border)]/50">
+      {/* Main header bar - glass variant per §5.1 */}
+      <div className="glass border-b border-[var(--color-border)]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 h-14 sm:h-16 lg:h-[72px] flex items-center justify-between">
-          {/* Brand */}
+          {/* Brand - flat brand-500 icon, no gradient */}
           <div className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
+            <div className="w-9 h-9 rounded-lg bg-[var(--color-brand)] flex items-center justify-center shadow-elevated">
               <svg viewBox="0 0 30 30" className="w-5 h-5">
                 <path d="M3 15 H12 V6 H24 V15 H27 M12 15 V24" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 <circle cx="15" cy="15" r="2" fill="white" />
@@ -49,9 +47,9 @@ export default function Header() {
             </div>
             <div className="hidden sm:block">
               <span className="text-[15px] lg:text-base font-bold text-[var(--color-text-primary)] tracking-tight">
-                Progress<span className="gradient-text">Tracker</span>
+                Progress<span className="text-[var(--color-brand)]">Tracker</span>
               </span>
-              <span className="text-[9px] lg:text-[10px] text-[var(--color-text-muted)] block font-mono tracking-[0.2em] uppercase leading-none mt-0.5">
+              <span className="text-[9px] lg:text-[10px] text-[var(--color-text-tertiary)] block font-mono tracking-[0.2em] uppercase leading-none mt-0.5">
                 Daily EOD · Team Vikram
               </span>
             </div>
@@ -60,22 +58,22 @@ export default function Header() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             {/* Clock */}
-            <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] border border-[var(--color-border)]/50">
-              <span className="text-xs font-mono text-[var(--color-text-muted)] tabular-nums">{clock}</span>
+            <div className="hidden md:flex items-center px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] border border-[var(--color-border)]">
+              <span className="text-xs font-mono text-[var(--color-text-tertiary)] tabular-nums">{clock}</span>
             </div>
 
             {/* Theme toggle */}
             <button
               onClick={() => setDark(!dark)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-[var(--color-surface-hover)] transition-all duration-200 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-raised)] transition-all duration-[var(--duration-fast)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
               title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
             </button>
 
-            {/* User info */}
+            {/* User info - flat brand avatar */}
             <div className="flex items-center gap-2.5 pl-2 ml-1 border-l border-[var(--color-border)]">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-[var(--color-brand)] flex items-center justify-center text-white text-xs font-bold shadow-elevated">
                 {user?.name?.[0] || "?"}
               </div>
               <span className="text-sm font-medium text-[var(--color-text-primary)] hidden sm:block">{user?.name}</span>
@@ -84,7 +82,7 @@ export default function Header() {
             {/* Logout */}
             <button
               onClick={logout}
-              className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 text-[var(--color-text-muted)] hover:text-red-500 ml-1"
+              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-[var(--color-surface-alert)] transition-all duration-[var(--duration-fast)] text-[var(--color-text-tertiary)] hover:text-[var(--color-alert)] ml-1"
               title="Sign out"
             >
               <LogOut className="w-[18px] h-[18px]" />
@@ -93,16 +91,16 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Ticker */}
-      <div className="border-b border-[var(--color-border)]/30 bg-[var(--color-surface)]/60 overflow-hidden h-9 sm:h-10 lg:h-[44px] flex items-center">
-        <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] lg:text-[10px] font-bold tracking-[0.15em] px-3 sm:px-4 h-full flex items-center z-10 shadow-sm">
+      {/* Ticker - flat progress accent, no gradient */}
+      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] overflow-hidden h-9 sm:h-10 lg:h-[44px] flex items-center">
+        <div className="flex-shrink-0 bg-[var(--color-progress)] text-white text-[9px] lg:text-[10px] font-bold tracking-[0.15em] px-3 sm:px-4 h-full flex items-center z-10 shadow-elevated">
           LIVE FEED
         </div>
         <div className="overflow-hidden flex-1">
           <div className="ticker-track flex gap-12 whitespace-nowrap px-5">
             {doubled.map((msg, i) => (
-              <span key={i} className="text-[11px] lg:text-xs text-[var(--color-text-muted)] flex items-center gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-sm shadow-emerald-400/30" />
+              <span key={i} className="text-[11px] lg:text-xs text-[var(--color-text-tertiary)] flex items-center gap-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-completion)] flex-shrink-0" />
                 {msg}
               </span>
             ))}

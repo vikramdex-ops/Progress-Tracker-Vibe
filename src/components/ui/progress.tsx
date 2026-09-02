@@ -13,23 +13,23 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
     const percentage = Math.min(Math.round((value / max) * 100), 100);
 
     const colors: Record<string, string> = {
-      primary: "bg-(--color-progress)",
-      secondary: "bg-(--color-brand)",
-      accent: "bg-(--color-completion)",
-      destructive: "bg-(--color-alert)",
+      primary: "bg-[var(--color-progress)]",
+      secondary: "bg-[var(--color-brand)]",
+      accent: "bg-[var(--color-completion)]",
+      destructive: "bg-[var(--color-alert)]",
     };
 
     return (
       <div ref={ref} className={cn("w-full", className)} {...props}>
         {showLabel && (
-          <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-1.5">
-            <span className="font-medium">{percentage}%</span>
+          <div className="flex justify-between text-xs text-[var(--color-text-tertiary)] mb-1.5">
+            <span className="font-medium tabular-nums">{percentage}%</span>
           </div>
         )}
-        <div className="h-2 w-full rounded-full bg-[var(--color-border-light)] overflow-hidden">
+        <div className="h-2 w-full rounded-full bg-[var(--color-border)] overflow-hidden">
           <div
             className={cn(
-              "h-full rounded-full transition-all duration-700 ease-out",
+              "h-full rounded-full transition-all duration-[var(--duration-slow)] ease-[var(--ease-default)]",
               colors[color]
             )}
             style={{ width: `${percentage}%` }}

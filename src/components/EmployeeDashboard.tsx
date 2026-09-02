@@ -257,7 +257,7 @@ export default function EmployeeDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-[var(--color-border-focus)] border-t-transparent animate-spin" />
           <span className="text-sm text-[var(--color-text-muted)]">Loading your dashboard...</span>
         </div>
       </div>
@@ -273,18 +273,18 @@ export default function EmployeeDashboard() {
       {/* ── Top Stats Row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 ">
         {[
-          { icon: <Star className="w-5 h-5" />, label: "Total XP", value: `${gamification?.xp || 0}`, color: "amber", gradient: "bg-(--color-surface-progress)" },
-          { icon: <Award className="w-5 h-5" />, label: levelInfo.title, value: `Level ${levelInfo.level}`, color: "indigo", gradient: "bg-(--color-surface-brand)" },
-          { icon: <Flame className="w-5 h-5" />, label: "Current Streak", value: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}`, color: "orange", gradient: "from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/10" },
-          { icon: <Check className="w-5 h-5" />, label: "Total Entries", value: `${gamification?.totalEntries || 0}`, color: "emerald", gradient: "from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/10" },
+          { icon: <Star className="w-5 h-5" />, label: "Total XP", value: `${gamification?.xp || 0}`, color: "amber", gradient: "bg-[var(--color-surface-progress)]" },
+          { icon: <Award className="w-5 h-5" />, label: levelInfo.title, value: `Level ${levelInfo.level}`, color: "indigo", gradient: "bg-[var(--color-surface-brand)]" },
+          { icon: <Flame className="w-5 h-5" />, label: "Current Streak", value: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}`, color: "orange", gradient: "bg-[var(--color-surface-default)]" },
+          { icon: <Check className="w-5 h-5" />, label: "Total Entries", value: `${gamification?.totalEntries || 0}`, color: "emerald", gradient: "bg-[var(--color-surface-default)]" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("stat-card-spring border border-(--color-border) p-4 lg:p-5", stat.gradient)}>
+          <Card key={stat.label} className={cn("stat-card-spring border border-[var(--color-border)] p-4 lg:p-5", stat.gradient)}>
             <div className="flex items-center gap-3 lg:gap-4">
               <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
-                stat.color === "amber" && "bg-(--color-surface-progress) text-(--color-warning) dark:bg-amber-900/30 dark:text-amber-400",
-                stat.color === "indigo" && "bg-indigo-100 text-(--color-brand-600) dark:bg-indigo-900/30 dark:text-indigo-400",
-                stat.color === "orange" && "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
-                stat.color === "emerald" && "bg-(--color-surface-completion) text-(--color-completion) dark:bg-emerald-900/30 dark:text-emerald-400",
+                stat.color === "amber" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
+                stat.color === "indigo" && "bg-[var(--color-surface-brand)] text-[var(--color-brand-600)]",
+                stat.color === "orange" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
+                stat.color === "emerald" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
               )}>
                 {stat.icon}
               </div>
@@ -298,7 +298,7 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* ── Tabs ── */}
-      <div className="flex gap-1.5 p-1 bg-[var(--color-surface-hover)] rounded-xl w-fit border border-[var(--color-border)]/50">
+      <div className="flex gap-1.5 p-1 bg-[var(--color-surface-raised)] rounded-xl w-fit border border-[var(--color-border)]">
         {[
           { id: "overview" as const, label: "Overview", icon: <Target className="w-4 h-4" /> },
           { id: "entries" as const, label: "EOD Entry", icon: <Send className="w-4 h-4" /> },
@@ -309,7 +309,7 @@ export default function EmployeeDashboard() {
             className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200",
               activeTab === t.id
-                ? "bg-[var(--color-surface)] text-(--color-warning) shadow-sm border border-(--color-progress-200)/30 dark:border-amber-800/30"
+                ? "bg-[var(--color-surface-default)] text-[var(--color-progress)] shadow-sm border border-[var(--color-amber-200)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
@@ -323,31 +323,31 @@ export default function EmployeeDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 ">
           {/* Today's Mission — full width */}
           <Card className={cn(
-            "lg:col-span-3 border-(--color-progress-200)/30 dark:border-amber-800/30 p-0 overflow-hidden",
-            "bg-gradient-to-r from-amber-50/80 via-orange-50/40 to-amber-50/60 dark:from-amber-950/15 dark:via-orange-950/10 dark:to-amber-950/15"
+            "lg:col-span-3 border-[var(--color-amber-200)] p-0 overflow-hidden",
+            "bg-[var(--color-surface-progress)]"
           )}>
             <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-(--shadow-elevated) flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-progress)] flex items-center justify-center shadow-elevated flex-shrink-0">
                 <Target className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <div className="text-[10px] font-bold text-(--color-warning) uppercase tracking-[0.15em] mb-0.5">Today's Mission</div>
+                <div className="text-[10px] font-bold text-[var(--color-progress)] uppercase tracking-[0.15em] mb-0.5">Today's Mission</div>
                 <div className="text-lg font-bold text-[var(--color-text-primary)]">
                   {todayEntry || onLeaveToday ? "✅ Mission Complete!" : "Complete today's EOD entry"}
                 </div>
-                <div className="text-sm text-amber-500 font-semibold mt-0.5">
+                <div className="text-sm text-[var(--color-progress)] font-semibold mt-0.5">
                   {todayEntry || onLeaveToday ? "+10 XP earned" : "+10 XP reward"}
                 </div>
               </div>
               {!todayEntry && !onLeaveToday && (
                 <div className="flex gap-2.5">
-                  <div className="px-4 py-2.5 rounded-xl bg-(--color-surface-completion) dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30 text-center">
-                    <div className="text-[11px] font-bold text-(--color-completion)">⚡ Early Bird</div>
-                    <div className="text-[10px] text-emerald-500 font-medium">+5 XP before 5 PM</div>
+                  <div className="px-4 py-2.5 rounded-xl bg-[var(--color-surface-completion)] border border-[var(--color-emerald-200)] text-center">
+                    <div className="text-[11px] font-bold text-[var(--color-completion)]">⚡ Early Bird</div>
+                    <div className="text-[10px] text-[var(--color-completion)] font-medium">+5 XP before 5 PM</div>
                   </div>
-                  <div className="px-4 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 border border-(--color-brand-200)/30 dark:border-indigo-800/30 text-center">
-                    <div className="text-[11px] font-bold text-(--color-brand-600)">🎯 100% Plan</div>
-                    <div className="text-[10px] text-(--color-brand) font-medium">+20 XP bonus</div>
+                  <div className="px-4 py-2.5 rounded-xl bg-[var(--color-surface-brand)] border border-[var(--color-brand-200)] text-center">
+                    <div className="text-[11px] font-bold text-[var(--color-brand-600)]">🎯 100% Plan</div>
+                    <div className="text-[10px] text-[var(--color-brand)] font-medium">+20 XP bonus</div>
                   </div>
                 </div>
               )}
@@ -385,7 +385,7 @@ export default function EmployeeDashboard() {
             <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Level Progression</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-14 h-14 rounded-2xl bg-(--color-brand) flex items-center justify-center text-white font-bold text-xl shadow-(--shadow-elevated) shadow-(--shadow-brand) flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl bg-[var(--color-brand)] flex items-center justify-center text-white font-bold text-xl shadow-elevated flex-shrink-0">
                   {levelInfo.level}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -404,7 +404,7 @@ export default function EmployeeDashboard() {
           <Card className="lg:col-span-3  shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-500" /> YOUR ACHIEVEMENTS
+                <Trophy className="w-4 h-4 text-[var(--color-progress)]" /> YOUR ACHIEVEMENTS
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
@@ -414,10 +414,10 @@ export default function EmployeeDashboard() {
                     <div
                       key={b.id}
                       className={cn(
-                        "p-3.5 rounded-2xl border text-center transition-all duration-200  cursor-default",
+                        "p-3.5 rounded-xl border text-center transition-all duration-200  cursor-default",
                         b.IsNew
-                          ? "border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800/30 shadow-sm shadow-amber-200/30"
-                          : "border-[var(--color-border)] bg-[var(--color-surface-hover)]"
+                          ? "border-[var(--color-amber-200)] bg-[var(--color-surface-progress)] shadow-sm shadow-elevated"
+                          : "border-[var(--color-border)] bg-[var(--color-surface-raised)]"
                       )}
                     >
                       <div className="text-2xl mb-1.5">
@@ -434,24 +434,24 @@ export default function EmployeeDashboard() {
           </Card>
 
           {/* AI Engineering Quiz — full width */}
-          <Card className="lg:col-span-3 stat-card-spring bg-(--color-surface) shadow-(--shadow-elevated) border border-(--color-border) overflow-hidden">
+          <Card className="lg:col-span-3 stat-card-spring bg-[var(--color-surface)] shadow-elevated border border-[var(--color-border)] overflow-hidden">
             <CardContent className="p-5 lg:p-7">
               {/* Header with tabs */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-(--color-brand)" />
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-brand)] flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-[var(--color-brand)]" />
                   </div>
                   <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">🤖 AI PIPING QUIZ</span>
                 </div>
-                <div className="flex gap-1 p-0.5 bg-[var(--color-surface-hover)] rounded-lg">
+                <div className="flex gap-1 p-0.5 bg-[var(--color-surface-raised)] rounded-lg">
                   {(["play", "history"] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setQuizTab(tab)}
                       className={cn(
                         "px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
-                        quizTab === tab ? "bg-(--color-brand) text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]",
+                        quizTab === tab ? "bg-[var(--color-brand)] text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]",
                       )}
                     >
                       {tab === "play" ? "🎯 Play" : `📖 History (${quizHistory.length})`}
@@ -463,15 +463,15 @@ export default function EmployeeDashboard() {
               {/* Stats bar */}
               {quizStats && (
                 <div className="flex gap-3 mb-4 flex-wrap">
-                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] text-[10px] font-semibold">
+                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] text-[10px] font-semibold">
                     <span className="text-[var(--color-text-muted)]">Score:</span>{" "}
                     <span className="text-[var(--color-text-primary)]">{quizStats.correct}/{quizStats.total}</span>
                   </div>
-                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] text-[10px] font-semibold">
+                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] text-[10px] font-semibold">
                     <span className="text-[var(--color-text-muted)]">Accuracy:</span>{" "}
                     <span className="text-[var(--color-text-primary)]">{quizStats.accuracy}%</span>
                   </div>
-                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-hover)] text-[10px] font-semibold">
+                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] text-[10px] font-semibold">
                     <span className="text-[var(--color-text-muted)]">Unique:</span>{" "}
                     <span className="text-[var(--color-text-primary)]">{quizStats.uniqueQuestions}</span>
                   </div>
@@ -482,8 +482,8 @@ export default function EmployeeDashboard() {
               {quizTab === "play" && (
                 generatingQuiz ? (
                   <div className="flex flex-col items-center gap-3 py-8">
-                    <div className="w-8 h-8 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                    <span className="text-sm text-(--color-brand) font-medium">AI is generating your question...</span>
+                    <div className="w-8 h-8 rounded-full border-2 border-[var(--color-brand-200)] border-t-transparent animate-spin" />
+                    <span className="text-sm text-[var(--color-brand)] font-medium">AI is generating your question...</span>
                     <span className="text-xs text-[var(--color-text-muted)]">Powered by MiniMax M3</span>
                   </div>
                 ) : quiz?.limitReached ? (
@@ -492,7 +492,7 @@ export default function EmployeeDashboard() {
                     <p className="text-sm font-semibold text-[var(--color-text-primary)]">Daily Limit Reached</p>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">You've answered {quiz.count}/{quiz.limit} questions today. Come back tomorrow!</p>
                     <div className="mt-3 flex justify-center">
-                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-(--color-brand-600) text-xs font-semibold">
+                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-xl bg-[var(--color-surface-brand)] text-[var(--color-brand-600)] text-xs font-semibold">
                         📖 Review History
                       </button>
                     </div>
@@ -503,18 +503,18 @@ export default function EmployeeDashboard() {
                       {quiz.difficulty && (
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] font-bold",
-                          quiz.difficulty === "Easy" && "bg-(--color-surface-completion) text-(--color-completion)",
-                          quiz.difficulty === "Medium" && "bg-(--color-surface-progress) text-(--color-warning)",
-                          quiz.difficulty === "Hard" && "bg-(--color-surface-alert) text-red-500",
+                          quiz.difficulty === "Easy" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
+                          quiz.difficulty === "Medium" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
+                          quiz.difficulty === "Hard" && "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
                         )}>{quiz.difficulty}</span>
                       )}
                       {quiz.category && (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-surface-hover)] text-[9px] font-semibold text-[var(--color-text-muted)]">
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-surface-raised)] text-[9px] font-semibold text-[var(--color-text-muted)]">
                           {quiz.category}
                         </span>
                       )}
                       {quiz.remaining !== undefined && (
-                        <span className="ml-auto px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-[9px] font-bold text-(--color-brand-600)">
+                        <span className="ml-auto px-2 py-0.5 rounded-full bg-[var(--color-surface-brand)] text-[9px] font-bold text-[var(--color-brand-600)]">
                           {quiz.remaining} left today
                         </span>
                       )}
@@ -532,10 +532,10 @@ export default function EmployeeDashboard() {
                             disabled={!!quizResult}
                             className={cn(
                               "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
-                              !quizResult && "hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 cursor-pointer",
+                              !quizResult && "hover:border-[var(--color-brand-200)] hover:bg-[var(--color-surface-brand)] cursor-pointer",
                               !!quizResult && "cursor-default",
-                              isCorrect && "border-emerald-400 bg-(--color-surface-completion) dark:bg-emerald-950/20 text-(--color-completion-700) dark:text-emerald-400",
-                              isWrong && "border-red-400 bg-(--color-surface-alert) dark:bg-red-950/20 text-red-600",
+                              isCorrect && "border-[var(--color-emerald-200)] bg-[var(--color-surface-completion)] text-[var(--color-completion-700)]",
+                              isWrong && "border-[var(--color-red-200)] bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
                               !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
                             )}
                           >
@@ -549,19 +549,19 @@ export default function EmployeeDashboard() {
                       <div className="space-y-2 ">
                         <div className={cn(
                           "p-3 rounded-xl text-sm font-medium",
-                          quizResult.correct ? "bg-(--color-surface-completion) dark:bg-emerald-950/20 text-(--color-completion)" : "bg-(--color-surface-alert) dark:bg-red-950/20 text-red-500",
+                          quizResult.correct ? "bg-[var(--color-surface-completion)] text-[var(--color-completion)]" : "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
                         )}>
                           {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong! The correct answer is ${quizResult.correctAnswer}.`}
                         </div>
                         {quizResult.explanation && (
-                          <div className="p-3 rounded-xl bg-(--color-surface-progress) dark:bg-blue-950/20 border border-(--color-brand-200)/30 dark:border-blue-800/30">
-                            <p className="text-xs font-bold text-blue-600 mb-1">💡 EXPLANATION</p>
+                          <div className="p-3 rounded-xl bg-[var(--color-surface-progress)] border border-[var(--color-brand-200)]">
+                            <p className="text-xs font-bold text-[var(--color-brand)] mb-1">💡 EXPLANATION</p>
                             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
                           </div>
                         )}
                         <button
                           onClick={handleGenerateQuiz}
-                          className="w-full py-2.5 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white text-sm font-semibold transition-colors"
+                          className="w-full py-2.5 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white text-sm font-semibold transition-colors"
                         >
                           🔄 Next Question
                         </button>
@@ -573,7 +573,7 @@ export default function EmployeeDashboard() {
                     <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
                     <button
                       onClick={handleGenerateQuiz}
-                      className="px-6 py-2.5 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white text-sm font-semibold transition-colors shadow-sm"
+                      className="px-6 py-2.5 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white text-sm font-semibold transition-colors shadow-sm"
                     >
                       ✨ Generate Question
                     </button>
@@ -594,14 +594,14 @@ export default function EmployeeDashboard() {
                           <div className="flex gap-1 flex-shrink-0">
                             <span className={cn(
                               "px-1.5 py-0.5 rounded text-[8px] font-bold",
-                              h.IsCorrect ? "bg-(--color-surface-completion) text-(--color-completion)" : "bg-(--color-surface-alert) text-red-500",
+                              h.IsCorrect ? "bg-[var(--color-surface-completion)] text-[var(--color-completion)]" : "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
                             )}>{h.IsCorrect ? "✓" : "✗"}</span>
                             {h.Difficulty && (
                               <span className={cn(
                                 "px-1.5 py-0.5 rounded text-[8px] font-bold",
-                                h.Difficulty === "Easy" && "bg-(--color-surface-completion) text-emerald-500",
-                                h.Difficulty === "Medium" && "bg-amber-50 text-amber-500",
-                                h.Difficulty === "Hard" && "bg-(--color-surface-alert) text-red-400",
+                                h.Difficulty === "Easy" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
+                                h.Difficulty === "Medium" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
+                                h.Difficulty === "Hard" && "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
                               )}>{h.Difficulty}</span>
                             )}
                           </div>
@@ -613,19 +613,19 @@ export default function EmployeeDashboard() {
                             return (
                               <span key={k} className={cn(
                                 "px-2 py-0.5 rounded font-medium",
-                                isCorrect && "bg-(--color-surface-completion) text-(--color-completion-700)",
-                                isUser && !isCorrect && "bg-(--color-surface-alert) text-red-600",
-                                !isCorrect && !isUser && "bg-[var(--color-surface-hover)] text-[var(--color-text-muted)]",
+                                isCorrect && "bg-[var(--color-surface-completion)] text-[var(--color-completion-700)]",
+                                isUser && !isCorrect && "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
+                                !isCorrect && !isUser && "bg-[var(--color-surface-raised)] text-[var(--color-text-muted)]",
                               )}>{k}. {h[`Option${k}`] || ""}</span>
                             );
                           })}
                         </div>
                         {h.Explanation && (
-                          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed bg-(--color-surface-progress)/50 dark:bg-blue-950/10 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>
+                          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed bg-[var(--color-surface-progress)]/50 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>
                         )}
                         <div className="flex items-center gap-2 text-[9px] text-[var(--color-text-muted)]">
                           {h.AnsweredAt && <span>{new Date(h.AnsweredAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>}
-                          {h.XpEarned > 0 && <span className="text-amber-500 font-bold">+{h.XpEarned} XP</span>}
+                          {h.XpEarned > 0 && <span className="text-[var(--color-progress)] font-bold">+{h.XpEarned} XP</span>}
                         </div>
                       </div>
                     ))
@@ -640,19 +640,19 @@ export default function EmployeeDashboard() {
             <Card className="lg:col-span-3 ">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500" /> LIVE FEED
+                  <Zap className="w-4 h-4 text-[var(--color-progress)]" /> LIVE FEED
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {announcements.slice(0, 10).map((ann) => (
-                    <div key={ann.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--color-surface-hover)] transition-colors">
+                    <div key={ann.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--color-surface-raised)] transition-colors">
                       <div className={cn(
                         "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
-                        ann.Type === "entry" && "bg-emerald-400",
-                        ann.Type === "leave" && "bg-orange-400",
-                        ann.Type === "badge" && "bg-(--color-progress)",
-                        ann.Type === "system" && "bg-blue-400",
+                        ann.Type === "entry" && "bg-[var(--color-completion)]",
+                        ann.Type === "leave" && "bg-[var(--color-progress)]",
+                        ann.Type === "badge" && "bg-[var(--color-progress)]",
+                        ann.Type === "system" && "bg-[var(--color-brand)]",
                       )} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
@@ -686,22 +686,22 @@ export default function EmployeeDashboard() {
           )}
 
           {showLeaveForm && (
-            <Card className="border-orange-200/60 dark:border-orange-800/30 ">
+            <Card className="border-[var(--color-amber-200)] ">
               <CardContent className="p-5 flex gap-3 items-end">
                 <div className="flex-1">
                   <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Reason (optional)</label>
                   <Input value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} placeholder="e.g., Sick leave" />
                 </div>
-                <Button onClick={handleMarkLeave} className="bg-orange-500 hover:bg-orange-600">Confirm Leave</Button>
+                <Button onClick={handleMarkLeave} className="bg-[var(--color-progress)] hover:brightness-90">Confirm Leave</Button>
                 <Button variant="ghost" onClick={() => setShowLeaveForm(false)}><X className="w-4 h-4" /></Button>
               </CardContent>
             </Card>
           )}
 
           {onLeaveToday ? (
-            <Card className="border-orange-200/60 dark:border-orange-800/30 bg-gradient-to-br from-orange-50/50 to-amber-50/30 dark:from-orange-950/10 dark:to-amber-950/5">
+            <Card className="border-[var(--color-amber-200)] bg-[var(--color-surface-progress)]">
               <CardContent className="p-12 text-center">
-                <Calendar className="w-14 h-14 text-orange-300 dark:text-orange-600 mx-auto mb-4" />
+                <Calendar className="w-14 h-14 text-[var(--color-progress)] mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">On Leave Today</h3>
                 <p className="text-sm text-[var(--color-text-muted)]">No EOD submission needed for today.</p>
               </CardContent>
@@ -712,7 +712,7 @@ export default function EmployeeDashboard() {
             <Card className=" overflow-hidden">
               <CardHeader className="px-6 py-5 lg:px-8">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-(--color-completion) lg:text-lg">
+                  <CardTitle className="flex items-center gap-2 text-[var(--color-completion)] lg:text-lg">
                     <Check className="w-5 h-5" /> Today's Entry Submitted
                   </CardTitle>
                   <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5 font-mono">
@@ -722,20 +722,20 @@ export default function EmployeeDashboard() {
               </CardHeader>
               <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
                 <div className="grid grid-cols-3 gap-5 lg:gap-7 text-center mb-5">
-                  <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/15">
-                    <div className="text-2xl font-bold text-amber-500 tabular-nums">{todayEntry.PlannedQty}</div>
+                  <div className="p-3 rounded-xl bg-[var(--color-surface-progress)]">
+                    <div className="text-2xl font-bold text-[var(--color-progress)] tabular-nums">{todayEntry.PlannedQty}</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-1">Planned</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-(--color-surface-completion) dark:bg-emerald-950/15">
-                    <div className="text-2xl font-bold text-emerald-500 tabular-nums">{todayEntry.ActualQty}</div>
+                  <div className="p-3 rounded-xl bg-[var(--color-surface-completion)]">
+                    <div className="text-2xl font-bold text-[var(--color-completion)] tabular-nums">{todayEntry.ActualQty}</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-1">Actual</div>
                   </div>
-                  <div className="p-3 rounded-xl bg-[var(--color-surface-hover)]">
+                  <div className="p-3 rounded-xl bg-[var(--color-surface-raised)]">
                     <div className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">{todayEntry.CompletionPct}%</div>
                     <div className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-wider mt-1">Completion</div>
                   </div>
                 </div>
-                <div className="p-3.5 rounded-xl bg-[var(--color-surface-hover)] border border-[var(--color-border)]/50 text-sm">
+                <div className="p-3.5 rounded-xl bg-[var(--color-surface-raised)] border border-[var(--color-border)] text-sm">
                   <span className="font-semibold text-[var(--color-text-secondary)]">{todayEntry.Project}</span>
                   <span className="text-[var(--color-text-muted)] mx-2">·</span>
                   <span className="text-[var(--color-text-secondary)]">{todayEntry.Task}</span>
@@ -752,17 +752,17 @@ export default function EmployeeDashboard() {
             </Card>
             {/* AI EOD Insights */}
             {loadingInsights && (
-              <Card className="border-(--color-brand-200)/30 dark:border-indigo-800/30  overflow-hidden">
+              <Card className="border-[var(--color-brand-200)]  overflow-hidden">
                 <CardContent className="p-5 flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                  <span className="text-sm text-(--color-brand) font-medium">AI is analyzing your entry...</span>
+                  <div className="w-6 h-6 rounded-full border-2 border-[var(--color-brand-200)] border-t-transparent animate-spin" />
+                  <span className="text-sm text-[var(--color-brand)] font-medium">AI is analyzing your entry...</span>
                 </CardContent>
               </Card>
             )}
             {eodInsights && !loadingInsights && (
-              <Card className="border-(--color-brand-200)/30 dark:border-indigo-800/30 bg-(--color-surface-brand)  overflow-hidden">
+              <Card className="border-[var(--color-brand-200)] bg-[var(--color-surface-brand)]  overflow-hidden">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-(--color-brand-600)">
+                  <CardTitle className="flex items-center gap-2 text-[var(--color-brand-600)]">
                     🤖 AI Insights
                     <span className="ml-auto text-xs font-normal text-[var(--color-text-muted)] normal-case">
                       Powered by GPT-OSS-20B
@@ -773,7 +773,7 @@ export default function EmployeeDashboard() {
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm",
-                      eodInsights.productivityScore >= 7 ? "bg-(--color-surface-completion)0" : eodInsights.productivityScore >= 4 ? "bg-(--color-progress)" : "bg-(--color-surface-alert)0",
+                      eodInsights.productivityScore >= 7 ? "bg-[var(--color-completion)]" : eodInsights.productivityScore >= 4 ? "bg-[var(--color-progress)]" : "bg-[var(--color-alert)]",
                     )}>{eodInsights.productivityScore}/10</div>
                     <div>
                       <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase">Productivity Score</p>
@@ -782,7 +782,7 @@ export default function EmployeeDashboard() {
                   </div>
                   {eodInsights.highlights?.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-(--color-completion) uppercase">Highlights</p>
+                      <p className="text-[10px] font-bold text-[var(--color-completion)] uppercase">Highlights</p>
                       {eodInsights.highlights.map((h: string, i: number) => (
                         <p key={i} className="text-xs text-[var(--color-text-secondary)] pl-3">✅ {h}</p>
                       ))}
@@ -790,14 +790,14 @@ export default function EmployeeDashboard() {
                   )}
                   {eodInsights.suggestions?.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-(--color-warning) uppercase">Suggestions</p>
+                      <p className="text-[10px] font-bold text-[var(--color-progress)] uppercase">Suggestions</p>
                       {eodInsights.suggestions.map((s: string, i: number) => (
                         <p key={i} className="text-xs text-[var(--color-text-secondary)] pl-3">💡 {s}</p>
                       ))}
                     </div>
                   )}
                   {eodInsights.complexityAnalysis && (
-                    <p className="text-[11px] text-[var(--color-text-muted)] bg-[var(--color-surface-hover)] rounded-lg px-3 py-2">
+                    <p className="text-[11px] text-[var(--color-text-muted)] bg-[var(--color-surface-raised)] rounded-lg px-3 py-2">
                       📊 {eodInsights.complexityAnalysis}
                     </p>
                   )}
@@ -811,14 +811,14 @@ export default function EmployeeDashboard() {
               <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
                 <CardTitle className="flex items-center gap-2 text-base lg:text-lg font-bold">
                   <Send className="w-4 h-4" /> TODAY'S EOD ENTRY
-                  <span className="ml-auto text-sm font-bold text-amber-500 normal-case tracking-normal">+10 XP</span>
+                  <span className="ml-auto text-sm font-bold text-[var(--color-progress)] normal-case tracking-normal">+10 XP</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5 px-4 sm:px-5 lg:px-8 pb-5 lg:pb-7">
                 {workItems.map((item, i) => (
                   <div
                     key={i}
-                    className="p-4 lg:p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-hover)]/50 space-y-4"
+                    className="p-4 lg:p-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] space-y-4"
                   >
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
@@ -827,7 +827,7 @@ export default function EmployeeDashboard() {
                       {workItems.length > 1 && (
                         <button
                           onClick={() => setWorkItems(workItems.filter((_, j) => j !== i))}
-                          className="text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-(--color-surface-alert) dark:hover:bg-red-950/20"
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-alert)] transition-colors p-1 rounded-lg hover:bg-[var(--color-surface-alert)]"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -839,7 +839,7 @@ export default function EmployeeDashboard() {
                         <select
                           value={item.projectName}
                           onChange={(e) => updateItem(i, "projectName", e.target.value)}
-                          className="w-full h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 outline-none transition-all"
+                          className="w-full h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none transition-all"
                         >
                           <option value="">Select project...</option>
                           {PROJECTS.map((p) => (
@@ -858,10 +858,10 @@ export default function EmployeeDashboard() {
                             type="button"
                             onClick={() => handleAutoDescribe(i)}
                             disabled={!item.task || autoDescribeIdx === i}
-                            className="text-[10px] font-bold text-(--color-brand) hover:text-(--color-brand-600) disabled:opacity-40 flex items-center gap-1"
+                            className="text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-600)] disabled:opacity-40 flex items-center gap-1"
                           >
                             {autoDescribeIdx === i ? (
-                              <><div className="w-3 h-3 rounded-full border border-indigo-400 border-t-transparent animate-spin" /> Generating...</>
+                              <><div className="w-3 h-3 rounded-full border border-[var(--color-brand-200)] border-t-transparent animate-spin" /> Generating...</>
                             ) : ("✨ AI Auto-Describe")}
                           </button>
                         </div>
@@ -880,7 +880,7 @@ export default function EmployeeDashboard() {
                         <select
                           value={item.complexity}
                           onChange={(e) => updateItem(i, "complexity", e.target.value)}
-                          className="w-full h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 outline-none transition-all"
+                          className="w-full h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none transition-all"
                         >
                           <option>Low</option>
                           <option>Moderate</option>
@@ -911,7 +911,7 @@ export default function EmployeeDashboard() {
                     value={overallRemarks}
                     onChange={(e) => setOverallRemarks(e.target.value)}
                     placeholder="Any additional notes..."
-                    className="w-full h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 outline-none resize-none transition-all"
+                    className="w-full h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none resize-none transition-all"
                   />
                 </div>
 
@@ -942,7 +942,7 @@ export default function EmployeeDashboard() {
                     </thead>
                     <tbody>
                       {entries.slice(0, 30).map((e) => (
-                        <tr key={e.id} className="border-b border-[var(--color-border)]/30 hover:bg-[var(--color-surface-hover)] transition-colors">
+                        <tr key={e.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] transition-colors">
                           <td className="py-3 pr-4 font-mono text-xs text-[var(--color-text-muted)]">{e.Date}</td>
                           <td className="py-3 pr-4 font-medium text-[var(--color-text-secondary)]">{e.Project}</td>
                           <td className="py-3 pr-4 text-[var(--color-text-secondary)]">{e.Task}</td>
@@ -971,8 +971,8 @@ export default function EmployeeDashboard() {
       {/* ── Floating Chatbot ── */}
       <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
-          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-2xl shadow-(--shadow-elevated) border border-[var(--color-border)] overflow-hidden ">
-            <div className="p-3 bg-(--color-brand) text-white flex items-center justify-between">
+          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-xl shadow-elevated border border-[var(--color-border)] overflow-hidden ">
+            <div className="p-3 bg-[var(--color-brand)] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm">🤖</span>
                 <span className="text-xs font-bold">Piping Assistant</span>
@@ -984,16 +984,16 @@ export default function EmployeeDashboard() {
               {chatMessages.map((msg, i) => (
                 <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                   <div className={cn(
-                    "max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed",
+                    "max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed",
                     msg.role === "user"
-                      ? "bg-(--color-brand) text-white rounded-br-md"
-                      : "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)] rounded-bl-md",
+                      ? "bg-[var(--color-brand)] text-white rounded-br-md"
+                      : "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)] rounded-bl-md",
                   )}>{msg.content}</div>
                 </div>
               ))}
               {chatLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[var(--color-surface-hover)] px-3 py-2 rounded-2xl rounded-bl-md">
+                  <div className="bg-[var(--color-surface-raised)] px-3 py-2 rounded-xl rounded-bl-md">
                     <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"300ms"}} /></div>
                   </div>
                 </div>
@@ -1006,12 +1006,12 @@ export default function EmployeeDashboard() {
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleChat()}
                   placeholder="Ask about piping codes, standards..."
-                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-indigo-400"
+                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-[var(--color-brand-200)]"
                 />
                 <button
                   onClick={handleChat}
                   disabled={!chatInput.trim() || chatLoading}
-                  className="w-9 h-9 rounded-xl bg-(--color-brand) hover:bg-indigo-600 text-white flex items-center justify-center disabled:opacity-50"
+                  className="w-9 h-9 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white flex items-center justify-center disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -1022,10 +1022,10 @@ export default function EmployeeDashboard() {
         <button
           onClick={() => setChatOpen(!chatOpen)}
           className={cn(
-            "w-14 h-14 rounded-2xl shadow-(--shadow-elevated) flex items-center justify-center transition-all duration-300",
+            "w-14 h-14 rounded-xl shadow-elevated flex items-center justify-center transition-all duration-300",
             chatOpen
               ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90"
-              : "bg-(--color-brand) hover:scale-110",
+              : "bg-[var(--color-brand)] hover:",
           )}
         >
           {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}

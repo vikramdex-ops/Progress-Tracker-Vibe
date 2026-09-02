@@ -1,18 +1,20 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+// Calm Glass §5.4 — 4 intents × 3 styles, semantic tokens only
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "secondary" | "success" | "warning" | "destructive" | "outline";
 }
 
 const Badge = ({ className, variant = "default", ...props }: BadgeProps) => {
+  // Maps legacy variant names to Calm Glass semantic tokens
   const variants: Record<string, string> = {
-    default: "bg-amber-50 text-amber-600 border-amber-200/60 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40",
-    secondary: "bg-indigo-50 text-indigo-600 border-indigo-200/60 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-800/40",
-    success: "bg-emerald-50 text-emerald-600 border-emerald-200/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/40",
-    warning: "bg-orange-50 text-orange-600 border-orange-200/60 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/40",
-    destructive: "bg-red-50 text-red-500 border-red-200/60 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
-    outline: "border-[var(--color-border)] text-[var(--color-text-muted)]",
+    default: "bg-[var(--color-surface-progress)] text-[var(--color-amber-700)] border-[var(--color-amber-200)]",
+    secondary: "bg-[var(--color-surface-brand)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]",
+    success: "bg-[var(--color-surface-completion)] text-[var(--color-emerald-700)] border-[var(--color-emerald-200)]",
+    warning: "bg-[var(--color-surface-progress)] text-[var(--color-amber-700)] border-[var(--color-amber-200)]",
+    destructive: "bg-[var(--color-surface-alert)] text-[var(--color-red-700)] border-[var(--color-red-200)]",
+    outline: "border-[var(--color-border)] text-[var(--color-text-tertiary)] bg-transparent",
   };
 
   return (
