@@ -36,20 +36,12 @@ jobs:
 
       - name: Validate environment
         run: |
-          API_URL="${{ vars.API_BASE_URL }}"
-          if [ -z "$API_URL" ]; then
-            API_URL="https://progress-tracker-vibe-vikrams-projects-221b97a9.vercel.app/api"
-            echo "⚠️ vars.API_BASE_URL empty, using fallback: $API_URL"
-          fi
-          # Workaround for primary alias video/mp2t cache issue — prefer working alias
-          if [[ "$API_URL" == "https://progress-tracker-vibe.vercel.app/api" ]]; then
-            echo "⚠️ Primary alias has edge cache issue (video/mp2t), switching to working alias"
-            API_URL="https://progress-tracker-vibe-vikrams-projects-221b97a9.vercel.app/api"
-          fi
-          echo "✅ API URL configured: $API_URL"
+          # Use production alias (now fixed to text/html + 204 OPTIONS) — GH Pages var may still be alias2 preview (protected)
+          API_URL="https://progress-tracker-vibe.vercel.app/api"
+          echo "✅ API URL configured: $API_URL (production, not preview)"
           echo "VITE_API_URL=$API_URL" >> $GITHUB_ENV
         env:
-          VITE_API_URL: ${{ vars.API_BASE_URL }}
+          VITE_API_URL: https://progress-tracker-vibe.vercel.app/api
 
       - name: Build
         run: bun run build
