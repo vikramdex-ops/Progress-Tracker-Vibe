@@ -8,11 +8,25 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { lazy, Suspense } from "react";
 import LoginPage from "@/components/LoginPage";
 import Header from "@/components/Header";
-import EmployeeDashboard from "@/components/EmployeeDashboard";
-import TeamLeadDashboard from "@/components/TeamLeadDashboard";
 import { ToastProvider } from "@/components/ui/primitives";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+const EmployeeDashboard = lazy(() => import("@/components/EmployeeDashboard"));
+const TeamLeadDashboard = lazy(() => import("@/components/TeamLeadDashboard"));
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--color-border-focus)] border-t-transparent animate-spin" />
+        <span className="text-sm text-[var(--color-text-tertiary)]">Loading…</span>
+      </div>
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────────────────────
  * RequireAuth — blocks unauthenticated access, redirects to /login
@@ -24,7 +38,7 @@ function RequireAuth() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <span className="text-(--color-text-secondary)">Loading…</span>
+        <span className="text-sm text-[var(--color-text-tertiary)]">Loading…</span>
       </div>
     );
   }
@@ -59,7 +73,11 @@ function AppShell() {
     <>
       <Header />
       <main className="min-h-[calc(100vh-4rem)]">
-        <Outlet />
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
     </>
   );
@@ -68,14 +86,15 @@ function AppShell() {
 function NotFound() {
   const navigate = useNavigate();
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
-      <h1 className="text-display font-bold text-(--color-text-primary)">
-        404
-      </h1>
-      <p className="mt-2 text-(--color-text-secondary)">Page not found</p>
+    <div className="flex min-h-screen flex-col items-center justify-center p-8">
+      <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-raised)] border border-[var(--color-border)] flex items-center justify-center mb-4">
+        <span className="text-2xl">🔍</span>
+      </div>
+      <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">404</h1>
+      <p className="mt-2 text-sm text-[var(--color-text-tertiary)]">Page not found — check the URL or return to your dashboard.</p>
       <button
         onClick={() => navigate(-1)}
-        className="mt-4 rounded-md bg-(--color-brand) px-4 py-2 text-sm font-semibold text-white hover:brightness-90"
+        className="mt-4 rounded-lg bg-[var(--color-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:brightness-90"
       >
         Go back
       </button>

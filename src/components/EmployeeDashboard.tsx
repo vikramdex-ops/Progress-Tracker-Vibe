@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import CelebrationModal from "./CelebrationModal";
+import { FirstEodOnboarding } from "./OnboardingHint";
 import type { WorkItem, EodEntry, GamificationData } from "@/lib/types";
 import {
   Send, Plus, Trash2, Check, Star, Flame, Trophy, Target,
@@ -269,6 +270,7 @@ export default function EmployeeDashboard() {
       {celebration && (
         <CelebrationModal xp={celebration.xp} streak={celebration.streak} onClose={() => setCelebration(null)} />
       )}
+      {!todayEntry && !onLeaveToday && entries.length === 0 && <FirstEodOnboarding />}
 
       {/* ── Top Stats Row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 ">
