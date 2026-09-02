@@ -747,19 +747,19 @@ export default function TeamLeadDashboard() {
       </Card>
 
       {/* ── AI Weekly Report ── */}
-      <Card className="stat-card-spring bg-[var(--color-surface-brand)] shadow-elevated border border-[var(--color-brand-200)] overflow-hidden">
+      <Card className="bg-[var(--color-surface-default)] shadow-elevated border border-[var(--color-border)] overflow-hidden">
         <CardContent className="p-5 lg:p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-[var(--color-brand-600)] flex items-center gap-2">
-              📊 AI Weekly Report
-              <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case">GPT-OSS-20B</span>
+            <h3 className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-[var(--color-surface-brand)] border border-[var(--color-brand-200)] flex items-center justify-center text-[var(--color-brand)] text-xs">◈</span> AI Weekly Report
+              <span className="text-[10px] font-normal text-[var(--color-text-tertiary)] normal-case tracking-wide">GPT-OSS-20B</span>
             </h3>
             <button
               onClick={loadWeeklyReport}
               disabled={loadingReport}
-              className="px-3 py-1.5 rounded-lg bg-[var(--color-brand)] hover:bg-[var(--color-brand)] text-white text-[10px] font-bold transition-colors disabled:opacity-50"
+              className="btn-shimmer px-4 py-2 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-xs font-semibold shadow-elevated transition-all disabled:opacity-50 flex items-center gap-1.5"
             >
-              {loadingReport ? "Analyzing..." : "🔄 Generate"}
+              {loadingReport ? <><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Analyzing…</> : <>✦ Generate</>}
             </button>
           </div>
           {loadingReport ? (
@@ -816,20 +816,20 @@ export default function TeamLeadDashboard() {
         </CardContent>
       </Card>
 
-      {/* ── AI Deep Team Analytics (DeepSeek V4) ── */}
-      <Card className=" shadow-sm border border-[var(--color-brand-200)] bg-[var(--color-progress)]   overflow-hidden">
+      {/* ── AI Deep Team Analytics (DeepSeek V4) — Calm Glass surface-default, not solid progress ── */}
+      <Card className="bg-[var(--color-surface-default)] shadow-elevated border border-[var(--color-border)] overflow-hidden">
         <CardContent className="p-5 lg:p-6">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-[var(--color-brand-600)] flex items-center gap-2">
-              🔍 Deep Team Analytics
-              <span className="text-[10px] font-normal text-[var(--color-text-muted)] normal-case">DeepSeek V4</span>
+            <h3 className="text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-[var(--color-surface-progress)] border border-[var(--color-amber-200)] flex items-center justify-center text-[var(--color-progress)] text-xs">⬢</span> Deep Team Analytics
+              <span className="text-[10px] font-normal text-[var(--color-text-tertiary)] normal-case tracking-wide">DeepSeek V4</span>
             </h3>
             <button
               onClick={loadTeamAnalytics}
               disabled={loadingAnalytics}
-              className="px-3 py-1.5 rounded-lg bg-[var(--color-brand)] hover:bg-[var(--color-brand)]-600 text-white text-[10px] font-bold transition-colors disabled:opacity-50"
+              className="btn-shimmer px-4 py-2 rounded-xl bg-[var(--color-progress)] hover:brightness-95 text-white text-xs font-semibold shadow-elevated transition-all disabled:opacity-50 flex items-center gap-1.5"
             >
-              {loadingAnalytics ? "Analyzing..." : "🔄 Deep Analyze"}
+              {loadingAnalytics ? <><span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Analyzing…</> : <>⬢ Deep Analyze</>}
             </button>
           </div>
           {loadingAnalytics ? (
@@ -994,8 +994,8 @@ export default function TeamLeadDashboard() {
                   <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Overall Remarks</label>
                   <textarea value={overallRemarks} onChange={(e) => setOverallRemarks(e.target.value)} placeholder="Any additional notes..." className="w-full h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm resize-none" />
                 </div>
-                <Button onClick={handleSubmitEod} disabled={submitting} className="w-full" size="lg">
-                  {submitting ? "Submitting..." : "SUBMIT EOD ENTRY → +10 XP"}
+                <Button onClick={handleSubmitEod} disabled={submitting} className="w-full btn-shimmer shadow-elevated" size="lg">
+                  {submitting ? "Submitting…" : "Submit EOD Entry  →  +10 XP"}
                 </Button>
               </CardContent>
             </Card>
@@ -1070,14 +1070,14 @@ export default function TeamLeadDashboard() {
                             <p className="text-sm leading-relaxed">{quizResult.explanation}</p>
                           </div>
                         )}
-                        <button onClick={handleGenerateQuiz} className="w-full py-2.5 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white text-sm font-semibold">🔄 Next Question</button>
+                        <button onClick={handleGenerateQuiz} className="btn-shimmer w-full py-3 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-sm font-semibold shadow-elevated">✦ Next Question</button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3 py-6">
                     <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
-                    <button onClick={handleGenerateQuiz} className="px-6 py-2.5 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white text-sm font-semibold shadow-sm">✨ Generate Question</button>
+                    <button onClick={handleGenerateQuiz} className="btn-shimmer px-6 py-3 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-sm font-semibold shadow-elevated">✦ Generate Question</button>
                   </div>
                 )
               ) : (

@@ -563,9 +563,9 @@ export default function EmployeeDashboard() {
                         )}
                         <button
                           onClick={handleGenerateQuiz}
-                          className="w-full py-2.5 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white text-sm font-semibold transition-colors"
+                          className="btn-shimmer w-full py-3 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-sm font-semibold shadow-elevated transition-all"
                         >
-                          🔄 Next Question
+                          ✦ Next Question
                         </button>
                       </div>
                     )}
@@ -575,9 +575,9 @@ export default function EmployeeDashboard() {
                     <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
                     <button
                       onClick={handleGenerateQuiz}
-                      className="px-6 py-2.5 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white text-sm font-semibold transition-colors shadow-sm"
+                      className="btn-shimmer px-6 py-3 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-sm font-semibold shadow-elevated transition-all"
                     >
-                      ✨ Generate Question
+                      ✦ Generate Question
                     </button>
                   </div>
                 )
@@ -917,8 +917,8 @@ export default function EmployeeDashboard() {
                   />
                 </div>
 
-                <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">
-                  <Send className="w-4 h-4 mr-2" /> {submitting ? "Submitting..." : "SUBMIT EOD ENTRY → +10 XP"}
+                <Button onClick={handleSubmit} disabled={submitting} className="w-full btn-shimmer shadow-elevated" size="lg">
+                  <Send className="w-4 h-4 mr-2" /> {submitting ? "Submitting…" : "Submit EOD Entry  →  +10 XP"}
                 </Button>
               </CardContent>
             </Card>
