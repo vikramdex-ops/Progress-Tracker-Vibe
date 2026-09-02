@@ -36,18 +36,25 @@ jobs:
 
       - name: Validate environment
         run: |
-          if [ -z "$VITE_API_URL" ]; then
-            echo "ERROR: VITE_API_URL is not configured. Check GitHub Settings → Variables → Production"
-            exit 1
+          API_URL="${{ vars.API_BASE_URL }}"
+          if [ -z "$API_URL" ]; then
+            API_URL="https://progress-tracker-vibe-vikrams-projects-221b97a9.vercel.app/api"
+            echo "⚠️ vars.API_BASE_URL empty, using fallback: $API_URL"
           fi
-          echo "✅ API URL configured: $VITE_API_URL"
+          # Workaround for primary alias video/mp2t cache issue — prefer working alias
+          if [[ "$API_URL" == "https://progress-tracker-vibe.vercel.app/api" ]]; then
+            echo "⚠️ Primary alias has edge cache issue (video/mp2t), switching to working alias"
+            API_URL="https://progress-tracker-vibe-vikrams-projects-221b97a9.vercel.app/api"
+          fi
+          echo "✅ API URL configured: $API_URL"
+          echo "VITE_API_URL=$API_URL" >> $GITHUB_ENV
         env:
           VITE_API_URL: ${{ vars.API_BASE_URL }}
 
       - name: Build
         run: bun run build
         env:
-          VITE_API_URL: ${{ vars.API_BASE_URL }}
+          VITE_API_URL: ${{ env.VITE_API_URL }}
 
       - name: Add SPA fallback & nojekyll
         run: |
