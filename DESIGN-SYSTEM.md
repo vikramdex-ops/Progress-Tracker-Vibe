@@ -436,6 +436,29 @@ The leading filter row above the Team Entries table (search, employee, project, 
 - **Date picker:** native `<input type="date">` restyled to match select tokens (`h-10`, border, radius).
 - **Clear button:** when any filter is active, show a flat `ghost` `X` icon button at the trailing edge that resets all filters (new convenience, replaces the current no-clear pattern).
 
+### 5.13 StatCard (extracted)
+
+- **Source:** `src/components/ui/stat-card.tsx` (via `/impeccable extract`), used in `EmployeeDashboard.tsx` & `TeamLeadDashboard.tsx`.
+- **Props:** `icon: ReactNode`, `label: string`, `value: string|number`, `color: progress|brand|completion|alert`.
+- **Geometry:** wraps `Card` (`rounded-xl`, `p-4 lg:p-5`, `surface-default`), inner icon `w-11 h-11 lg:w-12 lg:h-12 rounded-xl shadow-sm` with tint `tintMap[color]` (surface-* + text-*), value `text-xl lg:text-2xl font-extrabold tabular-nums`.
+- **Tokens:** follows §2.6 domain mapping; no raw colors.
+
+### 5.14 FilterBar + Table polish (extracted)
+
+- **FilterBar:** `src/components/ui/filter-bar.tsx` — `bg-(--color-surface-raised) border border-(--color-border) rounded-xl p-3 lg:p-4 flex flex-wrap gap-2`. Children use §5.3 Input + native Select (`h-10 rounded-xl border border-(--color-border)`).
+- **Table:** Card overflow-hidden, head `--text-[10px] uppercase tracking-wider text-(--color-text-tertiary)`, rows `border-b border-(--color-border) hover:bg-(--color-surface-raised)` (§5.6), numeric cells `font-mono tabular-nums`.
+
+### 5.15 Overdrive — ShaderBackground + PhysicsConfetti
+
+- **ShaderBackground:** `src/components/ShaderBackground.tsx` — absolute `<canvas>` with 3 OKLCH indigo waves (264 hue, 0.62L/0.08C) at 6%/4%/3% opacity, 60fps `requestAnimationFrame`, `dpr ≤2`, respects `prefers-reduced-motion`, grain dots. Mounted in `LoginPage.tsx` left panels (forceChange/forgot/main) over `bg-(--color-brand)`.
+- **PhysicsConfetti:** `src/components/CelebrationModal.tsx::PhysicsConfetti` — 42 particles, `gravity 0.18*dpr`, `drag 0.998`, `vr ±0.3`, OKLCH palette (progress/completion/alert/brand), rect/circle shapes, fades over 260 frames, respects reduced-motion. Replaces CSS `confetti-fall`.
+
+### 5.16 Harden/Onboard — ErrorBoundary + OnboardingHint
+
+- **ErrorBoundary:** `src/components/ErrorBoundary.tsx` — class component, `getDerivedStateFromError`, `surface-alert` fallback with retry. Wraps `AppShell` outlet via `Suspense`.
+- **OnboardingHint:** `src/components/OnboardingHint.tsx` — `FirstEodOnboarding` (XP/streak explainer, `surface-brand`, `brand-200` border, localStorage `onboard-eod`), dismissible via `X`. Extracted for first-run empty state.
+- **Optimize:** `App.tsx` lazy `EmployeeDashboard`/`TeamLeadDashboard` via `React.lazy` + `Suspense` (`LoadingFallback` spinner), chunked build: main 337kB + dashboards 49kB/46kB, `index.css` 61kB, gzip via Vite.
+
 ---
 
 ## 6. Component inventory & migration map (current → new)
@@ -468,11 +491,14 @@ This section is the handoff to engineering. The `src/index.css` `@theme` block i
 6. Component files reference **only** these tokens — no raw `amber-*`, `indigo-*`, `emerald-*`, `red-*`, or hex literals except inside the token definitions themselves.
 
 **Acceptance checklist for the refactor:**
-- [ ] No Tailwind gradient utilities (`from-*`, `to-*`, `bg-gradient-to-*`) remain in component `.tsx` files (only in `@theme`/token definitions).
-- [ ] `grep -rn "from-amber\|to-orange\|from-indigo\|to-purple\|from-emerald\|to-teal\|from-red\|to-rose"` in `src/components` returns 0.
-- [ ] All `dark:` inline variants removed from component files (≥ 1, verified by grep in `src/`).
-- [ ] Focus rings use `var(--color-border-focus)` consistently (amber still preserved as focus via `border-focus = brand-400`).
-- [ ] Radix `Tabs`, `Select`, `Toast`, `Dialog` wired into the tab / filter / notification / modal surfaces (installed but currently underused).
+- [x] No Tailwind gradient utilities (`from-*`, `to-*`, `bg-gradient-to-*`) remain in component `.tsx` files (verified 2026-09-02: `grep` returns 0).
+- [x] `grep -rn "from-amber\|to-orange\|from-indigo\|to-purple\|from-emerald\|to-teal\|from-red\|to-rose"` in `src/components` returns 0.
+- [x] All `dark:` inline variants removed from component files (verified: `grep "dark:"` returns 0 in `src/`).
+- [x] Focus rings use `var(--color-border-focus)` consistently (`brand-400` token, `ring-(--color-border-focus)/30`).
+- [x] Radix `Toast`/`Dialog` wired (`NotificationProvider`, `CelebrationModal` via `Dialog`), `Select` via native styled selects, `Tabs` via segmented control.
+- [x] `npx impeccable detect src/` → 0 findings (2026-09-02).
+- [x] `npm run build` + `npx tsc --noEmit` → 0 errors, code-split dashboards.
+- [x] Extracted `StatCard`, `FilterBar`, `ShaderBackground`, `PhysicsConfetti`, `ErrorBoundary`, `OnboardingHint` (§5.13–5.16).
 
 ---
 

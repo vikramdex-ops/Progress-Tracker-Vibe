@@ -139,6 +139,26 @@ Dashboard surfaces with side cards (gamification, calendar, notifications). Main
 
 Form: vertical stack of inputs with labels above. Review grid: rows of card-style items with completion %, rating buttons, remarks preview. No nested cards — each entry is one Surface; meta (date, name, project) live inside the content area.
 
+### StatCard (extracted §5.7)
+
+Reusable stat: `icon` + `value` (tabular-nums, 2xl bold) + `label` (xs uppercase). Tint via `color` prop: `progress`/`brand`/`completion`/`alert` maps to `bg-[var(--color-surface-*)] text-[var(--color-*)]` (§2.6). Used in both dashboards via `src/components/ui/stat-card.tsx`. See `FilterBar` (§5.12) for filter row compound.
+
+### FilterBar (extracted §5.12)
+
+Compound filter container: `bg-[var(--color-surface-raised)] border border-[var(--color-border)] rounded-xl p-3 lg:p-4 flex flex-wrap gap-2`. Children: search Input + Selects + date + range. Clear affordance when filters active. See `src/components/ui/filter-bar.tsx`.
+
+### ShaderBackground (overdrive)
+
+Cinematic login shader: `<canvas>` with 3 layered OKLCH indigo waves (62% lightness, 0.08 chroma, 264 hue) at 8%/4%/3% opacity, 60fps via `requestAnimationFrame`, respects `prefers-reduced-motion`, 8px blur via `glass` not needed. Integrated in `LoginPage.tsx` left panels (§8).
+
+### PhysicsConfetti (overdrive)
+
+Modal confetti: 42 particles, canvas 60fps, gravity 0.18*dpr, drag 0.998, rotation 0.3 rad/frame, OKLCH palette (`progress`/`completion`/`alert`/`brand`). Used in `CelebrationModal.tsx`. Respects reduced-motion.
+
+### ErrorBoundary + OnboardingHint (harden/onboard)
+
+`ErrorBoundary.tsx`: catches render errors, shows `surface-alert` card with retry. Wraps `AppShell` outlet via `Suspense` (lazy dashboards). `OnboardingHint.tsx`: `FirstEodOnboarding` progressive disclosure for first entry, localStorage dismissal, `Card` with `surface-brand`.
+
 ## Do's and Don'ts
 
 **Do**
@@ -155,7 +175,7 @@ Form: vertical stack of inputs with labels above. Review grid: rows of card-styl
 - Don't use pure black (#000) or pure gray (#808080) — always tint with OKLCH neutral.
 - Don't nest cards inside cards (one level of Surface per component).
 - Don't use purple-to-blue gradients or bounce easing anywhere (per anti-patterns).
-- Don't introduce new font families (system sans / the installed Inter is the only approved face).
+- Don't introduce new font families (JetBrains Mono + system mono is the only approved stack).
 - Don't put gray text on colored backgrounds (brand surfaces use dark text; dark surfaces use light text).
 - Don't add shadow to flat progress/status bars — color track + number is sufficient.
 - Don't invent new component variants outside `Surface`, `Button`, `Badge`, `Notification` — extend via props or new sub-components, not new shapes.
