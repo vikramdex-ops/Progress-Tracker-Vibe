@@ -49,6 +49,12 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.API_BASE_URL }}
 
+      - name: Add SPA fallback & nojekyll
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+          echo "SPA fallback ready: $(ls -lh dist/index.html dist/404.html)"
+
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v3
         with:
