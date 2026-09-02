@@ -1,5 +1,5 @@
 
-import { verifySession, parseBody } from "./_lib/auth";
+import { verifySession, parseBody } from "./_lib/auth.js";
 import {
   handleLogin,
   handleChangePassword,
@@ -37,7 +37,7 @@ import {
   handleSubscribePush,
   handleUnsubscribePush,
   handleCheckReminders,
-} from "./_lib/handlers";
+} from "./_lib/handlers.js";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");

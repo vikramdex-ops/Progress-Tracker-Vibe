@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "crypto";
-import { airtable, TABLES } from "./airtable";
+import { airtable, TABLES } from "./airtable.js";
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");

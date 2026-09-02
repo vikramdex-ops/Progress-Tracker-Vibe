@@ -1,5 +1,5 @@
-import { airtable, TABLES } from "./airtable";
-import { hashPassword, verifyPassword, generateToken, getEmployeeByEmail } from "./auth";
+import { airtable, TABLES } from "./airtable.js";
+import { hashPassword, verifyPassword, generateToken, getEmployeeByEmail } from "./auth.js";
 
 /** Sanitize employee data — strip sensitive fields before sending to client */
 function sanitizeEmp(emp: any) {
@@ -663,7 +663,7 @@ export async function handleCreateAnnouncement(body: any) {
 }
 
 // ─── AI-Powered Engineering Quiz (NVIDIA MiniMax M3) ─────────
-import { generateQuizQuestion } from "./nvidia";
+import { generateQuizQuestion } from "./nvidia.js";
 
 /** Get previously asked questions for an employee from App_Settings */
 async function getAskedQuestions(employee: string): Promise<string[]> {
@@ -864,8 +864,8 @@ export async function handleGetQuizHistory(params: URLSearchParams) {
 }
 
 // ─── AI EOD Insights (GPT-OSS-20B) ──────────────────────────
-import { generateEodInsights, generateWeeklyReport } from "./nvidia-oss";
-import { generateEodDescription, chatWithEngineer, analyzeTeamPatterns } from "./deepseek";
+import { generateEodInsights, generateWeeklyReport } from "./nvidia-oss.js";
+import { generateEodDescription, chatWithEngineer, analyzeTeamPatterns } from "./deepseek.js";
 
 export async function handleGetEodInsights(body: any) {
   const { employee, entries } = body;
