@@ -322,7 +322,7 @@ export default function EmployeeDashboard() {
 
       {/* ═══════════════════════════ OVERVIEW ═══════════════════════════ */}
       {activeTab === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 ">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 stagger-children">
           {/* Today's Mission — full width */}
           <Card className={cn(
             "lg:col-span-3 border-[var(--color-amber-200)] p-0 overflow-hidden",

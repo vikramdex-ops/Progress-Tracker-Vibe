@@ -367,7 +367,7 @@ export default function TeamLeadDashboard() {
           { icon: <BarChart3 className="w-5 h-5" />, label: "Avg Completion", value: `${avgComp}%`, color: "blue", gradient: "bg-[var(--color-surface-default)]" },
           { icon: <Star className="w-5 h-5" />, label: "Awaiting Rating", value: `${pendingRatings}`, color: "amber", gradient: "bg-[var(--color-surface-default)]" },
         ].map((stat) => (
-          <Card key={stat.label} className={cn("shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
+          <Card key={stat.label} className={cn("stat-card-spring shadow-sm border border-[var(--color-border)]/40 p-4 lg:p-5", stat.gradient)}>
             <div className="flex items-center gap-3 lg:gap-4">
               <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
                 stat.color === "emerald" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
@@ -488,7 +488,7 @@ export default function TeamLeadDashboard() {
       )}
 
       {/* ── Compact Widgets Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 xl:gap-5 ">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 xl:gap-5 stagger-children">
         {/* Streak Leaderboard */}
         <Card className=" shadow-sm border border-[var(--color-border)]/40">
           <CardHeader className="mb-3 pb-2"><CardTitle className="flex items-center gap-1.5 text-sm lg:text-[15px] font-bold">🔥 Streak Leaderboard</CardTitle></CardHeader>

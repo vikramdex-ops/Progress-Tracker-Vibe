@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { authApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Zap, Lock, ArrowRight, Eye, EyeOff, Shield, Sparkles, ArrowLeft } from 
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -44,7 +46,11 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const result = await login(email, password);
-      if (result.forcePasswordChange) setForceChange(true);
+      if (result.forcePasswordChange) {
+        setForceChange(true);
+        return;
+      }
+      navigate("/", { replace: true });
     } catch (err: any) {
       const msg = err.message || "Invalid email or password";
       setError(msg);
@@ -64,8 +70,14 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await authApi.changePassword(password, newPw);
+      const result = await login(email, newPw);
+      if (result.forcePasswordChange) {
+        setForceChange(true);
+        return;
+      }
       setPassword(newPw);
       setForceChange(false);
+      navigate("/", { replace: true });
     } catch (err: any) {
       setError(err.message || "Failed to change password");
     } finally {
@@ -79,12 +91,20 @@ export default function LoginPage() {
       <div className="min-h-screen flex bg-[var(--color-bg)]">
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[var(--color-brand)] items-center justify-center">
           <ShaderBackground />
+          <svg viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full opacity-40" aria-hidden>
+            <path d="M-20 200 H260 V420 H820" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" />
+            <path d="M-20 600 H520 V760 H820" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" style={{ animationDelay: "-0.7s" }} />
+            <circle cx="260" cy="200" r="5" fill="white" opacity="0.9" />
+            <circle cx="520" cy="600" r="5" fill="white" opacity="0.9" />
+          </svg>
           <div className="relative z-10 text-center px-12 max-w-md">
-            <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-6 rise-in">
               <Shield className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Secure Your Account</h1>
-            <p className="text-[15px] text-white/80 leading-relaxed">Set a personal password to protect your workspace. Your credentials are encrypted and secure.</p>
+            <h1 className="text-4xl font-bold text-white mb-3 tracking-tight word-reveal">
+              <span>Secure</span> <span>Your Account</span>
+            </h1>
+            <p className="text-[15px] text-white/80 leading-relaxed rise-in d2">Set a personal password to protect your workspace. Your credentials are encrypted and secure.</p>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-[var(--color-bg)]">
@@ -132,12 +152,20 @@ export default function LoginPage() {
       <div className="min-h-screen flex bg-[var(--color-bg)]">
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-[var(--color-brand)] items-center justify-center">
           <ShaderBackground />
+          <svg viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full opacity-40" aria-hidden>
+            <path d="M-20 300 H300 V500 H820" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" />
+            <path d="M-20 700 H200 V820" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" style={{ animationDelay: "-0.6s" }} />
+            <circle cx="300" cy="300" r="5" fill="white" opacity="0.9" />
+            <circle cx="200" cy="700" r="5" fill="white" opacity="0.9" />
+          </svg>
           <div className="relative z-10 text-center px-12 max-w-md">
-            <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-6 rise-in">
               <Lock className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Password Reset</h1>
-            <p className="text-[15px] text-white/80 leading-relaxed">Enter your email and we'll notify the team lead to reset your password.</p>
+            <h1 className="text-4xl font-bold text-white mb-3 tracking-tight word-reveal">
+              <span>Password</span> <span>Reset</span>
+            </h1>
+            <p className="text-[15px] text-white/80 leading-relaxed rise-in d2">Enter your email and we'll notify the team lead to reset your password.</p>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-[var(--color-bg)]">
@@ -190,22 +218,32 @@ export default function LoginPage() {
       {/* Left branding panel — flat brand fill + shader overdrive */}
       <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-[var(--color-brand)] items-center justify-center border-r border-white/10">
         <ShaderBackground />
+        <svg viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full opacity-40" aria-hidden>
+          <path d="M-20 140 H300 V320 H560" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" />
+          <path d="M-20 520 H180 V660 H820" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" style={{ animationDelay: "-0.5s" }} />
+          <path d="M240 -20 V80 M240 80 H420 V820" stroke="white" strokeWidth="1.5" fill="none" className="pipeline-flow" style={{ animationDelay: "-0.9s" }} />
+          <circle cx="300" cy="140" r="5" fill="white" opacity="0.9" />
+          <circle cx="180" cy="520" r="5" fill="white" opacity="0.9" />
+          <circle cx="420" cy="80" r="5" fill="white" opacity="0.9" />
+        </svg>
         <div className="relative z-10 text-center px-16 max-w-lg">
-          <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-8">
+          <div className="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-8 rise-in">
             <svg viewBox="0 0 30 30" className="w-10 h-10">
               <path d="M3 15 H12 V6 H24 V15 H27 M12 15 V24" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
               <circle cx="15" cy="15" r="2" fill="white" opacity="0.9" />
             </svg>
           </div>
-          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight leading-none">Progress<br />Tracker</h1>
-          <p className="text-lg text-white/80 mb-10 font-medium">Daily EOD · Team Vikram</p>
+          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight leading-none word-reveal">
+            <span>Progress</span><br /><span>Tracker</span>
+          </h1>
+          <p className="text-lg text-white/80 mb-10 font-medium rise-in d2">Daily EOD · Team Vikram</p>
           <div className="flex flex-wrap justify-center gap-2.5">
             {[
               { icon: <Sparkles className="w-3.5 h-3.5" />, label: "XP & Levels" },
               { icon: <Zap className="w-3.5 h-3.5" />, label: "Live Streaks" },
               { icon: <Shield className="w-3.5 h-3.5" />, label: "Secure Login" },
-            ].map((f) => (
-              <div key={f.label} className="flex items-center gap-2 bg-white/12 border border-white/15 text-white text-sm font-medium px-4 py-2 rounded-full">
+            ].map((f, i) => (
+              <div key={f.label} className={`flex items-center gap-2 bg-white/12 border border-white/15 text-white text-sm font-medium px-4 py-2 rounded-full rise-in d${i + 3}`}>
                 {f.icon} {f.label}
               </div>
             ))}
@@ -217,7 +255,7 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-14 xl:p-20 bg-[var(--color-bg)]">
         <div className="w-full max-w-md">
           {/* Mobile-only brand — flat */}
-          <div className="lg:hidden text-center mb-10">
+          <div className="lg:hidden text-center mb-10 rise-in">
             <div className="w-16 h-16 rounded-xl bg-[var(--color-brand)] flex items-center justify-center mx-auto mb-4 shadow-elevated">
               <svg viewBox="0 0 30 30" className="w-8 h-8">
                 <path d="M3 15 H12 V6 H24 V15 H27 M12 15 V24" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -231,7 +269,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form card — Calm Glass default surface */}
-          <div className="bg-[var(--color-surface)] rounded-xl p-7 sm:p-8 lg:p-10 shadow-elevated border border-[var(--color-border)]">
+          <div className="bg-[var(--color-surface)] rounded-xl p-7 sm:p-8 lg:p-10 shadow-elevated border border-[var(--color-border)] rise-in d2">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-1">Welcome back</h2>
               <p className="text-sm text-[var(--color-text-tertiary)]">Sign in to access your dashboard</p>

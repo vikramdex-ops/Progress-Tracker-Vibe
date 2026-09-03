@@ -322,6 +322,7 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0ms !important;
+      animation-delay: 0ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0ms !important;
     }
@@ -409,5 +410,64 @@
   }
   .btn-shimmer:hover::after {
     transform: translateX(100%);
+  }
+
+  /* ── Cinematic entrance system (§5.1 overdrive) ── */
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .rise-in {
+    opacity: 0;
+    animation: rise-in 640ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .animate-fade-in {
+    opacity: 0;
+    animation: fade-in 500ms ease-out forwards;
+  }
+  .d1 { animation-delay: 60ms; }
+  .d2 { animation-delay: 120ms; }
+  .d3 { animation-delay: 200ms; }
+  .d4 { animation-delay: 280ms; }
+  .d5 { animation-delay: 360ms; }
+
+  .stat-card-spring {
+    opacity: 0;
+    animation: rise-in 640ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .stat-card-spring:nth-child(2) { animation-delay: 90ms; }
+  .stat-card-spring:nth-child(3) { animation-delay: 180ms; }
+  .stat-card-spring:nth-child(4) { animation-delay: 270ms; }
+
+  .word-reveal > span {
+    display: inline-block;
+    opacity: 0;
+    animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .word-reveal > span:nth-child(2) { animation-delay: 150ms; }
+
+  .stagger-children > * {
+    opacity: 0;
+    animation: rise-in 640ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 60ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 140ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 220ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 300ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 380ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 460ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 540ms; }
+  .stagger-children > *:nth-child(n+8) { animation-delay: 600ms; }
+
+  @keyframes pipeline-dash {
+    to { stroke-dashoffset: -32; }
+  }
+  .pipeline-flow {
+    stroke-dasharray: 6 10;
+    animation: pipeline-dash 1.4s linear infinite;
   }
 }

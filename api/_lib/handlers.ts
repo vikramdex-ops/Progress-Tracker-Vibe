@@ -3,13 +3,15 @@ import { hashPassword, verifyPassword, generateToken, getEmployeeByEmail } from 
 
 /** Sanitize employee data — strip sensitive fields before sending to client */
 function sanitizeEmp(emp: any) {
+  // Airtable field may be "FirstLogin" or "First Login" (display name) — handle both
+  const firstLogin = emp.fields.FirstLogin ?? emp.fields["First Login"] ?? false;
   return {
     id: emp.id,
     name: emp.fields.Name,
     email: emp.fields.Email,
     role: emp.fields.Role,
     active: emp.fields.Active,
-    firstLogin: emp.fields.FirstLogin,
+    firstLogin,
     xp: emp.fields.XP || 0,
     level: emp.fields.Level || 1,
     levelTitle: emp.fields.LevelTitle || "Piping Trainee",
@@ -22,6 +24,22 @@ function sanitizeEmp(emp: any) {
 /** Safe Airtable filter formula */
 function ef(str: string): string {
   return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+/** Update an employee record — falls back to "First Login" field name if Airtable rejects "FirstLogin" */
+async function updateEmployee(id: string, fields: Record<string, any>) {
+  try {
+    return await airtable.update(TABLES.EMPLOYEES, id, fields);
+  } catch (err: any) {
+    const msg = String(err?.message || "");
+    if (msg.toLowerCase().includes("unknown field name") && "FirstLogin" in fields) {
+      const remapped = { ...fields };
+      remapped["First Login"] = remapped.FirstLogin;
+      delete remapped.FirstLogin;
+      return await airtable.update(TABLES.EMPLOYEES, id, remapped);
+    }
+    throw err;
+  }
 }
 
 // ─── Auth ────────────────────────────────────────────────
@@ -51,8 +69,9 @@ export async function handleLogin(body: any) {
     };
   }
 
-  // First login: use temp password
-  if (emp.fields.FirstLogin) {
+  // First login: use temp password — handle both "FirstLogin" and "First Login" field names
+  const isFirstLogin = emp.fields.FirstLogin ?? emp.fields["First Login"] ?? false;
+  if (isFirstLogin) {
     if (!emp.fields.TempPassword) {
       return {
         status: 500,
@@ -114,22 +133,24 @@ export async function handleLogin(body: any) {
 
 export async function handleChangePassword(body: any, emp: any) {
   const { oldPassword, newPassword } = body;
+  const fields = emp.fields || emp;
   if (!newPassword || newPassword.length < 4)
     return { status: 400, data: { error: "Password must be at least 4 characters" } };
 
-  // On first login, skip old password verification
-  if (!emp.FirstLogin) {
-    if (!oldPassword || !emp.PasswordHash || !verifyPassword(oldPassword, emp.PasswordHash)) {
+  // On first login, skip old password verification (field may be "FirstLogin" or "First Login")
+  const isFirstLogin = fields.FirstLogin ?? fields["First Login"] ?? false;
+  if (!isFirstLogin) {
+    if (!oldPassword || !fields.PasswordHash || !verifyPassword(oldPassword, fields.PasswordHash)) {
       return { status: 401, data: { error: "Current password is incorrect" } };
     }
   }
 
-  if (newPassword === emp.TempPassword) {
+  if (newPassword === fields.TempPassword) {
     return { status: 400, data: { error: "New password must be different from your temporary password" } };
   }
 
   const hash = hashPassword(newPassword);
-  await airtable.update(TABLES.EMPLOYEES, emp.id, {
+  await updateEmployee(emp.id, {
     PasswordHash: hash,
     FirstLogin: false,
     TempPassword: "",
@@ -484,7 +505,7 @@ export async function handleApprovePasswordReset(body: any) {
     if (emps.length === 0) return { status: 404, data: { error: "Employee not found — they may have been removed" } };
 
     const emp = emps[0];
-    await airtable.update(TABLES.EMPLOYEES, emp.id, {
+    await updateEmployee(emp.id, {
       TempPassword: newTempPassword,
       FirstLogin: true,
       PasswordHash: "",
@@ -551,7 +572,7 @@ export async function handleResetEmployeePassword(body: any) {
     if (emps.length === 0) return { status: 404, data: { error: "Employee not found" } };
 
     const emp = emps[0];
-    await airtable.update(TABLES.EMPLOYEES, emp.id, {
+    await updateEmployee(emp.id, {
       TempPassword: newTempPassword,
       FirstLogin: true,
       PasswordHash: "",
