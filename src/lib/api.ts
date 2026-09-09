@@ -1,5 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
+import { isTestModeActive, handleTestApiRequest } from "./test-mode-api";
+
 let authToken: string | null = null;
 
 export function setAuthToken(token: string | null) {
@@ -18,6 +20,10 @@ async function apiRequest<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  // Test mode: serve everything from the in-memory mock router.
+  if (isTestModeActive()) {
+    return handleTestApiRequest(path, options);
+  }
   if (!API_BASE) throw new Error("API not configured. Set VITE_API_URL environment variable.");
   const token = getAuthToken();
   const url = `${API_BASE}/${path}`;

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { entriesApi, gamificationApi, leavesApi, announcementsApi, quizApi, calendarApi, aiInsightsApi, deepseekApi } from "@/lib/api";
 import { PROJECTS, COMPLEXITY_COLORS } from "@/lib/constants";
@@ -36,7 +37,9 @@ export default function EmployeeDashboard() {
   const [overallRemarks, setOverallRemarks] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [celebration, setCelebration] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "entries">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "entries">(
+    () => (new URLSearchParams(window.location.search).get("tab") === "entries" ? "entries" : "overview")
+  );
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [leaveReason, setLeaveReason] = useState("");
   const [loading, setLoading] = useState(true);
@@ -116,6 +119,17 @@ export default function EmployeeDashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  /* ── Tab state ↔ URL (?tab=…) — enables deep links from the test-mode HUD ── */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const switchTab = (tab: "overview" | "entries") => {
+    setActiveTab(tab);
+    setSearchParams(tab === "overview" ? {} : { tab }, { replace: true });
+  };
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t === "entries" || t === "overview") setActiveTab(t);
+  }, [searchParams]);
 
   const updateItem = (i: number, field: keyof WorkItem, val: any) => {
     const items = [...workItems];
@@ -341,7 +355,7 @@ export default function EmployeeDashboard() {
           ].map((t) => (
             <button
               key={t.id}
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => switchTab(t.id)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer",
                 activeTab === t.id
@@ -409,7 +423,7 @@ export default function EmployeeDashboard() {
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => setActiveTab("entries")}
+                    onClick={() => switchTab("entries")}
                     className="cursor-pointer shadow-sm"
                   >
                     Log Progress →

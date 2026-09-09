@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useTestMode } from "@/lib/test-mode";
 import { authApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ShaderBackground from "@/components/ShaderBackground";
-import { Zap, Lock, ArrowRight, Eye, EyeOff, Shield, Sparkles, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
+import { Zap, Lock, ArrowRight, Eye, EyeOff, Shield, Sparkles, ArrowLeft, Mail, CheckCircle2, FlaskConical } from "lucide-react";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const testMode = useTestMode();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +24,21 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loginHint, setLoginHint] = useState("");
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
+
+  /* ── Test mode: one-click demo login (in-memory data, no real backend) ── */
+  const handleDemoLogin = async (role: "employee" | "team_lead") => {
+    setError("");
+    setDemoLoading(role);
+    try {
+      const emp = testMode?.enable(role) ?? null;
+      navigate(emp?.role === "team_lead" ? "/team" : "/dashboard", { replace: true });
+    } catch (err: any) {
+      setError(err.message || "Failed to start test mode");
+    } finally {
+      setDemoLoading(null);
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -366,6 +383,48 @@ export default function LoginPage() {
                 Sign In to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </form>
+
+            {/* ── Test mode: one-click demo accounts ── */}
+            <div className="mt-6 pt-5 border-t border-[var(--color-border)]">
+              <div className="flex items-center gap-2 mb-2.5">
+                <FlaskConical className="w-3.5 h-3.5 text-[var(--color-progress)]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  Test mode · full demo experience
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed mb-3">
+                Explore every screen for both roles with seeded demo data — nothing touches the real backend.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("team_lead")}
+                  disabled={demoLoading !== null}
+                  className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl border border-[var(--color-progress)] bg-[var(--color-surface-progress)] hover:brightness-95 disabled:opacity-50 cursor-pointer transition-all"
+                >
+                  <span className="text-xs font-bold text-[var(--color-progress)]">
+                    {demoLoading === "team_lead" ? "Starting…" : "Team Lead demo"}
+                  </span>
+                  <span className="text-[10px] text-[var(--color-text-tertiary)]">Dashboard, review & rating</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("employee")}
+                  disabled={demoLoading !== null}
+                  className="flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl border border-[var(--color-brand)] bg-[var(--color-surface-brand)] hover:brightness-95 disabled:opacity-50 cursor-pointer transition-all"
+                >
+                  <span className="text-xs font-bold text-[var(--color-brand)]">
+                    {demoLoading === "employee" ? "Starting…" : "Employee demo"}
+                  </span>
+                  <span className="text-[10px] text-[var(--color-text-tertiary)]">EOD form, quiz & streaks</span>
+                </button>
+              </div>
+              {testMode?.active && (
+                <p className="mt-2 text-[10px] text-[var(--color-progress)] font-semibold">
+                  Test mode is active — use the floating Test Mode panel to switch accounts or exit.
+                </p>
+              )}
+            </div>
           </div>
 
           <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">

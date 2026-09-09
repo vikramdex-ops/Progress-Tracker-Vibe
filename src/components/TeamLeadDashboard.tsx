@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import {
   entriesApi,
@@ -69,7 +70,23 @@ export default function TeamLeadDashboard() {
   const [newTempPw, setNewTempPw] = useState("");
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [calendar, setCalendar] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"team" | "myeod" | "myquiz">("team");
+  const [activeTab, setActiveTab] = useState<"team" | "myeod" | "myquiz">(
+    () => {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      return t === "myeod" || t === "myquiz" ? t : "team";
+    }
+  );
+
+  /* ── Tab state ↔ URL (?tab=…) — enables deep links from the test-mode HUD ── */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const switchTab = (tab: "team" | "myeod" | "myquiz") => {
+    setActiveTab(tab);
+    setSearchParams(tab === "team" ? {} : { tab }, { replace: true });
+  };
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t === "myeod" || t === "myquiz" || t === "team") setActiveTab(t);
+  }, [searchParams]);
 
   // EOD submission state (for team lead)
   const [workItems, setWorkItems] = useState<any[]>([
@@ -502,7 +519,7 @@ export default function TeamLeadDashboard() {
           ].map((t) => (
             <button
               key={t.id}
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => switchTab(t.id)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200",
                 activeTab === t.id

@@ -1,7 +1,8 @@
 ﻿import { type Employee, type WorkItem, type EodEntry, type Leave, type Badge, type EarnedBadge, type Announcement, type Notification, type PushSubscription, type CalendarEntry, type GamificationData, type AuthResponse, type SubmissionResult } from "./types";
 
-// Fixed date for deterministic behavior
-export const TODAY = new Date("2026-09-09");
+// Anchor "today" to the real current date so the seeded dataset always lines
+// up with the app's live, today-based calculations (which use toISOString).
+export const TODAY = new Date();
 
 // Utility functions
 function addDays(date: Date, days: number): Date {
@@ -181,12 +182,12 @@ let state = {
     score: number;
     timestamp: string;
   }[],
-  quizStats: Record<string, {
+  quizStats: {} as Record<string, {
     totalAttempts: number;
     correctAttempts: number;
     currentStreak: number;
     longestStreak: number;
-  }>{},
+  }>,
 };
 
 // Predefined data for seeding
@@ -482,3 +483,26 @@ function initializeSeedData() {
     };
   });
 }
+
+// ─── Accessors used by the test-mode mock API (test-mode-api.ts) ─────────
+let seeded = false;
+
+/** Seed the in-memory store on first use; subsequent calls are no-ops. */
+export function ensureTestSeeded() {
+  if (!seeded) {
+    initializeSeedData();
+    seeded = true;
+  }
+}
+
+/** Wipe and reseed the in-memory store from scratch. */
+export function resetTestData() {
+  initializeSeedData();
+  seeded = true;
+}
+
+/** Live in-memory store — mutations are visible to every mock endpoint. */
+export function getTestState() {
+  return state;
+}
+

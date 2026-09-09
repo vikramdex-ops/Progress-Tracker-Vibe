@@ -50,6 +50,28 @@ Progress-Tracker-Vibe/
 └── QA-TEST-PLAN.md               Ratchasan's QA plan
 ```
 
+## 🧪 Test Mode
+
+A built-in, fully offline demo mode for exercising every GUI screen with **both roles** — no Airtable, no backend, no real accounts.
+
+**How to enter:**
+
+- Click **"Team Lead demo"** or **"Employee demo"** on the login screen, or
+- Open `http://localhost:5173/?test=1` (also `?test=employee`, `?test=team_lead`)
+
+**What you get:**
+
+- 8 seeded demo accounts (2 team leads + 6 employees) with ~30 working days of EOD history, leaves, calendar, live-feed announcements, notifications, badges, password-reset requests and quiz history
+- A floating **Test Mode panel** (bottom-left) to:
+  - instantly **switch between any account** (team lead ⇄ employee)
+  - deep-link to **every screen**: My Dashboard, EOD Entry Form, Team Overview, Lead · My EOD, Engineering Quiz
+  - **Reset demo data** (wipe + reseed the in-memory dataset)
+  - **Exit test mode** (back to the real login)
+- The full loop works end-to-end in-memory: submit EOD → XP + celebration → live-feed announcement → team-lead rating → employee notification, plus the 3-per-day quiz limit, AI insights / weekly report / auto-describe / chat / analytics (canned), and the first-login (temp password) flow — try signing in as `taylor.chen@company.com` on the normal login form
+- Nothing touches the production API while test mode is active; state survives page refresh and lives entirely in the browser
+
+Key files: `src/lib/test-mode.tsx` (provider), `src/lib/test-mode-api.ts` (mock API router), `src/lib/test-data.ts` (seed dataset), `src/components/TestModeBar.tsx` (HUD).
+
 ## 🧰 Stack
 
 - **Frontend:** React 19 + Vite 6 + TypeScript + TailwindCSS v4

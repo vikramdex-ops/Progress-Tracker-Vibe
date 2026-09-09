@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import TestModeBar from "@/components/TestModeBar";
 import { lazy, Suspense } from "react";
 import LoginPage from "@/components/LoginPage";
 import Header from "@/components/Header";
@@ -158,6 +159,9 @@ export default function App() {
           {/* 404 fallback */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+
+        {/* Floating test-mode HUD (renders only while test mode is active) */}
+        <TestModeBar />
       </BrowserRouter>
     </ToastProvider>
   );
