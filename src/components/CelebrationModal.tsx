@@ -126,41 +126,63 @@ export default function CelebrationModal({ xp, streak, newBadges = [], onClose }
         }}
       >
         <div className="relative">
-          {/* Icon - flat progress fill, no gradient */}
-          <div className="w-20 h-20 rounded-2xl bg-[var(--color-progress)] flex items-center justify-center mx-auto mb-5 shadow-elevated">
-            <span className="text-4xl">🎉</span>
+          {/* Icon */}
+          <div className="w-20 h-20 rounded-2xl bg-[var(--color-surface-progress)] border border-[var(--color-amber-200)] dark:border-[var(--color-amber-800)] flex items-center justify-center mx-auto mb-5 shadow-md">
+            <span className="text-4xl animate-bounce">🎯</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">EOD Submitted!</h2>
+          <h2 className="text-2xl font-extrabold text-[var(--color-text-primary)] tracking-tight mb-1">
+            Great Work Today!
+          </h2>
+          <p className="text-xs text-[var(--color-text-tertiary)] mb-5">Your daily EOD report was successfully recorded</p>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-center gap-2.5 text-[var(--color-progress)] font-bold text-lg">
-              <Star className="w-5 h-5 fill-[var(--color-progress)]" /> +{xp} XP
+          <div className="space-y-2.5 bg-[var(--color-surface-raised)] border border-[var(--color-border)] rounded-xl p-4 mb-5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 text-[var(--color-text-secondary)] font-medium">
+                <Star className="w-4 h-4 fill-[var(--color-progress)] text-[var(--color-progress)]" />
+                XP Earned
+              </span>
+              <span className="font-extrabold text-[var(--color-progress)] tabular-nums">+{xp} XP</span>
             </div>
+
             {streak > 1 && (
-              <div className="flex items-center justify-center gap-2.5 text-[var(--color-progress)] font-bold">
-                <Flame className="w-5 h-5" /> {streak}-Day Streak 🔥
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-[var(--color-border)]">
+                <span className="flex items-center gap-2 text-[var(--color-text-secondary)] font-medium">
+                  <Flame className="w-4 h-4 text-[var(--color-progress)]" />
+                  Active Streak
+                </span>
+                <span className="font-extrabold text-[var(--color-progress)] tabular-nums">{streak} Days</span>
               </div>
             )}
+
             {newBadges.length > 0 && (
-              <div className="flex items-center justify-center gap-2.5 text-[var(--color-progress)] font-bold">
-                <Trophy className="w-5 h-5" /> Badge{newBadges.length > 1 ? "s" : ""} Unlocked!
+              <div className="flex items-center justify-between text-sm pt-2 border-t border-[var(--color-border)]">
+                <span className="flex items-center gap-2 text-[var(--color-completion)] font-medium">
+                  <Trophy className="w-4 h-4" />
+                  New Badges
+                </span>
+                <span className="font-bold text-[var(--color-completion)]">{newBadges.join(", ")}</span>
               </div>
             )}
           </div>
 
-          {/* Progress bar auto-close - flat */}
-          <div className="mt-6 h-1 w-full rounded-full bg-[var(--color-border)] overflow-hidden">
+          <button
+            onClick={() => { setVisible(false); setTimeout(onClose, 250); }}
+            className="w-full py-2.5 rounded-lg bg-[var(--color-progress)] hover:brightness-105 text-white font-medium text-sm transition-all shadow-sm cursor-pointer"
+          >
+            Continue to Dashboard
+          </button>
+
+          {/* Progress bar auto-close */}
+          <div className="mt-4 h-1 w-full rounded-full bg-[var(--color-border)] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--color-progress)]"
+              className="h-full rounded-full bg-[var(--color-progress)] animate-progress-bar"
               style={{
-                animation: "progress-bar 3.5s linear forwards",
-                width: "100%",
-                transformOrigin: "left",
+                animationDuration: "3.5s",
               }}
             />
           </div>
-          <p className="text-[10px] text-[var(--color-text-tertiary)] mt-2 font-medium">Closing automatically...</p>
+          <p className="text-[10px] text-[var(--color-text-tertiary)] mt-1.5 font-medium">Closing in a few seconds...</p>
         </div>
       </div>
     </div>

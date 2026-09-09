@@ -343,23 +343,35 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         {toasts.map((toast) => (
           <ToastRoot
             key={toast.id}
-            className="group"
-            duration={toast.variant === "error" ? 100000 : undefined}
+            className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-overlay)] p-4 shadow-card-hover flex items-start justify-between gap-3 w-84 text-sm rise-in backdrop-blur-md"
+            duration={toast.variant === "error" ? 8000 : 4000}
           >
-            <ToastTitle
-              style={{
-                color: variantColors[toast.variant ?? "info"],
-              }}
+            <div className="flex items-start gap-2.5 min-w-0">
+              <span
+                className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                style={{ backgroundColor: variantColors[toast.variant ?? "info"] }}
+              />
+              <div>
+                <ToastTitle className="font-semibold text-[var(--color-text-primary)] text-sm leading-snug">
+                  {toast.title}
+                </ToastTitle>
+                {toast.description && (
+                  <ToastDescription className="text-xs text-[var(--color-text-secondary)] mt-0.5 leading-relaxed">
+                    {toast.description}
+                  </ToastDescription>
+                )}
+              </div>
+            </div>
+            <ToastClose
+              aria-label="Close"
+              onClick={() => dismiss(toast.id)}
+              className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors text-base leading-none p-0.5 cursor-pointer"
             >
-              {toast.title}
-            </ToastTitle>
-            {toast.description && (
-              <ToastDescription>{toast.description}</ToastDescription>
-            )}
-            <ToastClose aria-label="Close">×</ToastClose>
+              ×
+            </ToastClose>
           </ToastRoot>
         ))}
-        <ToastViewport className="fixed top-5 right-5 z-[100] flex flex-col gap-2" />
+        <ToastViewport className="fixed top-5 right-5 z-[100] flex flex-col gap-2 pointer-events-auto" />
       </ToastProviderPrimitive>
     </NotificationContext.Provider>
   );

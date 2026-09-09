@@ -19,10 +19,16 @@ const TeamLeadDashboard = lazy(() => import("@/components/TeamLeadDashboard"));
 
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center h-64">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-[var(--color-border-focus)] border-t-transparent animate-spin" />
-        <span className="text-sm text-[var(--color-text-tertiary)]">Loading…</span>
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16 py-8">
+      <div className="space-y-6 animate-fade-in">
+        <div className="h-24 w-full rounded-2xl skeleton" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="h-28 rounded-xl skeleton" />
+          <div className="h-28 rounded-xl skeleton" />
+          <div className="h-28 rounded-xl skeleton" />
+          <div className="h-28 rounded-xl skeleton" />
+        </div>
+        <div className="h-64 w-full rounded-xl skeleton" />
       </div>
     </div>
   );
@@ -37,8 +43,16 @@ function RequireAuth() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <span className="text-sm text-[var(--color-text-tertiary)]">Loading…</span>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[var(--color-brand)] flex items-center justify-center animate-pulse text-white shadow-sm">
+            <svg viewBox="0 0 30 30" className="w-5 h-5">
+              <path d="M3 15 H12 V6 H24 V15 H27 M12 15 V24" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+              <circle cx="15" cy="15" r="2" fill="white" />
+            </svg>
+          </div>
+          <span className="text-xs text-[var(--color-text-tertiary)] font-mono">Loading Progress Tracker…</span>
+        </div>
       </div>
     );
   }
@@ -86,18 +100,28 @@ function AppShell() {
 function NotFound() {
   const navigate = useNavigate();
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-raised)] border border-[var(--color-border)] flex items-center justify-center mb-4">
-        <span className="text-2xl">🔍</span>
+    <div className="flex min-h-[70vh] flex-col items-center justify-center p-8 text-center rise-in">
+      <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-raised)] border border-[var(--color-border)] flex items-center justify-center mb-4 shadow-sm">
+        <span className="text-2xl">🧭</span>
       </div>
-      <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">404</h1>
-      <p className="mt-2 text-sm text-[var(--color-text-tertiary)]">Page not found — check the URL or return to your dashboard.</p>
-      <button
-        onClick={() => navigate(-1)}
-        className="mt-4 rounded-lg bg-[var(--color-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:brightness-90"
-      >
-        Go back
-      </button>
+      <h1 className="text-4xl font-extrabold text-[var(--color-text-primary)] tracking-tight">404</h1>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)] max-w-sm">
+        The page you are looking for does not exist or has been moved.
+      </p>
+      <div className="flex items-center gap-3 mt-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="rounded-lg bg-[var(--color-brand)] px-4 py-2.5 text-sm font-medium text-white hover:brightness-105 shadow-sm cursor-pointer transition-all"
+        >
+          Go Back
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-raised)] cursor-pointer transition-all"
+        >
+          Return to Dashboard
+        </button>
+      </div>
     </div>
   );
 }

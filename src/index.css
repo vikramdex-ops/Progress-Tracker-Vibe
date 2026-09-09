@@ -48,6 +48,11 @@
   --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-3: 0 12px 24px rgba(0, 0, 0, 0.08);
   --shadow-elevated: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --shadow-glow-brand: 0 0 20px -4px oklch(0.550 0.170 264 / 0.28);
+  --shadow-glow-progress: 0 0 20px -4px oklch(0.660 0.175 70 / 0.28);
+  --shadow-glow-completion: 0 0 20px -4px oklch(0.640 0.160 160 / 0.28);
 }
 
 /*
@@ -216,6 +221,13 @@
   --color-error: oklch(0.740 0.200 25);
   --color-error-surface: oklch(0.160 0.038 25);
   --color-warning-surface: oklch(0.130 0.045 72);
+
+  /* Dark mode shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.20);
+  --shadow-card-hover: 0 12px 32px -4px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-glow-brand: 0 0 24px -2px oklch(0.620 0.170 264 / 0.35);
+  --shadow-glow-progress: 0 0 24px -2px oklch(0.730 0.175 70 / 0.35);
+  --shadow-glow-completion: 0 0 24px -2px oklch(0.730 0.155 160 / 0.35);
 }
 
 /*
@@ -302,11 +314,12 @@
 
 @layer base {
   html {
-    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-feature-settings: "liga" 1, "calt" 1;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
   }
 
   body {
@@ -316,6 +329,33 @@
     font-size: 0.9375rem;
     line-height: 1.6;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklch, var(--color-brand) 30%, transparent);
+    color: var(--color-text-primary);
+  }
+
+  /* Elegant subtle scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: var(--radius-full);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-tertiary);
+  }
+
+  /* Code and telemetry use JetBrains Mono */
+  code, kbd, samp, pre, .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
   }
 
   /* Reduced motion respect (§5.1 / §8 guardrails) */
@@ -469,5 +509,54 @@
   .pipeline-flow {
     stroke-dasharray: 6 10;
     animation: pipeline-dash 1.4s linear infinite;
+  }
+
+  /* ── Chat typing indicator dots ── */
+  @keyframes typing-dot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+  .animate-typing-dot-1 { animation: typing-dot 1.2s infinite ease-in-out; }
+  .animate-typing-dot-2 { animation: typing-dot 1.2s infinite ease-in-out 0.2s; }
+  .animate-typing-dot-3 { animation: typing-dot 1.2s infinite ease-in-out 0.4s; }
+
+  /* ── Skeleton shimmer loader ── */
+  @keyframes skeleton-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-surface-raised) 25%, var(--color-surface-overlay) 50%, var(--color-surface-raised) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.8s infinite ease-in-out;
+  }
+
+  /* ── Celebration modal auto-close bar ── */
+  @keyframes progress-bar {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+  .animate-progress-bar {
+    animation: progress-bar linear forwards;
+  }
+
+  /* ── Subtle pulse for streak badge & live dots ── */
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.06); }
+  }
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s infinite ease-in-out;
+  }
+
+  /* ── Smooth interactive card transitions ── */
+  .card-interactive {
+    transition: transform var(--duration-fast) var(--ease-default),
+                box-shadow var(--duration-fast) var(--ease-default),
+                border-color var(--duration-fast) var(--ease-default);
+  }
+  .card-interactive:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-card-hover);
   }
 }

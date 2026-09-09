@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { StatCard } from "@/components/ui/stat-card";
+import { useNotification } from "@/components/ui/primitives";
 import CelebrationModal from "./CelebrationModal";
 import { FirstEodOnboarding } from "./OnboardingHint";
 import type { WorkItem, EodEntry, GamificationData } from "@/lib/types";
 import {
   Send, Plus, Trash2, Check, Star, Flame, Trophy, Target,
-  TrendingUp, Clock, Calendar, Award, Zap, BookOpen, X,
+  TrendingUp, Clock, Calendar, Award, Zap, BookOpen, X, MessageSquare, Sparkles,
 } from "lucide-react";
 
 const blankItem: WorkItem = {
@@ -24,6 +26,7 @@ const blankItem: WorkItem = {
 
 export default function EmployeeDashboard() {
   const { user, refreshUser } = useAuth();
+  const { notify } = useNotification();
   const today = new Date().toISOString().split("T")[0];
 
   const [entries, setEntries] = useState<EodEntry[]>([]);
@@ -51,7 +54,7 @@ export default function EmployeeDashboard() {
   // Chatbot
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([
-    { role: "assistant", content: "👋 Hi! I'm your piping engineering assistant. Ask me anything about codes, standards, design, or calculations!" },
+    { role: "assistant", content: "👋 Hi! I'm your piping engineering assistant. Ask me anything about ASME B31.3, piping design, stress analysis, or calculations!" },
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -126,8 +129,15 @@ export default function EmployeeDashboard() {
   };
 
   const handleSubmit = async () => {
-    const valid = workItems.filter((w) => w.projectName && w.task);
-    if (!valid.length) return;
+    const valid = workItems.filter((w) => w.projectName.trim() && w.task.trim());
+    if (!valid.length) {
+      notify({
+        title: "Incomplete Work Items",
+        description: "Please select a project and provide a task description before submitting.",
+        variant: "warning",
+      });
+      return;
+    }
     setSubmitting(true);
     try {
       const res: any = await entriesApi.create({
@@ -137,6 +147,11 @@ export default function EmployeeDashboard() {
         OverallRemarks: overallRemarks,
       });
       setCelebration({ xp: res.xp?.amount || 10, streak: (gamification?.currentStreak || 0) + 1 });
+      notify({
+        title: "EOD Report Submitted",
+        description: "Your daily progress entry was saved and XP has been credited.",
+        variant: "success",
+      });
       await loadData();
       setWorkItems([{ ...blankItem }]);
       setOverallRemarks("");
@@ -151,7 +166,11 @@ export default function EmployeeDashboard() {
         setLoadingInsights(false);
       }
     } catch (e: any) {
-      alert(e.message);
+      notify({
+        title: "Submission Error",
+        description: e.message || "Failed to submit EOD report.",
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -162,9 +181,18 @@ export default function EmployeeDashboard() {
       await leavesApi.create({ EmployeeName: user?.name, Date: today, Reason: leaveReason, MarkedBy: user?.name });
       setShowLeaveForm(false);
       setLeaveReason("");
+      notify({
+        title: "Leave Marked",
+        description: "Leave recorded for today. Your streak is safeguarded.",
+        variant: "info",
+      });
       loadData();
     } catch (e: any) {
-      alert(e.message);
+      notify({
+        title: "Leave Error",
+        description: e.message || "Failed to mark leave.",
+        variant: "error",
+      });
     }
   };
 
@@ -272,191 +300,287 @@ export default function EmployeeDashboard() {
       )}
       {!todayEntry && !onLeaveToday && entries.length === 0 && <FirstEodOnboarding />}
 
-      {/* ── Top Stats Row ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 ">
-        {[
-          { icon: <Star className="w-5 h-5" />, label: "Total XP", value: `${gamification?.xp || 0}`, color: "amber", gradient: "bg-[var(--color-surface-progress)]" },
-          { icon: <Award className="w-5 h-5" />, label: levelInfo.title, value: `Level ${levelInfo.level}`, color: "indigo", gradient: "bg-[var(--color-surface-brand)]" },
-          { icon: <Flame className="w-5 h-5" />, label: "Current Streak", value: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}`, color: "orange", gradient: "bg-[var(--color-surface-default)]" },
-          { icon: <Check className="w-5 h-5" />, label: "Total Entries", value: `${gamification?.totalEntries || 0}`, color: "emerald", gradient: "bg-[var(--color-surface-default)]" },
-        ].map((stat) => (
-          <Card key={stat.label} className={cn("stat-card-spring border border-[var(--color-border)] p-4 lg:p-5", stat.gradient)}>
-            <div className="flex items-center gap-3 lg:gap-4">
-              <div className={cn("w-11 h-11 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm",
-                stat.color === "amber" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
-                stat.color === "indigo" && "bg-[var(--color-surface-brand)] text-[var(--color-brand-600)]",
-                stat.color === "orange" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
-                stat.color === "emerald" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
-              )}>
-                {stat.icon}
-              </div>
-              <div className="min-w-0">
-                <div className="text-xl lg:text-2xl font-extrabold text-[var(--color-text-primary)] tabular-nums leading-none">{stat.value}</div>
-                <div className="text-[10px] lg:text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-widest leading-tight mt-1">{stat.label}</div>
-              </div>
-            </div>
-          </Card>
-        ))}
+      {/* ── Top Stats Row — using refined StatCard compound ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
+        <StatCard
+          icon={<Star className="w-5 h-5 text-[var(--color-progress)]" />}
+          label="Total XP"
+          value={gamification?.xp || 0}
+          color="progress"
+          subtitle="All-time points"
+        />
+        <StatCard
+          icon={<Award className="w-5 h-5 text-[var(--color-brand)]" />}
+          label={levelInfo.title}
+          value={`Level ${levelInfo.level}`}
+          color="brand"
+          subtitle={`${Math.max(0, Math.round(levelInfo.nextLevelXp - levelInfo.currentXp))} XP to next tier`}
+        />
+        <StatCard
+          icon={<Flame className="w-5 h-5 text-[var(--color-progress)]" />}
+          label="Active Streak"
+          value={`${gamification?.currentStreak || 0} Day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}`}
+          color="progress"
+          subtitle={`Best: ${gamification?.longestStreak || 0} days`}
+        />
+        <StatCard
+          icon={<Check className="w-5 h-5 text-[var(--color-completion)]" />}
+          label="Total Reports"
+          value={gamification?.totalEntries || 0}
+          color="completion"
+          subtitle="Verified EOD logs"
+        />
       </div>
 
-      {/* ── Tabs ── */}
-      <div className="flex gap-1.5 p-1 bg-[var(--color-surface-raised)] rounded-xl w-fit border border-[var(--color-border)]">
-        {[
-          { id: "overview" as const, label: "Overview", icon: <Target className="w-4 h-4" /> },
-          { id: "entries" as const, label: "EOD Entry", icon: <Send className="w-4 h-4" /> },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTab(t.id)}
-            className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200",
-              activeTab === t.id
-                ? "bg-[var(--color-surface-default)] text-[var(--color-progress)] shadow-sm border border-[var(--color-amber-200)]"
-                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-            )}
-          >
-            {t.icon} {t.label}
-          </button>
-        ))}
+      {/* ── Navigation Tabs ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex gap-1.5 p-1 bg-[var(--color-surface-raised)] rounded-xl border border-[var(--color-border)] shadow-xs">
+          {[
+            { id: "overview" as const, label: "Dashboard Overview", icon: <Target className="w-4 h-4" /> },
+            { id: "entries" as const, label: "EOD Entry Form", icon: <Send className="w-4 h-4" /> },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer",
+                activeTab === t.id
+                  ? "bg-[var(--color-surface-default)] text-[var(--color-text-primary)] shadow-xs font-semibold border border-[var(--color-border)]"
+                  : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-default)]/50"
+              )}
+            >
+              {t.icon}
+              <span>{t.label}</span>
+              {t.id === "entries" && !todayEntry && !onLeaveToday && (
+                <span className="w-2 h-2 rounded-full bg-[var(--color-progress)] animate-pulse-subtle" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div className="text-xs font-mono text-[var(--color-text-tertiary)] flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5" />
+          <span>Today: {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</span>
+        </div>
       </div>
 
       {/* ═══════════════════════════ OVERVIEW ═══════════════════════════ */}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5 xl:gap-6 stagger-children">
-          {/* Today's Mission — full width */}
+          {/* Today's Mission — full width card */}
           <Card className={cn(
-            "lg:col-span-3 border-[var(--color-amber-200)] p-0 overflow-hidden",
+            "lg:col-span-3 border-[var(--color-amber-200)] dark:border-[var(--color-amber-800)] p-0 overflow-hidden shadow-card",
             "bg-[var(--color-surface-progress)]"
           )}>
-            <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-              <div className="w-12 h-12 rounded-xl bg-[var(--color-progress)] flex items-center justify-center shadow-elevated flex-shrink-0">
-                <Target className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="text-[10px] font-bold text-[var(--color-progress)] uppercase tracking-[0.15em] mb-0.5">Today's Mission</div>
-                <div className="text-lg font-bold text-[var(--color-text-primary)]">
-                  {todayEntry || onLeaveToday ? "✅ Mission Complete!" : "Complete today's EOD entry"}
+            <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+              <div className="flex items-center gap-4 sm:gap-5">
+                <div className="w-12 h-12 rounded-xl bg-[var(--color-progress)] flex items-center justify-center shadow-sm text-white flex-shrink-0">
+                  <Target className="w-6 h-6" />
                 </div>
-                <div className="text-sm text-[var(--color-progress)] font-semibold mt-0.5">
-                  {todayEntry || onLeaveToday ? "+10 XP earned" : "+10 XP reward"}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-[var(--color-progress)] uppercase tracking-[0.15em]">Daily Mission</span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-default)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                      Due 6:00 PM IST
+                    </span>
+                  </div>
+                  <div className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] mt-0.5">
+                    {todayEntry ? "Daily Progress Logged Successfully" : onLeaveToday ? "On Approved Leave Today" : "Submit Today's Engineering Progress"}
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                    {todayEntry
+                      ? `Submitted at ${todayEntry.FilledAt || "today"} · +10 XP earned`
+                      : onLeaveToday
+                      ? "Streak safely paused for today"
+                      : "Record planned vs actual quantities to earn XP and extend your momentum"}
+                  </p>
                 </div>
               </div>
-              {!todayEntry && !onLeaveToday && (
-                <div className="flex gap-2.5">
-                  <div className="px-4 py-2.5 rounded-xl bg-[var(--color-surface-completion)] border border-[var(--color-emerald-200)] text-center">
-                    <div className="text-[11px] font-bold text-[var(--color-completion)]">⚡ Early Bird</div>
-                    <div className="text-[10px] text-[var(--color-completion)] font-medium">+5 XP before 5 PM</div>
+
+              {!todayEntry && !onLeaveToday ? (
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="px-3.5 py-2 rounded-xl bg-[var(--color-surface-completion)] border border-[var(--color-emerald-200)] dark:border-[var(--color-emerald-800)] text-left shadow-2xs">
+                    <div className="text-[11px] font-bold text-[var(--color-completion)]">Early Bird</div>
+                    <div className="text-[10px] text-[var(--color-text-secondary)] font-medium">+5 XP before 5 PM</div>
                   </div>
-                  <div className="px-4 py-2.5 rounded-xl bg-[var(--color-surface-brand)] border border-[var(--color-brand-200)] text-center">
-                    <div className="text-[11px] font-bold text-[var(--color-brand-600)]">🎯 100% Plan</div>
-                    <div className="text-[10px] text-[var(--color-brand)] font-medium">+20 XP bonus</div>
+                  <div className="px-3.5 py-2 rounded-xl bg-[var(--color-surface-brand)] border border-[var(--color-brand-200)] dark:border-[var(--color-brand-800)] text-left shadow-2xs">
+                    <div className="text-[11px] font-bold text-[var(--color-brand)]">100% Plan</div>
+                    <div className="text-[10px] text-[var(--color-text-secondary)] font-medium">+20 XP bonus</div>
                   </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setActiveTab("entries")}
+                    className="cursor-pointer shadow-sm"
+                  >
+                    Log Progress →
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Badge variant="success" dot>
+                    Complete (+10 XP)
+                  </Badge>
                 </div>
               )}
             </div>
           </Card>
 
-          {/* Progress Ring */}
-          <Card className="flex flex-col items-center justify-center  shadow-sm border border-[var(--color-border)]/40">
-            <CardHeader className="w-full"><CardTitle className="text-sm lg:text-[15px] font-bold">THIS WEEK</CardTitle></CardHeader>
-            <CardContent className="pb-2">
-              <ProgressRing value={weeklyCompletion} size={140} strokeWidth={10} />
+          {/* Progress Ring — Weekly Completion */}
+          <Card className="flex flex-col items-center justify-between p-6 bg-[var(--color-surface-default)] shadow-card border border-[var(--color-border)]">
+            <CardHeader className="w-full p-0 mb-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Weekly Completion</CardTitle>
+                <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">Rolling 7-day average</p>
+              </div>
+              <span className="text-xs font-mono text-[var(--color-text-tertiary)]">{weekEntries.length} days active</span>
+            </CardHeader>
+            <CardContent className="p-0 flex flex-col items-center justify-center my-2">
+              <ProgressRing value={weeklyCompletion} size={136} strokeWidth={9} subtitle="Avg %" color="progress" />
             </CardContent>
+            <div className="w-full text-center text-xs text-[var(--color-text-secondary)] pt-3 border-t border-[var(--color-border)]">
+              {weeklyCompletion >= 80 ? "🔥 Excellent pacing this week" : weeklyCompletion > 0 ? "Targeting 100% completion" : "No entries yet this week"}
+            </div>
           </Card>
 
           {/* Quick Stats */}
-          <Card className=" shadow-sm border border-[var(--color-border)]/40">
-            <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Quick Stats</CardTitle></CardHeader>
-            <CardContent className="space-y-3.5">
+          <Card className="p-6 bg-[var(--color-surface-default)] shadow-card border border-[var(--color-border)]">
+            <CardHeader className="p-0 mb-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Performance Pulse</CardTitle>
+                <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">Streak and activity status</p>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 space-y-3.5">
               {[
-                { emoji: "🔥", label: "Current Streak", val: `${gamification?.currentStreak || 0} day${(gamification?.currentStreak || 0) !== 1 ? "s" : ""}` },
-                { emoji: "⭐", label: "Total XP", val: `${gamification?.xp || 0}` },
-                { emoji: "🏆", label: "Best Streak", val: `${gamification?.longestStreak || 0} day${(gamification?.longestStreak || 0) !== 1 ? "s" : ""}` },
-                { emoji: "📊", label: "Entries", val: `${gamification?.totalEntries || 0}` },
+                { label: "Active Streak", val: `${gamification?.currentStreak || 0} Days`, color: "bg-[var(--color-progress)]", icon: <Flame className="w-3.5 h-3.5 text-white" /> },
+                { label: "Longest Streak Record", val: `${gamification?.longestStreak || 0} Days`, color: "bg-[var(--color-brand)]", icon: <Trophy className="w-3.5 h-3.5 text-white" /> },
+                { label: "Total Points Accumulated", val: `${gamification?.xp || 0} XP`, color: "bg-[var(--color-progress)]", icon: <Star className="w-3.5 h-3.5 text-white" /> },
+                { label: "Verified Submissions", val: `${gamification?.totalEntries || 0}`, color: "bg-[var(--color-completion)]", icon: <Check className="w-3.5 h-3.5 text-white" /> },
               ].map((s) => (
-                <div key={s.label} className="flex justify-between items-center">
-                  <span className="text-sm text-[var(--color-text-secondary)]">{s.emoji} {s.label}</span>
-                  <span className="font-bold text-sm text-[var(--color-text-primary)] tabular-nums">{s.val}</span>
+                <div key={s.label} className="flex justify-between items-center py-1 border-b border-[var(--color-border)] last:border-b-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className={cn("w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0", s.color)}>
+                      {s.icon}
+                    </div>
+                    <span className="text-xs text-[var(--color-text-secondary)] font-medium">{s.label}</span>
+                  </div>
+                  <span className="font-bold text-xs text-[var(--color-text-primary)] tabular-nums">{s.val}</span>
                 </div>
               ))}
             </CardContent>
           </Card>
 
           {/* Level Progression */}
-          <Card className=" shadow-sm border border-[var(--color-border)]/40">
-            <CardHeader><CardTitle className="text-sm lg:text-[15px] font-bold">Level Progression</CardTitle></CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-14 h-14 rounded-xl bg-[var(--color-brand)] flex items-center justify-center text-white font-bold text-xl shadow-elevated flex-shrink-0">
+          <Card className="p-6 bg-[var(--color-surface-default)] shadow-card border border-[var(--color-border)]">
+            <CardHeader className="p-0 mb-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Rank & Tier</CardTitle>
+                <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">Engineering milestone rank</p>
+              </div>
+              <Badge variant="secondary">Level {levelInfo.level}</Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-13 h-13 rounded-2xl bg-[var(--color-surface-brand)] border border-[var(--color-brand-200)] dark:border-[var(--color-brand-800)] flex items-center justify-center text-[var(--color-brand)] font-black text-xl shadow-xs flex-shrink-0">
                   {levelInfo.level}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-base font-bold text-[var(--color-text-primary)] leading-tight">{levelInfo.title}</div>
-                  <div className="text-[11px] text-[var(--color-text-muted)] mt-0.5">Level {levelInfo.level}</div>
-                  <Progress value={levelInfo.progress} color="secondary" className="mt-2.5" />
+                  <div className="text-base font-extrabold text-[var(--color-text-primary)] tracking-tight leading-tight truncate">
+                    {levelInfo.title}
+                  </div>
+                  <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                    {gamification?.xp || 0} XP earned
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)] font-medium">
-                {Math.round(levelInfo.nextLevelXp - levelInfo.currentXp)} XP to Level {levelInfo.level + 1}
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs text-[var(--color-text-tertiary)]">
+                  <span>Level {levelInfo.level}</span>
+                  <span className="font-semibold text-[var(--color-text-primary)]">{levelInfo.progress}%</span>
+                  <span>Level {levelInfo.level + 1}</span>
+                </div>
+                <Progress value={levelInfo.progress} color="secondary" size="default" />
+              </div>
+
+              <p className="text-xs text-[var(--color-text-secondary)] mt-3.5 leading-relaxed bg-[var(--color-surface-raised)] p-2.5 rounded-lg border border-[var(--color-border)] text-center">
+                <strong>{Math.max(0, Math.round(levelInfo.nextLevelXp - levelInfo.currentXp))} XP</strong> required to achieve Level {levelInfo.level + 1}
               </p>
             </CardContent>
           </Card>
 
           {/* Badges — full width */}
-          <Card className="lg:col-span-3  shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-[var(--color-progress)]" /> YOUR ACHIEVEMENTS
-              </CardTitle>
+          <Card className="lg:col-span-3 p-6 bg-[var(--color-surface-default)] shadow-card border border-[var(--color-border)] overflow-hidden">
+            <CardHeader className="p-0 mb-4 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-progress)] flex items-center justify-center text-[var(--color-progress)]">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Earned Badges & Distinctions</CardTitle>
+                  <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">Milestone trophies unlocked through consistent excellence</p>
+                </div>
+              </div>
+              <span className="text-xs font-mono text-[var(--color-text-tertiary)]">
+                {gamification?.badges?.length || 0} Unlocked
+              </span>
             </CardHeader>
-            <CardContent className="px-6 lg:px-8 pb-6 lg:pb-8">
+            <CardContent className="p-0">
               {gamification?.badges && gamification.badges.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 gap-3 lg:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                   {gamification.badges.map((b) => (
                     <div
                       key={b.id}
                       className={cn(
-                        "p-3.5 rounded-xl border text-center transition-all duration-200  cursor-default",
+                        "p-3 rounded-xl border text-center transition-all duration-200 card-interactive cursor-default",
                         b.IsNew
-                          ? "border-[var(--color-amber-200)] bg-[var(--color-surface-progress)] shadow-sm shadow-elevated"
+                          ? "border-[var(--color-amber-200)] dark:border-[var(--color-amber-800)] bg-[var(--color-surface-progress)] shadow-xs"
                           : "border-[var(--color-border)] bg-[var(--color-surface-raised)]"
                       )}
                     >
                       <div className="text-2xl mb-1.5">
                         {b.BadgeName?.includes("Streak") ? "🔥" : b.BadgeName?.includes("Entry") || b.BadgeName?.includes("100") ? "🏆" : b.BadgeName?.includes("Early") ? "⚡" : "⭐"}
                       </div>
-                      <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] leading-tight">{b.BadgeName}</div>
+                      <div className="text-[11px] font-semibold text-[var(--color-text-primary)] leading-tight truncate">{b.BadgeName}</div>
+                      <div className="text-[9px] text-[var(--color-text-tertiary)] mt-0.5">Badge Earned</div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-[var(--color-text-muted)] text-center py-8">No badges yet. Keep going!</p>
+                <div className="text-center py-8 bg-[var(--color-surface-raised)] rounded-xl border border-dashed border-[var(--color-border)]">
+                  <Trophy className="w-8 h-8 text-[var(--color-text-tertiary)] mx-auto mb-2 opacity-50" />
+                  <p className="text-xs font-semibold text-[var(--color-text-secondary)]">No badges unlocked yet</p>
+                  <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">Submit 3 consecutive EODs or complete 100% of planned work to unlock your first trophy!</p>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* AI Engineering Quiz — full width */}
-          <Card className="lg:col-span-3 stat-card-spring bg-[var(--color-surface)] shadow-elevated border border-[var(--color-border)] overflow-hidden">
+          <Card className="lg:col-span-3 bg-[var(--color-surface-default)] shadow-card border border-[var(--color-border)] overflow-hidden">
             <CardContent className="p-5 lg:p-7">
               {/* Header with tabs */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-brand)] flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-[var(--color-brand)]" />
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-brand)] flex items-center justify-center text-[var(--color-brand)]">
+                    <BookOpen className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] font-bold tracking-[0.15em] text-[var(--color-text-muted)] uppercase">🤖 AI PIPING QUIZ</span>
+                  <div>
+                    <span className="text-sm font-bold text-[var(--color-text-primary)]">Technical Domain Challenge</span>
+                    <p className="text-xs text-[var(--color-text-tertiary)]">Piping engineering standards & codes</p>
+                  </div>
                 </div>
-                <div className="flex gap-1 p-0.5 bg-[var(--color-surface-raised)] rounded-lg">
+                <div className="flex gap-1 p-0.5 bg-[var(--color-surface-raised)] rounded-lg border border-[var(--color-border)]">
                   {(["play", "history"] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setQuizTab(tab)}
                       className={cn(
-                        "px-3 py-1.5 rounded-md text-[10px] font-bold transition-all",
-                        quizTab === tab ? "bg-[var(--color-brand)] text-white shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]",
+                        "px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer",
+                        quizTab === tab ? "bg-[var(--color-surface-default)] text-[var(--color-brand)] shadow-xs border border-[var(--color-border)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]",
                       )}
                     >
-                      {tab === "play" ? "🎯 Play" : `📖 History (${quizHistory.length})`}
+                      {tab === "play" ? "Challenge" : `Past Attempts (${quizHistory.length})`}
                     </button>
                   ))}
                 </div>
@@ -464,18 +588,18 @@ export default function EmployeeDashboard() {
 
               {/* Stats bar */}
               {quizStats && (
-                <div className="flex gap-3 mb-4 flex-wrap">
-                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] text-[10px] font-semibold">
-                    <span className="text-[var(--color-text-muted)]">Score:</span>{" "}
-                    <span className="text-[var(--color-text-primary)]">{quizStats.correct}/{quizStats.total}</span>
+                <div className="flex gap-2.5 mb-4 flex-wrap">
+                  <div className="px-3 py-1 rounded-lg bg-[var(--color-surface-raised)] border border-[var(--color-border)] text-xs font-medium">
+                    <span className="text-[var(--color-text-tertiary)]">Score:</span>{" "}
+                    <span className="text-[var(--color-text-primary)] font-bold">{quizStats.correct}/{quizStats.total}</span>
                   </div>
-                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] text-[10px] font-semibold">
-                    <span className="text-[var(--color-text-muted)]">Accuracy:</span>{" "}
-                    <span className="text-[var(--color-text-primary)]">{quizStats.accuracy}%</span>
+                  <div className="px-3 py-1 rounded-lg bg-[var(--color-surface-raised)] border border-[var(--color-border)] text-xs font-medium">
+                    <span className="text-[var(--color-text-tertiary)]">Accuracy:</span>{" "}
+                    <span className="text-[var(--color-text-primary)] font-bold">{quizStats.accuracy}%</span>
                   </div>
-                  <div className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-raised)] text-[10px] font-semibold">
-                    <span className="text-[var(--color-text-muted)]">Unique:</span>{" "}
-                    <span className="text-[var(--color-text-primary)]">{quizStats.uniqueQuestions}</span>
+                  <div className="px-3 py-1 rounded-lg bg-[var(--color-surface-raised)] border border-[var(--color-border)] text-xs font-medium">
+                    <span className="text-[var(--color-text-tertiary)]">Completed:</span>{" "}
+                    <span className="text-[var(--color-text-primary)] font-bold">{quizStats.uniqueQuestions} unique</span>
                   </div>
                 </div>
               )}
@@ -484,18 +608,18 @@ export default function EmployeeDashboard() {
               {quizTab === "play" && (
                 generatingQuiz ? (
                   <div className="flex flex-col items-center gap-3 py-8">
-                    <div className="w-8 h-8 rounded-full border-2 border-[var(--color-brand-200)] border-t-transparent animate-spin" />
-                    <span className="text-sm text-[var(--color-brand)] font-medium">AI is generating your question...</span>
-                    <span className="text-xs text-[var(--color-text-muted)]">Powered by MiniMax M3</span>
+                    <div className="w-8 h-8 rounded-full border-2 border-[var(--color-brand)] border-t-transparent animate-spin" />
+                    <span className="text-sm text-[var(--color-brand)] font-medium">Generating technical question…</span>
+                    <span className="text-xs text-[var(--color-text-tertiary)]">Tailored to ASME B31.3 & process piping standards</span>
                   </div>
                 ) : quiz?.limitReached ? (
-                  <div className="text-center py-6">
+                  <div className="text-center py-6 bg-[var(--color-surface-raised)] rounded-xl border border-[var(--color-border)]">
                     <div className="text-3xl mb-2">🎯</div>
-                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">Daily Limit Reached</p>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-1">You've answered {quiz.count}/{quiz.limit} questions today. Come back tomorrow!</p>
+                    <p className="text-sm font-bold text-[var(--color-text-primary)]">Daily Challenge Limit Reached</p>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-1">You have answered {quiz.count}/{quiz.limit} questions today. More will unlock tomorrow!</p>
                     <div className="mt-3 flex justify-center">
-                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-xl bg-[var(--color-surface-brand)] text-[var(--color-brand-600)] text-xs font-semibold">
-                        📖 Review History
+                      <button onClick={() => setQuizTab("history")} className="px-4 py-2 rounded-lg bg-[var(--color-brand)] text-white text-xs font-medium cursor-pointer">
+                        Review Answer History
                       </button>
                     </div>
                   </div>
@@ -504,25 +628,25 @@ export default function EmployeeDashboard() {
                     <div className="flex items-center gap-2">
                       {quiz.difficulty && (
                         <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[9px] font-bold",
-                          quiz.difficulty === "Easy" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
-                          quiz.difficulty === "Medium" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
-                          quiz.difficulty === "Hard" && "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
+                          "px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider",
+                          quiz.difficulty === "Easy" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)] border border-[var(--color-emerald-200)] dark:border-[var(--color-emerald-800)]",
+                          quiz.difficulty === "Medium" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)] border border-[var(--color-amber-200)] dark:border-[var(--color-amber-800)]",
+                          quiz.difficulty === "Hard" && "bg-[var(--color-surface-alert)] text-[var(--color-alert)] border border-[var(--color-red-200)] dark:border-[var(--color-red-800)]",
                         )}>{quiz.difficulty}</span>
                       )}
                       {quiz.category && (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-surface-raised)] text-[9px] font-semibold text-[var(--color-text-muted)]">
+                        <span className="px-2 py-0.5 rounded-md bg-[var(--color-surface-raised)] text-[10px] font-semibold text-[var(--color-text-secondary)] border border-[var(--color-border)]">
                           {quiz.category}
                         </span>
                       )}
                       {quiz.remaining !== undefined && (
-                        <span className="ml-auto px-2 py-0.5 rounded-full bg-[var(--color-surface-brand)] text-[9px] font-bold text-[var(--color-brand-600)]">
-                          {quiz.remaining} left today
+                        <span className="ml-auto text-[11px] font-medium text-[var(--color-brand)]">
+                          {quiz.remaining} attempts remaining today
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-[var(--color-text-primary)] leading-relaxed font-semibold">{quiz.question}</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {Object.entries(quiz.options).map(([key, val]) => {
                         const isSelected = quizAnswer === key;
                         const isCorrect = quizResult && key === quizResult.correctAnswer;
@@ -534,98 +658,82 @@ export default function EmployeeDashboard() {
                             disabled={!!quizResult}
                             className={cn(
                               "p-3 rounded-xl text-left text-sm font-medium transition-all duration-200 border",
-                              !quizResult && "hover:border-[var(--color-brand-200)] hover:bg-[var(--color-surface-brand)] cursor-pointer",
+                              !quizResult && "hover:border-[var(--color-brand)] hover:bg-[var(--color-surface-raised)] cursor-pointer",
                               !!quizResult && "cursor-default",
-                              isCorrect && "border-[var(--color-emerald-200)] bg-[var(--color-surface-completion)] text-[var(--color-completion-700)]",
-                              isWrong && "border-[var(--color-red-200)] bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
-                              !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface)]",
+                              isCorrect && "border-[var(--color-emerald-200)] dark:border-[var(--color-emerald-800)] bg-[var(--color-surface-completion)] text-[var(--color-completion)] font-bold",
+                              isWrong && "border-[var(--color-red-200)] dark:border-[var(--color-red-800)] bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
+                              !isSelected && !isCorrect && !isWrong && "border-[var(--color-border)] bg-[var(--color-surface-default)] text-[var(--color-text-secondary)]",
                             )}
                           >
-                            <span className="text-[10px] font-bold text-[var(--color-text-muted)] mr-1.5">{key}.</span>
-                            {String(val)}
+                            <span className="text-xs font-bold text-[var(--color-text-tertiary)] mr-2">{key}.</span>
+                            <span>{String(val)}</span>
                           </button>
                         );
                       })}
                     </div>
                     {quizResult && (
-                      <div className="space-y-2 ">
+                      <div className="space-y-2.5 pt-2">
                         <div className={cn(
-                          "p-3 rounded-xl text-sm font-medium",
-                          quizResult.correct ? "bg-[var(--color-surface-completion)] text-[var(--color-completion)]" : "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
+                          "p-3 rounded-xl text-sm font-medium border",
+                          quizResult.correct
+                            ? "bg-[var(--color-surface-completion)] text-[var(--color-completion)] border-[var(--color-emerald-200)] dark:border-[var(--color-emerald-800)]"
+                            : "bg-[var(--color-surface-alert)] text-[var(--color-alert)] border-[var(--color-red-200)] dark:border-[var(--color-red-800)]",
                         )}>
-                          {quizResult.correct ? `✅ Correct! +${quizResult.xp} XP earned` : `❌ Wrong! The correct answer is ${quizResult.correctAnswer}.`}
+                          {quizResult.correct ? `Correct! +${quizResult.xp} XP earned` : `Incorrect. The correct answer is ${quizResult.correctAnswer}.`}
                         </div>
                         {quizResult.explanation && (
-                          <div className="p-3 rounded-xl bg-[var(--color-surface-progress)] border border-[var(--color-brand-200)]">
-                            <p className="text-xs font-bold text-[var(--color-brand)] mb-1">💡 EXPLANATION</p>
-                            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
+                          <div className="p-3.5 rounded-xl bg-[var(--color-surface-raised)] border border-[var(--color-border)]">
+                            <p className="text-xs font-bold text-[var(--color-brand)] mb-1 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5" /> Technical Explanation
+                            </p>
+                            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">{quizResult.explanation}</p>
                           </div>
                         )}
-                        <button
+                        <Button
                           onClick={handleGenerateQuiz}
-                          className="btn-shimmer w-full py-3 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-sm font-semibold shadow-elevated transition-all"
+                          className="w-full cursor-pointer"
                         >
-                          ✦ Next Question
-                        </button>
+                          Next Question →
+                        </Button>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-3 py-6">
-                    <p className="text-sm text-[var(--color-text-muted)]">Test your piping engineering knowledge</p>
-                    <button
+                  <div className="flex flex-col items-center gap-3 py-6 text-center">
+                    <p className="text-sm text-[var(--color-text-secondary)]">Test and build your domain mastery with questions on piping codes and specifications.</p>
+                    <Button
                       onClick={handleGenerateQuiz}
-                      className="btn-shimmer px-6 py-3 rounded-xl bg-[var(--color-brand)] hover:brightness-95 text-white text-sm font-semibold shadow-elevated transition-all"
+                      className="cursor-pointer"
                     >
-                      ✦ Generate Question
-                    </button>
+                      <Sparkles className="w-4 h-4 mr-2" /> Start Technical Challenge
+                    </Button>
                   </div>
                 )
               )}
 
               {/* History Tab */}
               {quizTab === "history" && (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                   {quizHistory.length === 0 ? (
-                    <p className="text-sm text-[var(--color-text-muted)] text-center py-8">No questions answered yet. Start playing!</p>
+                    <p className="text-sm text-[var(--color-text-tertiary)] text-center py-8">No challenges answered yet. Start a session!</p>
                   ) : (
                     quizHistory.map((h) => (
-                      <div key={h.id} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] space-y-2">
+                      <div key={h.id} className="p-3.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] space-y-2">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm text-[var(--color-text-primary)] font-medium leading-snug flex-1">{h.Question}</p>
-                          <div className="flex gap-1 flex-shrink-0">
+                          <p className="text-xs sm:text-sm text-[var(--color-text-primary)] font-medium leading-snug flex-1">{h.Question}</p>
+                          <div className="flex gap-1.5 flex-shrink-0">
                             <span className={cn(
-                              "px-1.5 py-0.5 rounded text-[8px] font-bold",
+                              "px-2 py-0.5 rounded text-[10px] font-bold",
                               h.IsCorrect ? "bg-[var(--color-surface-completion)] text-[var(--color-completion)]" : "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
-                            )}>{h.IsCorrect ? "✓" : "✗"}</span>
-                            {h.Difficulty && (
-                              <span className={cn(
-                                "px-1.5 py-0.5 rounded text-[8px] font-bold",
-                                h.Difficulty === "Easy" && "bg-[var(--color-surface-completion)] text-[var(--color-completion)]",
-                                h.Difficulty === "Medium" && "bg-[var(--color-surface-progress)] text-[var(--color-progress)]",
-                                h.Difficulty === "Hard" && "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
-                              )}>{h.Difficulty}</span>
-                            )}
+                            )}>{h.IsCorrect ? "Correct" : "Missed"}</span>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-1.5 text-[10px]">
-                          {(["A", "B", "C", "D"] as const).map((k) => {
-                            const isCorrect = k === h.CorrectAnswer;
-                            const isUser = k === h.UserAnswer;
-                            return (
-                              <span key={k} className={cn(
-                                "px-2 py-0.5 rounded font-medium",
-                                isCorrect && "bg-[var(--color-surface-completion)] text-[var(--color-completion-700)]",
-                                isUser && !isCorrect && "bg-[var(--color-surface-alert)] text-[var(--color-alert)]",
-                                !isCorrect && !isUser && "bg-[var(--color-surface-raised)] text-[var(--color-text-muted)]",
-                              )}>{k}. {h[`Option${k}`] || ""}</span>
-                            );
-                          })}
-                        </div>
                         {h.Explanation && (
-                          <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed bg-[var(--color-surface-progress)]/50 rounded-lg px-2.5 py-2">💡 {h.Explanation}</p>
+                          <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed bg-[var(--color-surface-default)] rounded-lg p-2.5 border border-[var(--color-border)]">
+                            {h.Explanation}
+                          </p>
                         )}
-                        <div className="flex items-center gap-2 text-[9px] text-[var(--color-text-muted)]">
+                        <div className="flex items-center gap-2 text-[10px] text-[var(--color-text-tertiary)]">
                           {h.AnsweredAt && <span>{new Date(h.AnsweredAt).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</span>}
                           {h.XpEarned > 0 && <span className="text-[var(--color-progress)] font-bold">+{h.XpEarned} XP</span>}
                         </div>
@@ -639,30 +747,36 @@ export default function EmployeeDashboard() {
 
           {/* Announcements Live Feed — full width */}
           {announcements.length > 0 && (
-            <Card className="lg:col-span-3 ">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-[var(--color-progress)]" /> LIVE FEED
-                </CardTitle>
+            <Card className="lg:col-span-3 p-6 bg-[var(--color-surface-default)] shadow-card border border-[var(--color-border)]">
+              <CardHeader className="p-0 mb-4 flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-progress)] flex items-center justify-center text-[var(--color-progress)]">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Live Team Pulse</CardTitle>
+                    <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">Real-time milestones and submission stream</p>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+              <CardContent className="p-0">
+                <div className="space-y-2 max-h-52 overflow-y-auto">
                   {announcements.slice(0, 10).map((ann) => (
-                    <div key={ann.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--color-surface-raised)] transition-colors">
+                    <div key={ann.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[var(--color-surface-raised)] transition-colors border border-transparent hover:border-[var(--color-border)]">
                       <div className={cn(
-                        "w-2 h-2 rounded-full mt-1.5 flex-shrink-0",
+                        "w-2 h-2 rounded-full mt-2 flex-shrink-0 animate-pulse-subtle",
                         ann.Type === "entry" && "bg-[var(--color-completion)]",
                         ann.Type === "leave" && "bg-[var(--color-progress)]",
                         ann.Type === "badge" && "bg-[var(--color-progress)]",
                         ann.Type === "system" && "bg-[var(--color-brand)]",
                       )} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
-                          <span className="font-semibold text-[var(--color-text-primary)]">{ann.EmployeeName}</span>
+                        <p className="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-snug">
+                          <strong className="font-semibold text-[var(--color-text-primary)]">{ann.EmployeeName}</strong>
                           {" "}{ann.Message}
                         </p>
                         {ann.Timestamp && (
-                          <span className="text-[10px] text-[var(--color-text-muted)] font-mono">
+                          <span className="text-[10px] text-[var(--color-text-tertiary)] font-mono block mt-0.5">
                             {new Date(ann.Timestamp).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
                           </span>
                         )}
@@ -809,39 +923,55 @@ export default function EmployeeDashboard() {
             </>
           ) : (
             /* EOD Form */
-            <Card className="shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
-              <CardHeader className="px-5 py-4 lg:px-8 lg:py-5">
-                <CardTitle className="flex items-center gap-2 text-base lg:text-lg font-bold">
-                  <Send className="w-4 h-4" /> TODAY'S EOD ENTRY
-                  <span className="ml-auto text-sm font-bold text-[var(--color-progress)] normal-case tracking-normal">+10 XP</span>
-                </CardTitle>
+            <Card className="shadow-card border border-[var(--color-border)] bg-[var(--color-surface-default)] overflow-hidden">
+              <CardHeader className="px-5 py-4 lg:px-8 lg:py-5 border-b border-[var(--color-border)]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-progress)] flex items-center justify-center text-[var(--color-progress)]">
+                      <Send className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base lg:text-lg font-bold">Daily Engineering Progress Log</CardTitle>
+                      <p className="text-xs text-[var(--color-text-tertiary)]">Record tasks, planned vs actual output, and complexity</p>
+                    </div>
+                  </div>
+                  <Badge variant="default" dot>+10 XP Base Reward</Badge>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-5 px-4 sm:px-5 lg:px-8 pb-5 lg:pb-7">
+              <CardContent className="space-y-6 px-4 sm:px-6 lg:px-8 py-6">
                 {workItems.map((item, i) => (
                   <div
                     key={i}
-                    className="p-4 lg:p-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] space-y-4"
+                    className="p-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] space-y-4 shadow-2xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                        Work Item {i + 1}
-                      </h4>
+                    <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border)]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--color-brand)] text-white text-[10px] font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <h4 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider">
+                          Project Work Item #{i + 1}
+                        </h4>
+                      </div>
                       {workItems.length > 1 && (
                         <button
+                          type="button"
                           onClick={() => setWorkItems(workItems.filter((_, j) => j !== i))}
-                          className="text-[var(--color-text-muted)] hover:text-[var(--color-alert)] transition-colors p-1 rounded-lg hover:bg-[var(--color-surface-alert)]"
+                          className="text-[var(--color-text-tertiary)] hover:text-[var(--color-alert)] transition-colors p-1.5 rounded-lg hover:bg-[var(--color-surface-alert)] cursor-pointer"
+                          title="Remove item"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
+
                     <div className="grid md:grid-cols-2 gap-4 lg:gap-5">
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Project</label>
+                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Project Name *</label>
                         <select
                           value={item.projectName}
                           onChange={(e) => updateItem(i, "projectName", e.target.value)}
-                          className="w-full h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none transition-all"
+                          className="w-full h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-3.5 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none transition-all cursor-pointer"
                         >
                           <option value="">Select project...</option>
                           {PROJECTS.map((p) => (
@@ -850,39 +980,57 @@ export default function EmployeeDashboard() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Task</label>
-                        <Input value={item.task} onChange={(e) => updateItem(i, "task", e.target.value)} placeholder="e.g., Isometric drafting" />
+                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Task Description *</label>
+                        <Input
+                          value={item.task}
+                          onChange={(e) => updateItem(i, "task", e.target.value)}
+                          placeholder="e.g., Isometric drafting, line sizing..."
+                        />
                       </div>
                       <div className="md:col-span-2">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-xs font-semibold text-[var(--color-text-secondary)]">Description</label>
+                          <label className="text-xs font-semibold text-[var(--color-text-secondary)]">Detailed Remarks / Deliverables</label>
                           <button
                             type="button"
                             onClick={() => handleAutoDescribe(i)}
                             disabled={!item.task || autoDescribeIdx === i}
-                            className="text-[10px] font-bold text-[var(--color-brand)] hover:text-[var(--color-brand-600)] disabled:opacity-40 flex items-center gap-1"
+                            className="text-[11px] font-bold text-[var(--color-brand)] hover:brightness-110 disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
                           >
                             {autoDescribeIdx === i ? (
-                              <><div className="w-3 h-3 rounded-full border border-[var(--color-brand-200)] border-t-transparent animate-spin" /> Generating...</>
-                            ) : ("✨ AI Auto-Describe")}
+                              <><div className="w-3 h-3 rounded-full border border-[var(--color-brand)] border-t-transparent animate-spin" /> AI Generating...</>
+                            ) : (<><Sparkles className="w-3 h-3" /> Auto-Generate Description</>)}
                           </button>
                         </div>
-                        <Input value={item.description} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Brief description or click AI Auto-Describe..." />
+                        <Input
+                          value={item.description}
+                          onChange={(e) => updateItem(i, "description", e.target.value)}
+                          placeholder="Brief technical summary or click Auto-Generate..."
+                        />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Planned Qty</label>
-                        <Input type="number" value={item.plannedQty || ""} onChange={(e) => updateItem(i, "plannedQty", Number(e.target.value))} placeholder="0" />
+                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Planned Output Quantity</label>
+                        <Input
+                          type="number"
+                          value={item.plannedQty || ""}
+                          onChange={(e) => updateItem(i, "plannedQty", Number(e.target.value))}
+                          placeholder="Planned count/hours"
+                        />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Actual Qty</label>
-                        <Input type="number" value={item.actualQty || ""} onChange={(e) => updateItem(i, "actualQty", Number(e.target.value))} placeholder="0" />
+                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Actual Accomplished Quantity</label>
+                        <Input
+                          type="number"
+                          value={item.actualQty || ""}
+                          onChange={(e) => updateItem(i, "actualQty", Number(e.target.value))}
+                          placeholder="Actual achieved"
+                        />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Complexity</label>
+                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Task Complexity</label>
                         <select
                           value={item.complexity}
                           onChange={(e) => updateItem(i, "complexity", e.target.value)}
-                          className="w-full h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none transition-all"
+                          className="w-full h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-3.5 text-sm text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none transition-all cursor-pointer"
                         >
                           <option>Low</option>
                           <option>Moderate</option>
@@ -890,35 +1038,54 @@ export default function EmployeeDashboard() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Completion: {item.completionPercent}%
-                        </label>
-                        <Progress value={item.completionPercent} color="accent" className="mt-1" />
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                            Completion Rate
+                          </label>
+                          <span className={cn(
+                            "text-xs font-bold tabular-nums",
+                            item.completionPercent >= 100 ? "text-[var(--color-completion)]" : "text-[var(--color-progress)]"
+                          )}>
+                            {item.completionPercent}%
+                          </span>
+                        </div>
+                        <Progress
+                          value={item.completionPercent}
+                          color={item.completionPercent >= 100 ? "accent" : "primary"}
+                          size="default"
+                        />
                       </div>
                     </div>
                   </div>
                 ))}
 
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setWorkItems([...workItems, { ...blankItem }])}
-                  className="w-full border-dashed"
+                  className="w-full border-dashed cursor-pointer py-3"
                 >
-                  <Plus className="w-4 h-4 mr-2" /> Add Another Project
+                  <Plus className="w-4 h-4 mr-2" /> Add Another Work Item
                 </Button>
 
                 <div>
-                  <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Overall Remarks</label>
+                  <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Overall Notes / Observations</label>
                   <textarea
                     value={overallRemarks}
                     onChange={(e) => setOverallRemarks(e.target.value)}
-                    placeholder="Any additional notes..."
-                    className="w-full h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none resize-none transition-all"
+                    placeholder="Any challenges, hold-ups, or notes for your team lead..."
+                    className="w-full h-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:ring-2 focus:ring-[var(--color-border-focus)]/30 focus:border-[var(--color-border-focus)] outline-none resize-none transition-all"
                   />
                 </div>
 
-                <Button onClick={handleSubmit} disabled={submitting} className="w-full btn-shimmer shadow-elevated" size="lg">
-                  <Send className="w-4 h-4 mr-2" /> {submitting ? "Submitting…" : "Submit EOD Entry  →  +10 XP"}
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  loading={submitting}
+                  className="w-full shadow-md cursor-pointer text-base py-3"
+                  size="lg"
+                >
+                  <Send className="w-4 h-4 mr-2" /> Submit Daily EOD (+10 XP)
                 </Button>
               </CardContent>
             </Card>
@@ -926,38 +1093,50 @@ export default function EmployeeDashboard() {
 
           {/* History */}
           {entries.length > 0 && (
-            <Card className="shadow-sm border border-[var(--color-border)]/40 overflow-hidden">
-              <CardHeader className="px-5 py-4 lg:px-8 lg:py-5"><CardTitle className="text-base lg:text-lg font-bold">My History</CardTitle></CardHeader>
-              <CardContent className="px-5 lg:px-8 pb-5 lg:pb-7">
+            <Card className="shadow-card border border-[var(--color-border)] bg-[var(--color-surface-default)] overflow-hidden">
+              <CardHeader className="px-5 py-4 lg:px-8 lg:py-5 border-b border-[var(--color-border)] flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base lg:text-lg font-bold text-[var(--color-text-primary)]">Submission History</CardTitle>
+                  <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5">Your verified log of daily EOD reports</p>
+                </div>
+                <span className="text-xs font-mono text-[var(--color-text-tertiary)]">{entries.length} Total Logs</span>
+              </CardHeader>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border)]">
-                        <th className="pb-3 font-semibold pr-4">Date</th>
-                        <th className="pb-3 font-semibold pr-4">Project</th>
-                        <th className="pb-3 font-semibold pr-4">Task</th>
-                        <th className="pb-3 font-semibold pr-4">Planned</th>
-                        <th className="pb-3 font-semibold pr-4">Actual</th>
-                        <th className="pb-3 font-semibold pr-4">Complete</th>
-                        <th className="pb-3 font-semibold">Rating</th>
+                      <tr className="text-left text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider bg-[var(--color-surface-raised)] border-b border-[var(--color-border)]">
+                        <th className="py-3 px-4 font-semibold">Date</th>
+                        <th className="py-3 px-4 font-semibold">Project</th>
+                        <th className="py-3 px-4 font-semibold">Task</th>
+                        <th className="py-3 px-4 font-semibold text-right">Planned</th>
+                        <th className="py-3 px-4 font-semibold text-right">Actual</th>
+                        <th className="py-3 px-4 font-semibold text-right">Rate</th>
+                        <th className="py-3 px-4 font-semibold text-center">Rating</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {entries.slice(0, 30).map((e) => (
-                        <tr key={e.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] transition-colors">
-                          <td className="py-3 pr-4 font-mono text-xs text-[var(--color-text-muted)]">{e.Date}</td>
-                          <td className="py-3 pr-4 font-medium text-[var(--color-text-secondary)]">{e.Project}</td>
-                          <td className="py-3 pr-4 text-[var(--color-text-secondary)]">{e.Task}</td>
-                          <td className="py-3 pr-4 font-mono tabular-nums">{e.PlannedQty}</td>
-                          <td className="py-3 pr-4 font-mono tabular-nums">{e.ActualQty}</td>
-                          <td className="py-3 pr-4 font-mono tabular-nums font-medium">{e.CompletionPct}%</td>
-                          <td className="py-3">
+                      {entries.slice(0, 30).map((e, idx) => (
+                        <tr
+                          key={e.id}
+                          className={cn(
+                            "border-b border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] transition-colors",
+                            idx % 2 === 1 && "bg-[var(--color-surface-raised)]/40"
+                          )}
+                        >
+                          <td className="py-3 px-4 font-mono text-xs text-[var(--color-text-secondary)] whitespace-nowrap">{e.Date}</td>
+                          <td className="py-3 px-4 font-semibold text-[var(--color-text-primary)]">{e.Project}</td>
+                          <td className="py-3 px-4 text-[var(--color-text-secondary)] max-w-xs truncate">{e.Task}</td>
+                          <td className="py-3 px-4 font-mono tabular-nums text-right text-[var(--color-text-secondary)]">{e.PlannedQty}</td>
+                          <td className="py-3 px-4 font-mono tabular-nums text-right text-[var(--color-text-secondary)]">{e.ActualQty}</td>
+                          <td className="py-3 px-4 font-mono tabular-nums font-semibold text-right text-[var(--color-text-primary)]">{e.CompletionPct}%</td>
+                          <td className="py-3 px-4 text-center">
                             {e.Rating ? (
                               <Badge variant={e.Rating === "E" ? "success" : e.Rating === "N" ? "destructive" : "secondary"}>
                                 {e.Rating}
                               </Badge>
                             ) : (
-                              <span className="text-[var(--color-text-muted)]">—</span>
+                              <span className="text-xs text-[var(--color-text-tertiary)]">—</span>
                             )}
                           </td>
                         </tr>
@@ -970,67 +1149,90 @@ export default function EmployeeDashboard() {
           )}
         </div>
       )}
+
       {/* ── Floating Chatbot ── */}
       <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
-          <div className="mb-3 w-80 lg:w-[400px] bg-[var(--color-surface)] rounded-xl shadow-elevated border border-[var(--color-border)] overflow-hidden ">
-            <div className="p-3 bg-[var(--color-brand)] text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">🤖</span>
-                <span className="text-xs font-bold">Piping Assistant</span>
-                <span className="text-[8px] bg-white/20 px-1.5 py-0.5 rounded-full">DeepSeek V4</span>
+          <div className="mb-3 w-80 sm:w-96 bg-[var(--color-surface-default)] rounded-2xl shadow-card-hover border border-[var(--color-border)] overflow-hidden rise-in">
+            <div className="p-3.5 bg-[var(--color-brand)] text-white flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold">Piping Knowledge Copilot</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-completion)] animate-pulse" />
+                  </div>
+                  <span className="text-[10px] text-white/80 block leading-none">ASME B31.3 & Standards</span>
+                </div>
               </div>
-              <button onClick={() => setChatOpen(false)} className="text-white/80 hover:text-white"><X className="w-4 h-4" /></button>
+              <button
+                onClick={() => setChatOpen(false)}
+                className="text-white/80 hover:text-white p-1 cursor-pointer transition-colors"
+                aria-label="Close chat"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div className="h-72 overflow-y-auto p-3 space-y-3">
+
+            <div className="h-72 overflow-y-auto p-3.5 space-y-3 bg-[var(--color-surface-raised)]/30">
               {chatMessages.map((msg, i) => (
                 <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                   <div className={cn(
-                    "max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed",
+                    "max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs",
                     msg.role === "user"
-                      ? "bg-[var(--color-brand)] text-white rounded-br-md"
-                      : "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)] rounded-bl-md",
-                  )}>{msg.content}</div>
+                      ? "bg-[var(--color-brand)] text-white rounded-br-xs"
+                      : "bg-[var(--color-surface-default)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-bl-xs",
+                  )}>
+                    {msg.content}
+                  </div>
                 </div>
               ))}
               {chatLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[var(--color-surface-raised)] px-3 py-2 rounded-xl rounded-bl-md">
-                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"0ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"150ms"}} /><div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] " style={{animationDelay:"300ms"}} /></div>
+                  <div className="bg-[var(--color-surface-default)] border border-[var(--color-border)] px-4 py-3 rounded-2xl rounded-bl-xs flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-typing-dot-1" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-typing-dot-2" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-typing-dot-3" />
                   </div>
                 </div>
               )}
             </div>
-            <div className="p-3 border-t border-[var(--color-border)]">
+
+            <div className="p-3 bg-[var(--color-surface-default)] border-t border-[var(--color-border)]">
               <div className="flex gap-2">
                 <input
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleChat()}
-                  placeholder="Ask about piping codes, standards..."
-                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm outline-none focus:border-[var(--color-brand-200)]"
+                  placeholder="Ask piping questions, calculations..."
+                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-input)] text-xs sm:text-sm outline-none focus:border-[var(--color-border-focus)] transition-all"
                 />
                 <button
                   onClick={handleChat}
                   disabled={!chatInput.trim() || chatLoading}
-                  className="w-9 h-9 rounded-xl bg-[var(--color-brand)] hover:brightness-90 text-white flex items-center justify-center disabled:opacity-50"
+                  className="w-9 h-9 rounded-xl bg-[var(--color-brand)] hover:brightness-105 active:scale-95 text-white flex items-center justify-center disabled:opacity-40 cursor-pointer transition-all shadow-xs"
+                  aria-label="Send message"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           </div>
         )}
+
         <button
           onClick={() => setChatOpen(!chatOpen)}
           className={cn(
-            "w-14 h-14 rounded-xl shadow-elevated flex items-center justify-center transition-all duration-300",
+            "w-13 h-13 rounded-2xl shadow-card-hover flex items-center justify-center transition-all duration-300 cursor-pointer",
             chatOpen
-              ? "bg-[var(--color-surface)] border border-[var(--color-border)] rotate-90"
-              : "bg-[var(--color-brand)] hover:",
+              ? "bg-[var(--color-surface-default)] border border-[var(--color-border)] text-[var(--color-text-primary)] rotate-90"
+              : "bg-[var(--color-brand)] text-white hover:brightness-105 hover:shadow-[var(--shadow-glow-brand)]",
           )}
+          aria-label={chatOpen ? "Close chat" : "Open piping assistant"}
         >
-          {chatOpen ? <X className="w-5 h-5 text-[var(--color-text-primary)]" /> : <span className="text-2xl">💬</span>}
+          {chatOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
         </button>
       </div>
     </div>

@@ -141,7 +141,7 @@ Form: vertical stack of inputs with labels above. Review grid: rows of card-styl
 
 ### StatCard (extracted §5.7)
 
-Reusable stat: `icon` + `value` (tabular-nums, 2xl bold) + `label` (xs uppercase). Tint via `color` prop: `progress`/`brand`/`completion`/`alert` maps to `bg-[var(--color-surface-*)] text-[var(--color-*)]` (§2.6). Used in both dashboards via `src/components/ui/stat-card.tsx`. See `FilterBar` (§5.12) for filter row compound.
+Reusable stat: `icon` + `value` (tabular-nums, 2xl bold) + `label` (xs uppercase). Tint via `color` prop: `progress`/`brand`/`completion`/`alert` maps to semantic surface and text tokens (§2.6). Used in both dashboards via `src/components/ui/stat-card.tsx`. See `FilterBar` (§5.12) for filter row compound.
 
 ### FilterBar (extracted §5.12)
 

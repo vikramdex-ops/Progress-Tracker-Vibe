@@ -4,28 +4,40 @@ import { cn } from "@/lib/utils";
 // Calm Glass §5.4 — 4 intents × 3 styles, semantic tokens only
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "secondary" | "success" | "warning" | "destructive" | "outline";
+  dot?: boolean;
 }
 
-const Badge = ({ className, variant = "default", ...props }: BadgeProps) => {
-  // Maps legacy variant names to Calm Glass semantic tokens
+const Badge = ({ className, variant = "default", dot, children, ...props }: BadgeProps) => {
   const variants: Record<string, string> = {
-    default: "bg-[var(--color-surface-progress)] text-[var(--color-amber-700)] border-[var(--color-amber-200)]",
-    secondary: "bg-[var(--color-surface-brand)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]",
-    success: "bg-[var(--color-surface-completion)] text-[var(--color-emerald-700)] border-[var(--color-emerald-200)]",
-    warning: "bg-[var(--color-surface-progress)] text-[var(--color-amber-700)] border-[var(--color-amber-200)]",
-    destructive: "bg-[var(--color-surface-alert)] text-[var(--color-red-700)] border-[var(--color-red-200)]",
-    outline: "border-[var(--color-border)] text-[var(--color-text-tertiary)] bg-transparent",
+    default: "bg-[var(--color-surface-progress)] text-[var(--color-progress)] border-[var(--color-amber-200)] dark:border-[var(--color-amber-800)]",
+    secondary: "bg-[var(--color-surface-brand)] text-[var(--color-brand)] border-[var(--color-brand-200)] dark:border-[var(--color-brand-800)]",
+    success: "bg-[var(--color-surface-completion)] text-[var(--color-completion)] border-[var(--color-emerald-200)] dark:border-[var(--color-emerald-800)]",
+    warning: "bg-[var(--color-surface-progress)] text-[var(--color-warning)] border-[var(--color-amber-200)] dark:border-[var(--color-amber-800)]",
+    destructive: "bg-[var(--color-surface-alert)] text-[var(--color-alert)] border-[var(--color-red-200)] dark:border-[var(--color-red-800)]",
+    outline: "border-[var(--color-border)] text-[var(--color-text-secondary)] bg-transparent",
+  };
+
+  const dotColors: Record<string, string> = {
+    default: "bg-[var(--color-progress)]",
+    secondary: "bg-[var(--color-brand)]",
+    success: "bg-[var(--color-completion)]",
+    warning: "bg-[var(--color-warning)]",
+    destructive: "bg-[var(--color-alert)]",
+    outline: "bg-[var(--color-text-tertiary)]",
   };
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-0.5 text-[11px] font-semibold tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-wide transition-colors duration-[var(--duration-fast)]",
         variants[variant],
         className
       )}
       {...props}
-    />
+    >
+      {dot && <span className={cn("h-1.5 w-1.5 rounded-full", dotColors[variant])} />}
+      {children}
+    </div>
   );
 };
 
