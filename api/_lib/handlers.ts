@@ -885,8 +885,8 @@ export async function handleGetQuizHistory(params: URLSearchParams) {
 }
 
 // ─── AI EOD Insights (GPT-OSS-20B) ──────────────────────────
-import { generateEodInsights, generateWeeklyReport } from "./nvidia-oss.js";
-import { generateEodDescription, chatWithEngineer, analyzeTeamPatterns } from "./deepseek.js";
+import { generateEodInsights } from "./nvidia-oss.js";
+import { generateEodDescription } from "./deepseek.js";
 
 export async function handleGetEodInsights(body: any) {
   const { employee, entries } = body;
@@ -901,37 +901,6 @@ export async function handleGetEodInsights(body: any) {
   }
 }
 
-export async function handleGetWeeklyReport() {
-  try {
-    const employees = await airtable.list(TABLES.EMPLOYEES, "{Active} = TRUE()");
-    const allEntries = await airtable.list(TABLES.ENTRIES);
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const weekStr = oneWeekAgo.toISOString().split("T")[0];
-
-    const teamData = employees.map((emp) => {
-      const name = emp.fields.Name;
-      const empEntries = allEntries.filter((e) => e.fields.EmployeeName === name);
-      const weekEntries = empEntries.filter((e) => e.fields.Date >= weekStr);
-      const avgComp = weekEntries.length > 0
-        ? Math.round(weekEntries.reduce((s, e) => s + (e.fields.CompletionPct || 0), 0) / weekEntries.length)
-        : 0;
-      return {
-        name,
-        entries: weekEntries.length,
-        avgCompletion: avgComp,
-        streak: emp.fields.CurrentStreak || 0,
-        xp: emp.fields.XP || 0,
-      };
-    });
-
-    const totalEntries = teamData.reduce((s, t) => s + t.entries, 0);
-    const report = await generateWeeklyReport(teamData, totalEntries, employees.length);
-    return { status: 200, data: report };
-  } catch (err: any) {
-    return { status: 500, data: { error: "Failed to generate report: " + err.message } };
-  }
-}
 
 // ─── AI EOD Auto-Describe (DeepSeek V4) ───────────────────────
 export async function handleAutoDescribe(body: any) {
@@ -942,57 +911,6 @@ export async function handleAutoDescribe(body: any) {
     return { status: 200, data: result };
   } catch (err: any) {
     return { status: 500, data: { error: "Failed to generate description: " + err.message } };
-  }
-}
-
-// ─── AI Piping Chatbot (DeepSeek V4) ─────────────────────────
-export async function handleChatMessage(body: any) {
-  const { message, context } = body;
-  if (!message) return { status: 400, data: { error: "Message required" } };
-  try {
-    const result = await chatWithEngineer(message, context);
-    return { status: 200, data: result };
-  } catch (err: any) {
-    return { status: 500, data: { error: "Chat failed: " + err.message } };
-  }
-}
-
-// ─── AI Smart Team Analytics (DeepSeek V4) ────────────────────
-export async function handleTeamAnalytics() {
-  try {
-    const employees = await airtable.list(TABLES.EMPLOYEES, "{Active} = TRUE()");
-    const allEntries = await airtable.list(TABLES.ENTRIES);
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const twoWeeksAgo = new Date();
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-    const weekStr = oneWeekAgo.toISOString().split("T")[0];
-    const twoWeekStr = twoWeeksAgo.toISOString().split("T")[0];
-
-    const teamHistory = employees.map((emp) => {
-      const name = emp.fields.Name;
-      const empEntries = allEntries.filter((e) => e.fields.EmployeeName === name);
-      const thisWeek = empEntries.filter((e) => e.fields.Date >= weekStr);
-      const lastWeek = empEntries.filter((e) => e.fields.Date >= twoWeekStr && e.fields.Date < weekStr);
-      const avgComp = thisWeek.length > 0
-        ? Math.round(thisWeek.reduce((s, e) => s + (e.fields.CompletionPct || 0), 0) / thisWeek.length)
-        : 0;
-      const trend = thisWeek.length > lastWeek.length ? "improving"
-        : thisWeek.length < lastWeek.length ? "declining" : "stable";
-      return {
-        name,
-        entries: thisWeek.length,
-        avgCompletion: avgComp,
-        streak: emp.fields.CurrentStreak || 0,
-        recentTrend: trend,
-        missedDays: Math.max(0, 5 - thisWeek.length),
-      };
-    });
-
-    const report = await analyzeTeamPatterns(teamHistory, "last 7 days");
-    return { status: 200, data: report };
-  } catch (err: any) {
-    return { status: 500, data: { error: "Failed to analyze team: " + err.message } };
   }
 }
 
@@ -1123,3 +1041,4 @@ export async function handleGetAllCalendar() {
     return { status: 500, data: { error: "Failed to fetch calendar: " + err.message } };
   }
 }
+

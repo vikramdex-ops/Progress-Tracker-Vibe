@@ -105,78 +105,6 @@ Rules:
   }
 }
 
-// ─── Weekly Report ──────────────────────────────────────────
-
-export interface WeeklyReport {
-  headline: string;
-  teamPerformance: string;
-  topPerformers: { name: string; reason: string }[];
-  needsAttention: { name: string; reason: string }[];
-  actionableInsights: string[];
-  weekSummary: string;
-}
-
-export async function generateWeeklyReport(
-  teamData: { name: string; entries: number; avgCompletion: number; streak: number; xp: number }[],
-  totalEntries: number,
-  totalTeamSize: number
-): Promise<WeeklyReport> {
-  const systemPrompt = `You are a senior engineering team analytics AI. Analyze the team's weekly performance data and provide actionable insights.
-
-Respond in EXACTLY this JSON format (no markdown, no code fences):
-{
-  "headline": "One-line headline summarizing the week (e.g., 'Strong week with 85% team participation')",
-  "teamPerformance": "2-3 sentence overall team performance analysis",
-  "topPerformers": [{"name": "Name", "reason": "Specific reason for recognition"}],
-  "needsAttention": [{"name": "Name", "reason": "Specific concern or pattern noticed"}],
-  "actionableInsights": ["Insight 1 with specific action", "Insight 2 with specific action"],
-  "weekSummary": "1-sentence engineering-focused summary"
-}
-
-Rules:
-- topPerformers: max 3, based on entries count + completion rate + streak
-- needsAttention: max 3, based on low entries, declining streak, or low completion
-- actionableInsights: max 3, specific and implementable
-- Be data-driven but empathetic. Focus on team dynamics.`;
-
-  const teamText = teamData.map(t =>
-    `${t.name}: ${t.entries} entries, ${t.avgCompletion}% avg completion, ${t.streak}d streak, ${t.xp} XP`
-  ).join("\n");
-
-  const content = await callGPT(
-    "openai/gpt-oss-20b",
-    systemPrompt,
-    `Weekly Report — ${new Date().toISOString().split("T")[0]}\n` +
-    `Team size: ${totalTeamSize} | Total entries this week: ${totalEntries}\n\n` +
-    `Team Data:\n${teamText}`,
-    2048
-  );
-
-  try {
-    let cleaned = content.trim();
-    if (cleaned.startsWith("```")) {
-      cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
-    }
-    const parsed = JSON.parse(cleaned);
-    return {
-      headline: parsed.headline || "Weekly report generated",
-      teamPerformance: parsed.teamPerformance || "",
-      topPerformers: Array.isArray(parsed.topPerformers) ? parsed.topPerformers.slice(0, 3) : [],
-      needsAttention: Array.isArray(parsed.needsAttention) ? parsed.needsAttention.slice(0, 3) : [],
-      actionableInsights: Array.isArray(parsed.actionableInsights) ? parsed.actionableInsights.slice(0, 3) : [],
-      weekSummary: parsed.weekSummary || "",
-    };
-  } catch {
-    return {
-      headline: "Weekly performance analysis",
-      teamPerformance: content.substring(0, 500),
-      topPerformers: [],
-      needsAttention: [],
-      actionableInsights: [],
-      weekSummary: "Analysis complete.",
-    };
-  }
-}
 
 // ─── Smart Leave Impact ─────────────────────────────────────
 
@@ -217,3 +145,5 @@ streakRisk: "low" (streak > 5), "medium" (streak 2-5), "high" (streak 0-1).`;
     return { impact: "Leave recorded.", recommendation: "No issues.", streakRisk: "low" };
   }
 }
+
+

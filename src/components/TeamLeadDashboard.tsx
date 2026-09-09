@@ -11,14 +11,15 @@ import {
   calendarApi,
   quizApi,
   gamificationApi,
-  aiInsightsApi,
   deepseekApi,
 } from "@/lib/api";
 import { PROJECTS, RATING_OPTIONS, COMPLEXITY_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { generateWeeklyReport, analyzeTeamData } from "@/lib/analytics-engine";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { useNotification } from "@/components/ui/primitives";
@@ -41,7 +42,7 @@ import {
   Sparkles,
   Trophy,
   RefreshCw,
-  MessageSquare,
+  Trash2,
   ChevronRight,
 } from "lucide-react";
 
@@ -121,17 +122,7 @@ export default function TeamLeadDashboard() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [teamAnalytics, setTeamAnalytics] = useState<any>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-
-  // Chatbot
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([
-    {
-      role: "assistant",
-      content: "👋 Hi! I'm your piping engineering assistant. Ask me anything about ASME codes, piping standards, or team coordination!",
-    },
-  ]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
+  const [autoDescribeIdx, setAutoDescribeIdx] = useState<number | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -293,16 +284,18 @@ export default function TeamLeadDashboard() {
 
   const sortedByStreak = [...teamNames].sort((a, b) => (streakMap[b] || 0) - (streakMap[a] || 0));
 
-  const loadTeamAnalytics = async () => {
+  // ── Team Analysis Engine (100% client-side — no API key, no network) ──
+  const loadTeamAnalytics = async (silent = false) => {
     setLoadingAnalytics(true);
     try {
-      const report = await deepseekApi.teamAnalytics();
+      const report = await analyzeTeamData(employees, entries, leaves);
       setTeamAnalytics(report);
-      notify({
-        title: "Team Analytics Ready",
-        description: "DeepSeek V4 analysis completed successfully.",
-        variant: "success",
-      });
+      if (!silent)
+        notify({
+          title: "Team Analytics Ready",
+          description: "Analysis engine completed instantly from the live dataset.",
+          variant: "success",
+        });
     } catch (e: any) {
       notify({
         title: "Analytics Failed",
@@ -314,35 +307,17 @@ export default function TeamLeadDashboard() {
     }
   };
 
-  const handleChat = async () => {
-    if (!chatInput.trim() || chatLoading) return;
-    const userMsg = chatInput.trim();
-    setChatInput("");
-    setChatMessages((prev) => [...prev, { role: "user", content: userMsg }]);
-    setChatLoading(true);
-    try {
-      const res: any = await deepseekApi.chat(
-        userMsg,
-        `Team: ${teamNames.join(", ")}. Today: ${today}. Team size: ${teamNames.length}`
-      );
-      setChatMessages((prev) => [...prev, { role: "assistant", content: res.answer || "I couldn't process that." }]);
-    } catch {
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error connecting to DeepSeek." }]);
-    } finally {
-      setChatLoading(false);
-    }
-  };
-
-  const loadWeeklyReport = async () => {
+  const loadWeeklyReport = async (silent = false) => {
     setLoadingReport(true);
     try {
-      const report = await aiInsightsApi.weeklyReport();
+      const report = await generateWeeklyReport(employees, entries, leaves);
       setWeeklyReport(report);
-      notify({
-        title: "Weekly Report Generated",
-        description: "Performance breakdown is now available.",
-        variant: "success",
-      });
+      if (!silent)
+        notify({
+          title: "Weekly Report Generated",
+          description: "Performance breakdown computed from the live dataset.",
+          variant: "success",
+        });
     } catch (e: any) {
       notify({
         title: "Report Failed",
@@ -353,6 +328,15 @@ export default function TeamLeadDashboard() {
       setLoadingReport(false);
     }
   };
+
+  // Auto-populate the analysis panel whenever the dataset finishes loading.
+  useEffect(() => {
+    if (loading) return;
+    if (employees.length === 0 && entries.length === 0) return;
+    loadTeamAnalytics(true);
+    loadWeeklyReport(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   // ── EOD Submission (for team lead) ──
   const todayMyEntry = myEntries.find((e: any) => e.Date === today);
@@ -367,6 +351,27 @@ export default function TeamLeadDashboard() {
       items[i].completionPercent = p > 0 ? Math.min(999, Math.round((a / p) * 100)) : 0;
     }
     setWorkItems(items);
+  };
+
+  // ── Auto-Describe (same as employee form) ──
+  const handleAutoDescribe = async (idx: number) => {
+    const item = workItems[idx];
+    if (!item.task) return;
+    setAutoDescribeIdx(idx);
+    try {
+      const res: any = await deepseekApi.autoDescribe({
+        task: item.task,
+        project: item.projectName,
+        plannedQty: item.plannedQty,
+        actualQty: item.actualQty,
+        complexity: item.complexity,
+      });
+      updateItem(idx, "description", res.description || "");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAutoDescribeIdx(null);
+    }
   };
 
   const handleSubmitEod = async () => {
@@ -549,7 +554,9 @@ export default function TeamLeadDashboard() {
       {/* ═══════════ TEAM OVERVIEW TAB ═══════════ */}
       {activeTab === "team" && (
         <>
-          {/* ── Top Stat Cards ── */}
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,372px)] gap-6 items-start">
+          <div className="min-w-0 space-y-5 lg:space-y-6">
+            {/* ── Top Stat Cards ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">
             <StatCard
               label="Filled Today"
@@ -1053,23 +1060,24 @@ export default function TeamLeadDashboard() {
             </CardContent>
           </Card>
 
-          {/* ── AI Insights Grid (Weekly Report & Deep Team Analytics) ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* AI Weekly Report */}
+          </div>
+          {/* ── close left column ↑ Analysis Center (right, sticky) ── */}
+          <aside className="xl:sticky xl:top-[84px] min-w-0 space-y-5">
+            {/* Weekly Report */}
             <Card className="shadow-sm border border-[var(--color-border)]">
               <CardHeader className="px-5 py-4 border-b border-[var(--color-border)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--color-brand)]" />
-                    <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">AI Weekly Report</CardTitle>
+                    <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Weekly Report</CardTitle>
                     <Badge variant="outline" className="text-[10px] text-[var(--color-brand)] border-[var(--color-brand)]/30">
-                      GPT-OSS-20B
+                      Logic Engine
                     </Badge>
                   </div>
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={loadWeeklyReport}
+                    onClick={() => loadWeeklyReport()}
                     loading={loadingReport}
                     className="text-xs h-8 gap-1.5"
                   >
@@ -1131,25 +1139,25 @@ export default function TeamLeadDashboard() {
               </CardContent>
             </Card>
 
-            {/* Deep Team Analytics (DeepSeek V4) */}
+            {/* Team Analytics (Deep Dive) */}
             <Card className="shadow-sm border border-[var(--color-border)]">
               <CardHeader className="px-5 py-4 border-b border-[var(--color-border)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--color-progress)]" />
-                    <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Deep Team Analytics</CardTitle>
+                    <CardTitle className="text-sm font-bold text-[var(--color-text-primary)]">Team Analytics</CardTitle>
                     <Badge variant="outline" className="text-[10px] text-[var(--color-progress)] border-[var(--color-progress)]/30">
-                      DeepSeek V4
+                      Logic Engine
                     </Badge>
                   </div>
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={loadTeamAnalytics}
+                    onClick={() => loadTeamAnalytics()}
                     loading={loadingAnalytics}
                     className="text-xs h-8 gap-1.5"
                   >
-                    ⬢ Deep Analyze
+                    ⬢ Analyze
                   </Button>
                 </div>
               </CardHeader>
@@ -1195,11 +1203,13 @@ export default function TeamLeadDashboard() {
                   </div>
                 ) : (
                   <p className="text-xs text-[var(--color-text-muted)] text-center py-6">
-                    Click Deep Analyze to run AI pattern detection on your project workflow.
+                    Click Analyze to compute team performance intelligence from the live dataset.
                   </p>
                 )}
               </CardContent>
             </Card>
+
+          </aside>
           </div>
         </>
       )}
@@ -1304,27 +1314,34 @@ export default function TeamLeadDashboard() {
                     className="p-4 sm:p-5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] space-y-4"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                        Work Item #{i + 1}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--color-brand)] text-white text-[10px] font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                        <h4 className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wider">
+                          Project Work Item #{i + 1}
+                        </h4>
+                      </div>
                       {workItems.length > 1 && (
                         <button
+                          type="button"
                           onClick={() => setWorkItems(workItems.filter((_: any, j: number) => j !== i))}
-                          className="text-[var(--color-text-muted)] hover:text-[var(--color-alert)] p-1 rounded-lg transition-colors"
+                          className="text-[var(--color-text-tertiary)] hover:text-[var(--color-alert)] p-1.5 rounded-lg hover:bg-[var(--color-surface-alert)] transition-colors cursor-pointer"
+                          title="Remove item"
                         >
-                          <X className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3.5">
                       <div>
                         <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Project
+                          Project Name *
                         </label>
                         <select
                           value={item.projectName}
                           onChange={(e) => updateItem(i, "projectName", e.target.value)}
-                          className="w-full h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-3 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] transition-all"
+                          className="w-full h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-3 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] transition-all cursor-pointer"
                         >
                           <option value="">Select project...</option>
                           {PROJECTS.map((p) => (
@@ -1336,7 +1353,7 @@ export default function TeamLeadDashboard() {
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Task
+                          Task Description *
                         </label>
                         <Input
                           value={item.task}
@@ -1345,9 +1362,21 @@ export default function TeamLeadDashboard() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Description
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                            Detailed Remarks / Deliverables
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleAutoDescribe(i)}
+                            disabled={!item.task || autoDescribeIdx === i}
+                            className="text-[11px] font-bold text-[var(--color-brand)] hover:brightness-110 disabled:opacity-40 flex items-center gap-1.5 cursor-pointer"
+                          >
+                            {autoDescribeIdx === i ? (
+                              <><div className="w-3 h-3 rounded-full border border-[var(--color-brand)] border-t-transparent animate-spin" /> AI Generating...</>
+                            ) : (<><Sparkles className="w-3 h-3" /> Auto-Generate Description</>)}
+                          </button>
+                        </div>
                         <Input
                           value={item.description}
                           onChange={(e) => updateItem(i, "description", e.target.value)}
@@ -1356,34 +1385,34 @@ export default function TeamLeadDashboard() {
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Planned Qty
+                          Planned Output Quantity
                         </label>
                         <Input
                           type="number"
                           value={item.plannedQty || ""}
                           onChange={(e) => updateItem(i, "plannedQty", Number(e.target.value))}
-                          placeholder="0"
+                          placeholder="Planned count/hours"
                         />
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Actual Qty
+                          Actual Accomplished Quantity
                         </label>
                         <Input
                           type="number"
                           value={item.actualQty || ""}
                           onChange={(e) => updateItem(i, "actualQty", Number(e.target.value))}
-                          placeholder="0"
+                          placeholder="Actual achieved"
                         />
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Complexity
+                          Task Complexity
                         </label>
                         <select
                           value={item.complexity}
                           onChange={(e) => updateItem(i, "complexity", e.target.value)}
-                          className="w-full h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-3 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] transition-all"
+                          className="w-full h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] px-3 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] transition-all cursor-pointer"
                         >
                           <option>Low</option>
                           <option>Moderate</option>
@@ -1391,13 +1420,22 @@ export default function TeamLeadDashboard() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
-                          Calculated Progress
-                        </label>
-                        <div className="h-10 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-default)] flex items-center justify-between font-mono text-xs">
-                          <span>Completion</span>
-                          <span className="font-bold text-[var(--color-text-primary)]">{item.completionPercent}%</span>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                            Completion Rate
+                          </label>
+                          <span className={cn(
+                            "text-xs font-bold tabular-nums",
+                            item.completionPercent >= 100 ? "text-[var(--color-completion)]" : "text-[var(--color-progress)]"
+                          )}>
+                            {item.completionPercent}%
+                          </span>
                         </div>
+                        <Progress
+                          value={item.completionPercent}
+                          color={item.completionPercent >= 100 ? "accent" : "primary"}
+                          size="default"
+                        />
                       </div>
                     </div>
                   </div>
@@ -1644,84 +1682,6 @@ export default function TeamLeadDashboard() {
           </Card>
         </div>
       )}
-
-      {/* ── Floating Chatbot ── */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {chatOpen && (
-          <div className="mb-3 w-80 sm:w-96 bg-[var(--color-surface-default)] rounded-2xl shadow-elevated border border-[var(--color-border)] overflow-hidden animate-scale-in">
-            <div className="p-3.5 bg-[var(--color-brand)] text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-xs font-bold">Piping Assistant</span>
-                <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded-full font-mono">DeepSeek V4</span>
-              </div>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="text-white/80 hover:text-white p-1 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="h-72 overflow-y-auto p-3.5 space-y-3">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-                  <div
-                    className={cn(
-                      "max-w-[85%] px-3.5 py-2 rounded-xl text-xs leading-relaxed",
-                      msg.role === "user"
-                        ? "bg-[var(--color-brand)] text-white rounded-br-xs"
-                        : "bg-[var(--color-surface-raised)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-bl-xs"
-                    )}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {chatLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-[var(--color-surface-raised)] border border-[var(--color-border)] px-3 py-2 rounded-xl rounded-bl-xs">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] typing-dot-1" />
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] typing-dot-2" />
-                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] typing-dot-3" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="p-3 border-t border-[var(--color-border)] bg-[var(--color-surface-default)]">
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleChat()}
-                  placeholder="Ask about ASME B31.3, materials..."
-                  className="flex-1 h-9 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand)] transition-all"
-                />
-                <Button
-                  onClick={handleChat}
-                  disabled={!chatInput.trim() || chatLoading}
-                  size="sm"
-                  className="h-9 w-9 p-0"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={() => setChatOpen(!chatOpen)}
-          className={cn(
-            "w-12 h-12 rounded-2xl shadow-elevated flex items-center justify-center transition-all duration-200",
-            chatOpen
-              ? "bg-[var(--color-surface-default)] border border-[var(--color-border)] text-[var(--color-text-primary)] rotate-90"
-              : "bg-[var(--color-brand)] text-white hover:brightness-110 shadow-lg shadow-[var(--color-brand)]/20"
-          )}
-        >
-          {chatOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-        </button>
       </div>
-    </div>
-  );
+    );
 }

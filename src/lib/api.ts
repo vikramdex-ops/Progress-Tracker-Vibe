@@ -174,16 +174,12 @@ export const quizApi = {
 export const aiInsightsApi = {
   eodInsights: (employee: string, entries: any[]) =>
     apiRequest("ai/eod-insights", { method: "POST", body: JSON.stringify({ employee, entries }) }),
-  weeklyReport: () => apiRequest("ai/weekly-report"),
 };
 
 // DeepSeek AI Features
 export const deepseekApi = {
   autoDescribe: (data: { task: string; project?: string; plannedQty?: number; actualQty?: number; complexity?: string }) =>
     apiRequest("ai/auto-describe", { method: "POST", body: JSON.stringify(data) }),
-  chat: (message: string, context?: string) =>
-    apiRequest("ai/chat", { method: "POST", body: JSON.stringify({ message, context }) }),
-  teamAnalytics: () => apiRequest("ai/team-analytics"),
 };
 
 // Push Notifications

@@ -17,7 +17,7 @@ import { FirstEodOnboarding } from "./OnboardingHint";
 import type { WorkItem, EodEntry, GamificationData } from "@/lib/types";
 import {
   Send, Plus, Trash2, Check, Star, Flame, Trophy, Target,
-  TrendingUp, Clock, Calendar, Award, Zap, BookOpen, X, MessageSquare, Sparkles,
+  TrendingUp, Clock, Calendar, Award, Zap, BookOpen, X, Sparkles,
 } from "lucide-react";
 
 const blankItem: WorkItem = {
@@ -54,13 +54,6 @@ export default function EmployeeDashboard() {
   const [eodInsights, setEodInsights] = useState<any>(null);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [autoDescribeIdx, setAutoDescribeIdx] = useState<number | null>(null);
-  // Chatbot
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([
-    { role: "assistant", content: "👋 Hi! I'm your piping engineering assistant. Ask me anything about ASME B31.3, piping design, stress analysis, or calculations!" },
-  ]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
   const [calendar, setCalendar] = useState<any[]>([]);
 
   const todayEntry = entries.find((e) => e.Date === today);
@@ -257,23 +250,6 @@ export default function EmployeeDashboard() {
       console.error(e);
     } finally {
       setAutoDescribeIdx(null);
-    }
-  };
-
-  // ── Chat ──
-  const handleChat = async () => {
-    if (!chatInput.trim() || chatLoading) return;
-    const userMsg = chatInput.trim();
-    setChatInput("");
-    setChatMessages((prev) => [...prev, { role: "user", content: userMsg }]);
-    setChatLoading(true);
-    try {
-      const res: any = await deepseekApi.chat(userMsg);
-      setChatMessages((prev) => [...prev, { role: "assistant", content: res.answer || "I couldn't process that question." }]);
-    } catch (e: any) {
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error. Please try again." }]);
-    } finally {
-      setChatLoading(false);
     }
   };
 
@@ -1164,91 +1140,6 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* ── Floating Chatbot ── */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {chatOpen && (
-          <div className="mb-3 w-80 sm:w-96 bg-[var(--color-surface-default)] rounded-2xl shadow-card-hover border border-[var(--color-border)] overflow-hidden rise-in">
-            <div className="p-3.5 bg-[var(--color-brand)] text-white flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold">Piping Knowledge Copilot</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-completion)] animate-pulse" />
-                  </div>
-                  <span className="text-[10px] text-white/80 block leading-none">ASME B31.3 & Standards</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="text-white/80 hover:text-white p-1 cursor-pointer transition-colors"
-                aria-label="Close chat"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="h-72 overflow-y-auto p-3.5 space-y-3 bg-[var(--color-surface-raised)]/30">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-                  <div className={cn(
-                    "max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs",
-                    msg.role === "user"
-                      ? "bg-[var(--color-brand)] text-white rounded-br-xs"
-                      : "bg-[var(--color-surface-default)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-bl-xs",
-                  )}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {chatLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-[var(--color-surface-default)] border border-[var(--color-border)] px-4 py-3 rounded-2xl rounded-bl-xs flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-typing-dot-1" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-typing-dot-2" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-brand)] animate-typing-dot-3" />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-3 bg-[var(--color-surface-default)] border-t border-[var(--color-border)]">
-              <div className="flex gap-2">
-                <input
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleChat()}
-                  placeholder="Ask piping questions, calculations..."
-                  className="flex-1 h-9 px-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-input)] text-xs sm:text-sm outline-none focus:border-[var(--color-border-focus)] transition-all"
-                />
-                <button
-                  onClick={handleChat}
-                  disabled={!chatInput.trim() || chatLoading}
-                  className="w-9 h-9 rounded-xl bg-[var(--color-brand)] hover:brightness-105 active:scale-95 text-white flex items-center justify-center disabled:opacity-40 cursor-pointer transition-all shadow-xs"
-                  aria-label="Send message"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={() => setChatOpen(!chatOpen)}
-          className={cn(
-            "w-13 h-13 rounded-2xl shadow-card-hover flex items-center justify-center transition-all duration-300 cursor-pointer",
-            chatOpen
-              ? "bg-[var(--color-surface-default)] border border-[var(--color-border)] text-[var(--color-text-primary)] rotate-90"
-              : "bg-[var(--color-brand)] text-white hover:brightness-105 hover:shadow-[var(--shadow-glow-brand)]",
-          )}
-          aria-label={chatOpen ? "Close chat" : "Open piping assistant"}
-        >
-          {chatOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-        </button>
       </div>
-    </div>
-  );
+    );
 }

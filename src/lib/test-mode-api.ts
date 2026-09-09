@@ -548,29 +548,6 @@ export async function handleTestApiRequest(path: string, options: RequestInit = 
     });
   }
 
-  if (route === "ai/weekly-report" && method === "GET") {
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const week = state.entries.filter((e) => new Date(e.Date) >= weekAgo);
-    const perEmp = state.employees.map((emp) => {
-      const own = week.filter((e) => e.EmployeeName === emp.name);
-      const avg = own.length ? Math.round(own.reduce((s, e) => s + e.CompletionPct, 0) / own.length) : 0;
-      return { name: emp.name, entries: own.length, avgCompletion: avg, streak: emp.currentStreak, xp: emp.xp };
-    });
-    const ranked = [...perEmp].sort((a, b) => b.entries - a.entries);
-    return delay({
-      headline: `${week.length} entries logged by the team this week`,
-      teamPerformance: `The team averaged ${Math.round(perEmp.reduce((s, t) => s + t.avgCompletion, 0) / (perEmp.length || 1))}% completion across ${week.length} submissions. ${ranked[0]?.name ?? "Nobody"} leads submission volume with ${ranked[0]?.entries ?? 0} entries.`,
-      topPerformers: ranked.slice(0, 3).map((t) => ({ name: t.name, reason: `${t.entries} entries at ${t.avgCompletion}% average completion` })),
-      needsAttention: ranked.slice(-2).reverse().map((t) => ({ name: t.name, reason: `Only ${t.entries} entries in the last 7 days — worth a check-in` })),
-      actionableInsights: [
-        "Review unrated entries in the EOD table to close the feedback loop.",
-        "Encourage members with 0 entries this week to submit or mark leave to protect streaks.",
-        "Rotate high-complexity tasks to balance load across engineers.",
-      ],
-      weekSummary: `Weekly totals: ${week.length} entries, ${Math.round(week.reduce((s, e) => s + e.XpAwarded, 0))} XP awarded.`,
-    });
-  }
 
   if (route === "ai/auto-describe" && method === "POST") {
     const task = body.task || "the assigned task";
@@ -582,27 +559,7 @@ export async function handleTestApiRequest(path: string, options: RequestInit = 
     });
   }
 
-  if (route === "ai/chat" && method === "POST") {
-    return delay({
-      answer: `(Test mode) Great question about "${String(body.message || "").slice(0, 60)}". In general, process piping design follows ASME B31.3: keep sustained stresses below the basic allowable S, keep the thermal displacement stress range within the code allowable, and check nozzle loads against vendor limits (API 610 for pumps). Give me a specific scenario — line size, material, temperature — and I can walk through the calculation step by step.`,
-    });
-  }
 
-  if (route === "ai/team-analytics" && method === "GET") {
-    const total = state.entries.length;
-    const rated = state.entries.filter((e) => e.Rating).length;
-    return delay({
-      insights: `The team has logged ${total} entries in the demo dataset with ${rated} rated by the lead (${Math.round((rated / (total || 1)) * 100)}% rating coverage). Submission pattern is stable on working days with occasional mid-week gaps.`,
-      patterns: [
-        { pattern: "Early-week completion spikes", impact: "Mondays show ~15% higher average completion than Fridays." },
-        { pattern: "Rating backlog", impact: rated < total * 0.5 ? `${total - rated} entries still awaiting review.` : "Review cadence is healthy." },
-      ],
-      recommendations: [
-        "Schedule a Friday wrap-up to clear the rating backlog before the week closes.",
-        "Pair low-streak engineers with mentors for the next sprint.",
-      ],
-    });
-  }
 
   // ── Push subscriptions ──
   if (route === "push/subscribe" && method === "POST") {
@@ -640,6 +597,7 @@ export async function handleTestApiRequest(path: string, options: RequestInit = 
 
   throw new ApiError(`Test mode: no mock for ${method} /${route}`);
 }
+
 
 
 
